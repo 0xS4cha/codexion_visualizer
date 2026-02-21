@@ -1,14 +1,11 @@
-import { useMemo, useRef, useCallback } from "react";
-import { SiReact, SiNextdotjs, SiTypescript, SiTailwindcss, SiC, SiLua, SiGit } from 'react-icons/si';
-import { useNavigate } from "react-router-dom";
-import { motion, useScroll, useSpring, useTransform } from "framer-motion";
-import Silk from "@/components/utils/Backgrounds/Silk/Silk"
-import GlassSurface from "@/components/utils/Components/GlassSurface/GlassSurface"
+import { useState } from "react";
+import Silk from "@/components/utils/Backgrounds/Silk/Silk";
+import GlassSurface from "@/components/utils/Components/GlassSurface/GlassSurface";
 import ShinyText from "@/components/utils/TextAnimations/ShinyText/ShinyText";
+import CodexionTimeline from "@/components/CodexionTimeline";
 
-export default function Home() {
-	const navigate = useNavigate();
-
+export default function Visualizer() {
+	const [rawLog, setRawLog] = useState("");
 
 	return (
 		<>
@@ -21,13 +18,119 @@ export default function Home() {
 					rotation={0}
 				/>
 			</div>
-			<div>
-				<footer className="border-t border-white/10 px-4 py-10 sm:px-8">
-					<div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 text-sm text-white/60 sm:flex-row">
-						<span>© 2026 Sacha S. — All rights reserved.</span>
+
+			{/* Header */}
+			<header className="fixed top-0 left-0 right-0 z-50 px-4 py-3 sm:px-6">
+				<GlassSurface
+					width="100%"
+					height={64}
+					borderRadius={16}
+					className="mx-auto max-w-6xl flex items-center justify-between px-6"
+				>
+					<div className="flex items-center gap-3">
+						<span className="text-2xl font-bold tabular-nums text-white/90">42</span>
+						<span className="text-white/40">|</span>
+						<ShinyText
+							text="Codexion"
+							className="text-xl font-bold tracking-tight"
+							color="#a0a0a0"
+							shineColor="#e8e8e8"
+							speed={3}
+							spread={90}
+						/>
 					</div>
-				</footer>
-			</div>
+					<div className="flex items-center gap-4 text-sm">
+						<ShinyText
+							text="Visualizer"
+							className="font-medium"
+							color="#888"
+							shineColor="#fff"
+							speed={4}
+							spread={100}
+						/>
+						<ShinyText
+							text="coders"
+							className="font-medium text-white/70"
+							color="#888"
+							shineColor="#b8e0ff"
+							speed={2.5}
+							spread={120}
+						/>
+					</div>
+				</GlassSurface>
+			</header>
+
+			<main className="min-h-screen pt-24 pb-32 px-4 sm:px-6">
+				<div className="mx-auto max-w-6xl space-y-6">
+					<GlassSurface
+						width="100%"
+						height={200}
+						borderRadius={16}
+						className="overflow-hidden !items-stretch !justify-stretch"
+					>
+						<div className="flex w-full flex-1 flex-col gap-2 self-stretch p-4">
+							<label className="mb-2 flex items-center gap-2 text-sm font-medium text-white/80">
+								<ShinyText
+									text="Logs Codexion"
+									className="text-sm"
+									color="#888"
+									shineColor="#fff"
+									speed={4}
+									spread={90}
+								/>
+								<span className="text-white/40">—</span>
+								<span className="text-white/50">
+									Colle la sortie (TIMESTAMP CODER_ID ACTION)
+								</span>
+							</label>
+							<textarea
+								value={rawLog}
+								onChange={(e) => setRawLog(e.target.value)}
+								placeholder={`0 2 has taken a dongle
+0 2 is compiling
+4 2 is debugging
+5 2 is refactoring
+...`}
+								className="flex-1 resize-none rounded-lg border border-white/10 bg-black/30 px-4 py-3 font-mono text-sm text-white/90 placeholder:text-white/30 focus:border-white/30 focus:outline-none focus:ring-1 focus:ring-white/20"
+								spellCheck={false}
+							/>
+						</div>
+					</GlassSurface>
+
+					<CodexionTimeline rawLog={rawLog} />
+				</div>
+			</main>
+
+			<footer className="fixed bottom-0 left-0 right-0 z-50 px-4 py-3 sm:px-6">
+				<GlassSurface
+					width="100%"
+					height={56}
+					borderRadius={16}
+					className="mx-auto max-w-6xl flex items-center justify-center px-6"
+				>
+					<div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-sm">
+						<ShinyText
+							text="Codexion"
+							className="font-semibold"
+							color="#888"
+							shineColor="#fff"
+							speed={5}
+							spread={90}
+						/>
+						<span className="text-white/30">—</span>
+						<ShinyText
+							text="42 · philosophers with coders"
+							className="font-medium"
+							color="#666"
+							shineColor="#a0a0a0"
+							speed={4}
+							spread={100}
+						/>
+						<span className="text-white/30">—</span>
+						<span className="text-white/50">© 2026 Sacha S.</span>
+					</div>
+				</GlassSurface>
+			</footer>
 		</>
 	);
 }
