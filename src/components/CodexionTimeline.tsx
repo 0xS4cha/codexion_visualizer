@@ -132,7 +132,7 @@ export default function CodexionTimeline({ rawLog }: CodexionTimelineProps) {
           </div>
 
           <div className="flex items-center mt-3 h-6">
-            <div className="sticky left-0 z-20 w-24 shrink-0 bg-[#121212]/90 backdrop-blur-md h-full border-r border-white/10" />
+          <div className="sticky left-0 z-20 w-24 shrink-0 flex items-center justify-end px-3 font-mono text-sm text-white/80 bg-[#121212]/90 backdrop-blur-md h-full border-r border-white/10 shadow-[4px_0_15px_rgba(0,0,0,0.5)] transition-colors group-hover:bg-[#1a1a1a]/90">Time</div>
             <div className="flex-1 relative mx-2">
               {[0, 0.25, 0.5, 0.75, 1].map((p) => {
                 const t = Math.round(minTime + (maxTime - minTime) * p);
