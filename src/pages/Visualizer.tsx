@@ -14,7 +14,7 @@ export default function Visualizer() {
 				<Silk
 					speed={5}
 					scale={1}
-					color="#2d2d2dff"
+					color="#2d2d2d"
 					noiseIntensity={1.5}
 					rotation={0}
 				/>

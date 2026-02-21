@@ -12,12 +12,12 @@ export interface Segment {
 }
 
 export const ACTION_COLORS: Record<string, string> = {
-  "has taken a dongle": "rgba(245, 158, 11, 0.9)",
-  "is compiling": "rgba(59, 130, 246, 0.9)",
-  "is debugging": "rgba(168, 85, 247, 0.9)",
-  "is refactoring": "rgba(16, 185, 129, 0.9)",
-  "burned out": "rgba(255, 0, 0, 0.9)",
-  "unknow action": "rgba(255, 255, 255, 0.5)",
+    "has taken a dongle": "rgba(251, 191, 36, 0.9)",
+    "is compiling": "rgba(96, 165, 250, 0.9)",
+    "is debugging": "rgba(167, 139, 250, 0.9)",
+    "is refactoring": "rgba(52, 211, 153, 0.9)",
+    "burned out": "rgba(248, 113, 113, 0.9)",
+    "unknow action": "rgba(156, 163, 175, 0.5)"
 };
 
 export function getActionColor(action: string): string {
