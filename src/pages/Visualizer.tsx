@@ -67,8 +67,7 @@ export default function Visualizer() {
 							<textarea
 								value={rawLog}
 								onChange={(e) => setRawLog(e.target.value)}
-								placeholder={`
-0 2 has taken a dongle
+								placeholder={`0 2 has taken a dongle
 0 2 is compiling
 4 2 is debugging
 5 2 is refactoring
