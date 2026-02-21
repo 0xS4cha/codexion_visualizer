@@ -15,7 +15,12 @@ interface Segment {
   action: string;
 }
 
+interface CodexionTimelineProps {
+  rawLog: string;
+}
+
 const INSTANT_ACTION_DURATION = 10; 
+
 const ACTION_COLORS: Record<string, string> = {
   "has taken a dongle": "rgba(245, 158, 11, 0.9)",
   "is compiling": "rgba(59, 130, 246, 0.9)",
@@ -27,7 +32,7 @@ const ACTION_COLORS: Record<string, string> = {
 
 function getActionColor(action: string): string {
   return ACTION_COLORS[action] ?? ACTION_COLORS["unknow action"];
-}
+};
 
 function buildSegments(entries: LogEntry[]): { segments: Map<number, Segment[]>, newMaxTime: number } {
   const byCoder = new Map<number, LogEntry[]>();
@@ -43,8 +48,8 @@ function buildSegments(entries: LogEntry[]): { segments: Map<number, Segment[]>,
     for (let i = 0; i < sorted.length - 1; i++) {
       totalDuration += sorted[i + 1].timestamp - sorted[i].timestamp;
       closedCount++;
-    }
-  }
+    };
+  };
 
   const averageDuration = closedCount > 0 ? totalDuration / closedCount : 50;
 
@@ -65,23 +70,19 @@ function buildSegments(entries: LogEntry[]): { segments: Map<number, Segment[]>,
         end = Math.max(nextTimestamp, start + INSTANT_ACTION_DURATION);
       } else {
         end = start + Math.max(averageDuration, INSTANT_ACTION_DURATION);
-      }
+      };
 
       if (end > globalMaxTime) {
         globalMaxTime = end;
-      }
+      };
 
       segs.push({ startTime: start, endTime: end, action: sorted[i].action });
 
       currentVirtualTime = end;
-    }
+    };
     segments.set(coderId, segs);
   }
   return { segments, newMaxTime: globalMaxTime };
-}
-
-interface CodexionTimelineProps {
-  rawLog: string;
 }
 
 export default function CodexionTimeline({ rawLog }: CodexionTimelineProps) {

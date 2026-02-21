@@ -30,22 +30,12 @@ export default function Visualizer() {
 						<span className="text-2xl font-bold tabular-nums text-white/90">42</span>
 						<span className="text-white/40">|</span>
 						<ShinyText
-							text="Codexion"
+							text="Codexion Visualizer"
 							className="text-xl font-bold tracking-tight"
 							color="#a0a0a0"
 							shineColor="#e8e8e8"
 							speed={3}
 							spread={90}
-						/>
-					</div>
-					<div className="flex items-center gap-4 text-sm">
-						<ShinyText
-							text="Visualizer"
-							className="font-medium"
-							color="#888"
-							shineColor="#fff"
-							speed={4}
-							spread={100}
 						/>
 					</div>
 				</GlassSurface>
