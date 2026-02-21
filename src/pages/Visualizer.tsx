@@ -3,6 +3,7 @@ import Silk from "@/components/utils/Backgrounds/Silk/Silk";
 import GlassSurface from "@/components/utils/Components/GlassSurface/GlassSurface";
 import ShinyText from "@/components/utils/TextAnimations/ShinyText/ShinyText";
 import CodexionTimeline from "@/components/CodexionTimeline";
+import CodexionTable from "@/components/CodexionTable";
 
 export default function Visualizer() {
 	const [rawLog, setRawLog] = useState("");
@@ -79,6 +80,7 @@ export default function Visualizer() {
 					</GlassSurface>
 
 					<CodexionTimeline rawLog={rawLog} />
+					<CodexionTable rawLog={rawLog} />
 				</div>
 			</main>
 

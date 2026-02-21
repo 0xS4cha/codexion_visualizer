@@ -1,107 +1,23 @@
 import { useMemo, useState, useRef } from "react";
 import { motion } from "motion/react";
-import type { LogEntry } from "@/lib/parseCodexionLog";
 import {
-  parseCodexionLog,
-  getCoderIds,
-  getTimeRange,
-} from "@/lib/parseCodexionLog";
+  prepareCodexionSimulation,
+  getActionColor,
+  ACTION_COLORS
+} from "@/lib/codexionSimulation";
+
 import GlassSurface from "@/components/utils/Components/GlassSurface/GlassSurface";
 import { toPng } from "html-to-image";
 
-interface Segment {
-  startTime: number;
-  endTime: number;
-  action: string;
-}
 
 interface CodexionTimelineProps {
   rawLog: string;
 }
 
-const INSTANT_ACTION_DURATION = 10; 
-
-const ACTION_COLORS: Record<string, string> = {
-  "has taken a dongle": "rgba(245, 158, 11, 0.9)",
-  "is compiling": "rgba(59, 130, 246, 0.9)",
-  "is debugging": "rgba(168, 85, 247, 0.9)",
-  "is refactoring": "rgba(16, 185, 129, 0.9)",
-  "burned out": "rgba(255, 0, 0, 0.9)",
-  "unknow action": "rgba(255, 255, 255, 0.5)"
-};
-
-function getActionColor(action: string): string {
-  return ACTION_COLORS[action] ?? ACTION_COLORS["unknow action"];
-};
-
-function buildSegments(entries: LogEntry[]): { segments: Map<number, Segment[]>, newMaxTime: number } {
-  const byCoder = new Map<number, LogEntry[]>();
-  for (const e of entries) {
-    if (!byCoder.has(e.coderId)) byCoder.set(e.coderId, []);
-    byCoder.get(e.coderId)!.push(e);
-  }
-  let totalDuration = 0;
-  let closedCount = 0;
-
-  for (const evts of byCoder.values()) {
-    const sorted = [...evts].sort((a, b) => a.timestamp - b.timestamp);
-    for (let i = 0; i < sorted.length - 1; i++) {
-      totalDuration += sorted[i + 1].timestamp - sorted[i].timestamp;
-      closedCount++;
-    };
-  };
-
-  const averageDuration = closedCount > 0 ? totalDuration / closedCount : 50;
-
-  const segments = new Map<number, Segment[]>();
-  let globalMaxTime = 0;
-  for (const [coderId, evts] of byCoder) {
-    const sorted = [...evts].sort((a, b) => a.timestamp - b.timestamp);
-    const segs: Segment[] = [];
-    let currentVirtualTime = 0; 
-
-    for (let i = 0; i < sorted.length; i++) {
-      const actualStart = sorted[i].timestamp;
-      const start = Math.max(actualStart, currentVirtualTime);
-
-      let end;
-      if (i + 1 < sorted.length) {
-        const nextTimestamp = sorted[i + 1].timestamp;
-        end = Math.max(nextTimestamp, start + INSTANT_ACTION_DURATION);
-      } else {
-        end = start + Math.max(averageDuration, INSTANT_ACTION_DURATION);
-      };
-
-      if (end > globalMaxTime) {
-        globalMaxTime = end;
-      };
-
-      segs.push({ startTime: start, endTime: end, action: sorted[i].action });
-
-      currentVirtualTime = end;
-    };
-    segments.set(coderId, segs);
-  }
-  return { segments, newMaxTime: globalMaxTime };
-}
-
 export default function CodexionTimeline({ rawLog }: CodexionTimelineProps) {
   const [zoom, setZoom] = useState<number>(1);
   const timelineRef = useRef<HTMLDivElement>(null);
-  const { entries, coderIds, minTime, maxTime, segments } = useMemo(() => {
-    const entries = parseCodexionLog(rawLog);
-    const coderIds = getCoderIds(entries);
-    const [minT] = getTimeRange(entries);
-    const { segments, newMaxTime } = buildSegments(entries);
-    return {
-      entries,
-      coderIds,
-      minTime: minT,
-      maxTime: newMaxTime,
-      timeSpan: newMaxTime - minT || 1,
-      segments,
-    };
-  }, [rawLog]);
+  const { entries, coderIds, minTime, maxTime, segments } = useMemo(() => prepareCodexionSimulation(rawLog), [rawLog]);
 
   const handleDownload = async () => {
     if (timelineRef.current === null) return;
