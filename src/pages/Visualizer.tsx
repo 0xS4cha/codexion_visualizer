@@ -71,7 +71,7 @@ export default function Visualizer() {
 								/>
 								<span className="text-white/40">—</span>
 								<span className="text-white/50">
-									Past the output (TIMESTAMP CODER_ID ACTION)
+									Paste the output (TIMESTAMP CODER_ID ACTION)
 								</span>
 							</label>
 							<textarea

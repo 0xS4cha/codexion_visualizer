@@ -130,7 +130,7 @@ export default function CodexionTimeline({ rawLog }: CodexionTimelineProps) {
         borderRadius={16}
         className="rounded-xl border border-white/10 bg-white/5 p-8 text-center text-white/40"
       >
-        Past the Codexion logs above to view them.
+        Paste the Codexion logs above to view them.
       </GlassSurface>
     );
   }
