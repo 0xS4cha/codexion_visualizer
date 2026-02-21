@@ -120,6 +120,8 @@ export default function Visualizer() {
 						/>
 						<span className="text-white/30">—</span>
 						<a href="https://sacha-dev.me/" className="text-white/50">© 2026 Sacha S. (sservant)</a>
+						<span className="text-white/30">—</span>
+						<a href="https://github.com/0xS4cha/codexion_visualizer" className="text-white/50">Github (Star or review)</a>
 					</div>
 				</GlassSurface>
 			</footer>
