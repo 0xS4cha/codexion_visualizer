@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useRef } from "react";
 import { motion } from "motion/react";
 import type { LogEntry } from "@/lib/parseCodexionLog";
 import {
@@ -7,6 +7,7 @@ import {
   getTimeRange,
 } from "@/lib/parseCodexionLog";
 import GlassSurface from "@/components/utils/Components/GlassSurface/GlassSurface";
+import { toPng } from "html-to-image";
 
 interface Segment {
   startTime: number;
@@ -85,7 +86,7 @@ interface CodexionTimelineProps {
 
 export default function CodexionTimeline({ rawLog }: CodexionTimelineProps) {
   const [zoom, setZoom] = useState<number>(1);
-
+  const timelineRef = useRef<HTMLDivElement>(null);
   const { entries, coderIds, minTime, maxTime, segments } = useMemo(() => {
     const entries = parseCodexionLog(rawLog);
     const coderIds = getCoderIds(entries);
@@ -100,6 +101,26 @@ export default function CodexionTimeline({ rawLog }: CodexionTimelineProps) {
       segments,
     };
   }, [rawLog]);
+
+  const handleDownload = async () => {
+    if (timelineRef.current === null) return;
+
+    try {
+      const dataUrl = await toPng(timelineRef.current, {
+        backgroundColor: '#121212',
+        quality: 1,
+        width: timelineRef.current.scrollWidth, 
+        height: timelineRef.current.scrollHeight,
+      });
+
+      const link = document.createElement('a');
+      link.download = 'codexion-timeline.png';
+      link.href = dataUrl;
+      link.click();
+    } catch (err) {
+      console.error('Error with the screen', err);
+    }
+  };
 
   if (entries.length === 0) {
     return (
@@ -118,6 +139,15 @@ export default function CodexionTimeline({ rawLog }: CodexionTimelineProps) {
     <div className="flex flex-col rounded-xl border border-white/10 bg-black/20 p-4">
       <div className="mb-4 flex items-center justify-between">
         <div className="flex items-center gap-4">
+          <button
+            onClick={handleDownload}
+            className="flex items-center gap-2 rounded-lg bg-white/10 px-3 py-1.5 text-xs font-medium text-white/80 transition hover:bg-white/20 active:scale-95"
+          >
+            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+            </svg>
+            Export PNG
+          </button>
           <span className="text-xs font-medium uppercase tracking-wider text-white/40">Zoom</span>
           <input
             type="range"
@@ -141,8 +171,7 @@ export default function CodexionTimeline({ rawLog }: CodexionTimelineProps) {
       <div className="overflow-x-auto overflow-y-hidden rounded-lg border border-white/5 bg-black/10 relative">
         
         <div style={{ width: `${zoom * 100}%`, minWidth: '100%' }} className="flex flex-col py-2">
-          
-          <div className="relative flex flex-col gap-2">
+          <div ref={timelineRef} className="relative flex flex-col gap-2">
             {coderIds.map((coderId) => (
               <div key={coderId} className="flex items-center h-10 group">
                 
