@@ -1,0 +1,79 @@
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html {
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+  width: 100%;
+}
+
+body {
+  display: flex;
+  font-family: 'Montserrat';
+  height: 100vh;
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+  width: 100%;
+  background-color: #212830;
+}
+
+#root {
+    width: 100%;
+    overflow-x: hidden;
+}
+
+/* Custom Scrollbar Styles */
+/* Webkit browsers (Chrome, Safari, Edge) */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(10, 10, 10, 0.3);
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, rgba(138, 92, 255, 0.6) 0%, rgba(255, 92, 122, 0.6) 100%);
+  border-radius: 10px;
+  border: 2px solid rgba(10, 10, 10, 0.3);
+  transition: all 0.3s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, rgba(138, 92, 255, 0.8) 0%, rgba(255, 92, 122, 0.8) 100%);
+  border: 2px solid rgba(255, 255, 255, 0.1);
+}
+
+::-webkit-scrollbar-thumb:active {
+  background: linear-gradient(180deg, rgba(138, 92, 255, 1) 0%, rgba(255, 92, 122, 1) 100%);
+}
+
+/* Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(138, 92, 255, 0.6) rgba(10, 10, 10, 0.3);
+}
+
+@layer components {
+    .headerProperties {
+
+    }
+    .loginButtons {
+      width:30%;
+      @apply  rounded-[1.12370370368vh] border border-white/10;
+      background: rgba(255, 255, 255, 0.05);
+  }
+  .loginButtons:hover {
+    @apply scale-105 border;
+    background: #6e6e6ec5;
+  }
+  .scaleBox:hover {
+       @apply scale-[1.01] border;
+  }
+}
