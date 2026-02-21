@@ -1,0 +1,4 @@
+User-agent: *
+Disallow:
+
+Sitemap: https://codexion-visualizer.sacha-dev.me/sitemap.xml
