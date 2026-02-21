@@ -1,4 +1,3 @@
-
 export interface LogEntry {
   timestamp: number;
   coderId: number;
@@ -6,6 +5,8 @@ export interface LogEntry {
 }
 
 export function parseCodexionLog(raw: string): LogEntry[] {
+  if (!raw) return [];
+
   const lines = raw.trim().split("\n");
   const entries: LogEntry[] = [];
 

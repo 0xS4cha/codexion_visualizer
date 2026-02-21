@@ -19,7 +19,6 @@ export default function Visualizer() {
 				/>
 			</div>
 
-			{/* Header */}
 			<header className="fixed top-0 left-0 right-0 z-50 px-4 py-3 sm:px-6">
 				<GlassSurface
 					width="100%"
@@ -48,14 +47,6 @@ export default function Visualizer() {
 							speed={4}
 							spread={100}
 						/>
-						<ShinyText
-							text="coders"
-							className="font-medium text-white/70"
-							color="#888"
-							shineColor="#b8e0ff"
-							speed={2.5}
-							spread={120}
-						/>
 					</div>
 				</GlassSurface>
 			</header>
@@ -80,17 +71,18 @@ export default function Visualizer() {
 								/>
 								<span className="text-white/40">—</span>
 								<span className="text-white/50">
-									Colle la sortie (TIMESTAMP CODER_ID ACTION)
+									Past the output (TIMESTAMP CODER_ID ACTION)
 								</span>
 							</label>
 							<textarea
 								value={rawLog}
 								onChange={(e) => setRawLog(e.target.value)}
-								placeholder={`0 2 has taken a dongle
-0 2 is compiling
-4 2 is debugging
-5 2 is refactoring
-...`}
+								placeholder={`
+								0 2 has taken a dongle
+								0 2 is compiling
+								4 2 is debugging
+								5 2 is refactoring
+								...`}
 								className="flex-1 resize-none rounded-lg border border-white/10 bg-black/30 px-4 py-3 font-mono text-sm text-white/90 placeholder:text-white/30 focus:border-white/30 focus:outline-none focus:ring-1 focus:ring-white/20"
 								spellCheck={false}
 							/>
@@ -119,7 +111,7 @@ export default function Visualizer() {
 						/>
 						<span className="text-white/30">—</span>
 						<ShinyText
-							text="42 · philosophers with coders"
+							text="42 · Common core"
 							className="font-medium"
 							color="#666"
 							shineColor="#a0a0a0"
@@ -127,7 +119,7 @@ export default function Visualizer() {
 							spread={100}
 						/>
 						<span className="text-white/30">—</span>
-						<span className="text-white/50">© 2026 Sacha S.</span>
+						<a href="https://sacha-dev.me/" className="text-white/50">© 2026 Sacha S. (sservant)</a>
 					</div>
 				</GlassSurface>
 			</footer>

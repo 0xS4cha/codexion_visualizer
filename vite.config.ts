@@ -12,6 +12,6 @@ export default defineConfig({
       "@": path.resolve(__dirname, "./src"),
     },
   },
-  assetsInclude: ['**/*.glb'],
+  base: "./"
 })
 
