@@ -116,7 +116,6 @@ export default function CodexionTimeline({ rawLog }: CodexionTimelineProps) {
 
   return (
     <div className="flex flex-col rounded-xl border border-white/10 bg-black/20 p-4">
-      {/* SECTION 1: CONTRÔLES (Fixes en haut) */}
       <div className="mb-4 flex items-center justify-between">
         <div className="flex items-center gap-4">
           <span className="text-xs font-medium uppercase tracking-wider text-white/40">Zoom</span>
