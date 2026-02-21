@@ -78,11 +78,11 @@ export default function Visualizer() {
 								value={rawLog}
 								onChange={(e) => setRawLog(e.target.value)}
 								placeholder={`
-								0 2 has taken a dongle
-								0 2 is compiling
-								4 2 is debugging
-								5 2 is refactoring
-								...`}
+0 2 has taken a dongle
+0 2 is compiling
+4 2 is debugging
+5 2 is refactoring
+...`}
 								className="flex-1 resize-none rounded-lg border border-white/10 bg-black/30 px-4 py-3 font-mono text-sm text-white/90 placeholder:text-white/30 focus:border-white/30 focus:outline-none focus:ring-1 focus:ring-white/20"
 								spellCheck={false}
 							/>
