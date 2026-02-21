@@ -5,6 +5,8 @@ Codexion data visualization tool (TypeScript)
 ## Authors
 
 - [@0xS4cha](https://github.com/0xS4cha)
+- [@69Nesta](https://github.com/69Nesta)
+- [@Yondemon4266](https://github.com/Yondemon4266)
 
 ## Result
 ![Result](result.png)
