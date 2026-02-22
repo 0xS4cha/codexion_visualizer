@@ -4,6 +4,7 @@ import GlassSurface from "@/components/utils/Components/GlassSurface/GlassSurfac
 import ShinyText from "@/components/utils/TextAnimations/ShinyText/ShinyText";
 import CodexionTimeline from "@/components/CodexionTimeline";
 import CodexionTable from "@/components/CodexionTable";
+import CodexionStats from "@/components/CodexionStats";
 
 export default function Visualizer() {
 	const [rawLog, setRawLog] = useState("");
@@ -76,6 +77,7 @@ export default function Visualizer() {
 
 					<CodexionTimeline rawLog={rawLog} />
 					<CodexionTable rawLog={rawLog} />
+					<CodexionStats rawLog={rawLog} />
 				</div>
 			</main>
 
