@@ -17,7 +17,7 @@ interface CodexionTimelineProps {
 export default function CodexionTimeline({ rawLog }: CodexionTimelineProps) {
   const [zoom, setZoom] = useState<number>(1);
   const timelineRef = useRef<HTMLDivElement>(null);
-  const { entries, coderIds, minTime, maxTime, segments } = useMemo(() => prepareCodexionSimulation(rawLog), [rawLog]);
+  const { entries, coderIds, minTime, maxTime, segments, visualToReal } = useMemo(() => prepareCodexionSimulation(rawLog), [rawLog]);
 
   const handleDownload = async () => {
     if (timelineRef.current === null) return;
@@ -116,7 +116,7 @@ export default function CodexionTimeline({ rawLog }: CodexionTimelineProps) {
                           width: `${trueWidth}%`,
                           backgroundColor: getActionColor(seg.action),
                         }}
-                        title={`Coder ${coderId} ${seg.action}\nStart: ${seg.startTime}\nEnd: ${seg.endTime}`}
+                        title={`Coder ${coderId} ${seg.action}\nStart: ${seg.realStart}\nEnd: ${seg.realEnd}`}
                       >
                         {isWideEnough && (
                           <span className="absolute inset-0 flex items-center justify-center truncate px-2 text-[11px] font-medium text-white/90 drop-shadow-md">
@@ -144,7 +144,7 @@ export default function CodexionTimeline({ rawLog }: CodexionTimelineProps) {
                   >
                     <div className="h-1 w-[1px] bg-white/30 mb-1" />
                     <span className="font-mono text-[10px] text-white/40">
-                      {t}
+                      {visualToReal(t)}
                     </span>
                   </div>
                 );

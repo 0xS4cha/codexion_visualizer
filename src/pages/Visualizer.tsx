@@ -44,12 +44,7 @@ export default function Visualizer() {
 
 			<main className="min-h-screen pt-24 pb-32 px-4 sm:px-6">
 				<div className="mx-auto max-w-6xl space-y-6">
-					<GlassSurface
-						width="100%"
-						height={200}
-						borderRadius={16}
-						className="overflow-hidden !items-stretch !justify-stretch"
-					>
+					 <div className="flex flex-col rounded-xl border border-white/10 bg-black/20 p-4">
 						<div className="flex w-full flex-1 flex-col gap-2 self-stretch p-4">
 							<label className="mb-2 flex items-center gap-2 text-sm font-medium text-white/80">
 								<ShinyText
@@ -77,7 +72,7 @@ export default function Visualizer() {
 								spellCheck={false}
 							/>
 						</div>
-					</GlassSurface>
+					</div>
 
 					<CodexionTimeline rawLog={rawLog} />
 					<CodexionTable rawLog={rawLog} />

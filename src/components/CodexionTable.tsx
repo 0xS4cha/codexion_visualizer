@@ -14,7 +14,7 @@ interface CodexionTableProps {
 
 export default function CodexionTable({ rawLog }: CodexionTableProps) {
   const [currentTime, setCurrentTime] = useState(0);
-  const { coderIds, minTime, maxTime, segments } = useMemo(() => prepareCodexionSimulation(rawLog), [rawLog]);
+  const { coderIds, minTime, maxTime, segments, visualToReal } = useMemo(() => prepareCodexionSimulation(rawLog), [rawLog]);
   const tableRef = useRef<HTMLDivElement>(null);
   const radius = 200;
   const center = 250;
@@ -75,7 +75,7 @@ export default function CodexionTable({ rawLog }: CodexionTableProps) {
             style={{ outline: 'none', WebkitAppearance: 'none' }}
           />
           <span className="min-w-[3rem] text-right text-sm font-medium text-white/70">
-            {currentTime}ms
+            {visualToReal(currentTime)}ms
           </span>
         </div>
         <div className="text-xs font-medium text-white/60">

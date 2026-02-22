@@ -2,13 +2,14 @@ import type { LogEntry } from "@/lib/parseCodexionLog";
 import {
   parseCodexionLog,
   getCoderIds,
-  getTimeRange,
 } from "@/lib/parseCodexionLog";
 
 export interface Segment {
   startTime: number;
   endTime: number;
   action: string;
+  realStart: number;
+  realEnd: number;
 }
 
 export const ACTION_COLORS: Record<string, string> = {
@@ -24,58 +25,128 @@ export function getActionColor(action: string): string {
   return ACTION_COLORS[action] ?? ACTION_COLORS["unknow action"];
 }
 
+function interpolate(v: number, vKeys: number[], rValues: number[]): number {
+  if (vKeys.length === 0) return 0;
+  if (v <= vKeys[0]) return rValues[0];
+  if (v >= vKeys[vKeys.length - 1]) return rValues[rValues.length - 1];
+
+  let i = 0;
+  while (i < vKeys.length - 1 && vKeys[i + 1] <= v) {
+    i++;
+  }
+
+  const v0 = vKeys[i];
+  const v1 = vKeys[i + 1];
+  const r0 = rValues[i];
+  const r1 = rValues[i + 1];
+
+  if (v1 === v0) return r0;
+
+  const t = (v - v0) / (v1 - v0);
+  return Math.round(r0 + t * (r1 - r0));
+}
+
 export function buildSegments(
   entries: LogEntry[],
   instantDuration = 10
-): { segments: Map<number, Segment[]>; maxTime: number } {
+): { 
+  segments: Map<number, Segment[]>; 
+  maxTime: number;
+  visualToReal: (v: number) => number;
+} {
     const byCoder = new Map<number, LogEntry[]>();
     for (const e of entries) {
       if (!byCoder.has(e.coderId)) byCoder.set(e.coderId, []);
       byCoder.get(e.coderId)!.push(e);
     }
-    let totalDuration = 0;
-    let closedCount = 0;
   
-    for (const evts of byCoder.values()) {
-      const sorted = [...evts].sort((a, b) => a.timestamp - b.timestamp);
-      for (let i = 0; i < sorted.length - 1; i++) {
-        totalDuration += sorted[i + 1].timestamp - sorted[i].timestamp;
-        closedCount++;
-      };
-    };
-  
-    const averageDuration = closedCount > 0 ? totalDuration / closedCount : 50;
+    const timestamps = new Set<number>();
+    for (const e of entries) timestamps.add(e.timestamp);
+    const sortedTimestamps = Array.from(timestamps).sort((a, b) => a - b);
+    const visualMap = new Map<number, number>();
+    const visualKeys: number[] = [];
+    const realValues: number[] = [];
+
+    let currentVisual = 0;
+    if (sortedTimestamps.length > 0) {
+        visualMap.set(sortedTimestamps[0], 0);
+        visualKeys.push(0);
+        realValues.push(sortedTimestamps[0]);
+    }
+
+    for (let i = 0; i < sortedTimestamps.length - 1; i++) {
+        const tCurr = sortedTimestamps[i];
+        const tNext = sortedTimestamps[i + 1];
+        const realDelta = tNext - tCurr;
+        
+        let maxStack = 0;
+        for (const evts of byCoder.values()) {
+            const count = evts.filter(e => e.timestamp === tCurr).length;
+            if (count > 0) {
+                maxStack = Math.max(maxStack, count * instantDuration);
+            }
+        }
+      
+        const visualDelta = Math.max(realDelta, maxStack);
+        currentVisual += visualDelta;
+        visualMap.set(tNext, currentVisual);
+        visualKeys.push(currentVisual);
+        realValues.push(tNext);
+    }
   
     const segments = new Map<number, Segment[]>();
     let globalMaxTime = 0;
+    const lastSegmentDuration = 50;
+
     for (const [coderId, evts] of byCoder) {
       const sorted = [...evts].sort((a, b) => a.timestamp - b.timestamp);
       const segs: Segment[] = [];
-      let currentVirtualTime = 0; 
+      let currentVisualEnd = 0;
   
       for (let i = 0; i < sorted.length; i++) {
-        const actualStart = sorted[i].timestamp;
-        const start = Math.max(actualStart, currentVirtualTime);
+        const entry = sorted[i];
+        const realT = entry.timestamp;
+        const visualStartBase = visualMap.get(realT)!;
+        
+        let start = visualStartBase;
+        if (i > 0 && sorted[i - 1].timestamp === realT) {
+          start = Math.max(start, currentVisualEnd);
+        }
   
         let end;
         if (i + 1 < sorted.length) {
-          const nextTimestamp = sorted[i + 1].timestamp;
-          end = Math.max(nextTimestamp, start + instantDuration);
+          const nextEntry = sorted[i + 1];
+          if (nextEntry.timestamp === realT) {
+             end = start + instantDuration;
+          } else {
+             const nextVisualBase = visualMap.get(nextEntry.timestamp)!;
+             end = Math.max(nextVisualBase, start + instantDuration);
+          }
         } else {
-          end = start + Math.max(averageDuration, instantDuration);
+          end = start + Math.max(lastSegmentDuration, instantDuration);
         };
   
         if (end > globalMaxTime) {
           globalMaxTime = end;
         };
   
-        segs.push({ startTime: start, endTime: end, action: sorted[i].action });
+        segs.push({ startTime: start, endTime: end, action: entry.action, realStart: realT, realEnd: end - start - realT });
   
-        currentVirtualTime = end;
+        currentVisualEnd = end;
       };
       segments.set(coderId, segs);
     }
-    return { segments, maxTime: globalMaxTime };
+
+    if (sortedTimestamps.length > 0) {
+        visualKeys.push(globalMaxTime);
+        const lastReal = sortedTimestamps[sortedTimestamps.length - 1];
+        const lastVisual = visualMap.get(lastReal)!;
+        realValues.push(lastReal + (globalMaxTime - lastVisual));
+    }
+
+    const visualToReal = (v: number) => interpolate(v, visualKeys, realValues);
+
+    return { segments, maxTime: globalMaxTime, visualToReal };
   }
 
 export function getStatusAtTime(
@@ -94,9 +165,10 @@ export function getStatusAtTime(
 export function prepareCodexionSimulation(rawLog: string) {
   const entries = parseCodexionLog(rawLog);
   const coderIds = getCoderIds(entries);
-  const [minTime] = getTimeRange(entries);
+  
+  const minTime = 0;
 
-  const { segments, maxTime } = buildSegments(entries, 10);
+  const { segments, maxTime, visualToReal } = buildSegments(entries, 10);
 
   return {
     entries,
@@ -104,5 +176,6 @@ export function prepareCodexionSimulation(rawLog: string) {
     segments,
     minTime,
     maxTime,
+    visualToReal
   };
 }
