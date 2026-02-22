@@ -114,8 +114,11 @@ export function buildSegments(
         }
   
         let end;
-        if (i + 1 < sorted.length) {
+        let actualRealEnd;
+      if (i + 1 < sorted.length) {
           const nextEntry = sorted[i + 1];
+          actualRealEnd = nextEntry.timestamp; 
+
           if (nextEntry.timestamp === realT) {
              end = start + instantDuration;
           } else {
@@ -124,13 +127,14 @@ export function buildSegments(
           }
         } else {
           end = start + Math.max(lastSegmentDuration, instantDuration);
-        };
+          actualRealEnd = realT + lastSegmentDuration; 
+        }
   
         if (end > globalMaxTime) {
           globalMaxTime = end;
         };
   
-        segs.push({ startTime: start, endTime: end, action: entry.action, realStart: realT, realEnd: end - start - realT });
+        segs.push({ startTime: start, endTime: end, action: entry.action, realStart: realT, realEnd: actualRealEnd });
   
         currentVisualEnd = end;
       };
