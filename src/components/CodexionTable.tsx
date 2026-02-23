@@ -5,8 +5,7 @@ import {
     ACTION_COLORS
   } from "@/lib/codexionSimulation";
 import GlassSurface from "@/components/utils/Components/GlassSurface/GlassSurface";
-import { toPng } from "html-to-image";
-
+import html2canvas from "html2canvas";
 
 interface CodexionTableProps {
   rawLog: string;
@@ -22,12 +21,13 @@ export default function CodexionTable({ rawLog }: CodexionTableProps) {
     if (tableRef.current === null) return;
 
     try {
-      const dataUrl = await toPng(tableRef.current, {
+      const canvas = await html2canvas(tableRef.current, {
         backgroundColor: '#121212',
-        quality: 1,
-        width: tableRef.current.scrollWidth, 
-        height: tableRef.current.scrollHeight,
+        scale: 2,
+        useCORS: true,
       });
+
+      const dataUrl = canvas.toDataURL('image/png');
 
       const link = document.createElement('a');
       link.download = 'codexion-table.png';
