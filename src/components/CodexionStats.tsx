@@ -9,12 +9,11 @@ import dev_logo from "@/assets/dev.svg"
 import ShinyText from "@/components/utils/TextAnimations/ShinyText/ShinyText"
 import { useAppSelector, useAppDispatch } from '@/redux/hook/index';
 
-interface CodexionStatsProps {
-  rawLog: string;
-}
 
-export default function CodexionStats({ rawLog }: CodexionStatsProps) {
+
+export default function CodexionStats({}) {
   const padding = useAppSelector((state) => state.settings.instantActionPadding);
+  const rawLog =  useAppSelector((state) => state.user_input.output);
   const { entries, coderIds, minTime, maxTime, segments, visualToReal, coderStats } = useMemo(() => prepareCodexionSimulation(rawLog, padding), [rawLog]);
 
 

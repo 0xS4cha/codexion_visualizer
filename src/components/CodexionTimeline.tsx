@@ -9,13 +9,9 @@ import GlassSurface from "@/components/utils/Components/GlassSurface/GlassSurfac
 import html2canvas from "html2canvas";
 import { useAppSelector, useAppDispatch } from '@/redux/hook/index';
 
-
-interface CodexionTimelineProps {
-  rawLog: string;
-}
-
-export default function CodexionTimeline({ rawLog }: CodexionTimelineProps) {
+export default function CodexionTimeline({}) {
   const padding = useAppSelector((state) => state.settings.instantActionPadding);
+  const rawLog =  useAppSelector((state) => state.user_input.output);
   const [zoom, setZoom] = useState<number>(1);
   const timelineRef = useRef<HTMLDivElement>(null);
   const { entries, coderIds, minTime, maxTime, segments, visualToReal } = useMemo(() => prepareCodexionSimulation(rawLog, padding), [rawLog, padding]);
