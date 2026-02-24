@@ -5,6 +5,7 @@ import ShinyText from "@/components/utils/TextAnimations/ShinyText/ShinyText";
 import CodexionTimeline from "@/components/CodexionTimeline";
 import CodexionTable from "@/components/CodexionTable";
 import CodexionStats from "@/components/CodexionStats";
+import CodexionOptions from "@/components/CodexionOptions";
 
 export default function Visualizer() {
 	const [rawLog, setRawLog] = useState("");
@@ -74,7 +75,7 @@ export default function Visualizer() {
 							/>
 						</div>
 					</div>
-
+					<CodexionOptions />
 					<CodexionTimeline rawLog={rawLog} />
 					<CodexionTable rawLog={rawLog} />
 					<CodexionStats rawLog={rawLog} />

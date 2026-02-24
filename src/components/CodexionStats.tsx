@@ -7,13 +7,15 @@ import GlassSurface from "@/components/utils/Components/GlassSurface/GlassSurfac
 import TiltedCard from "./utils/Components/TiltedCard/TiltedCard";
 import dev_logo from "@/assets/dev.svg"
 import ShinyText from "@/components/utils/TextAnimations/ShinyText/ShinyText"
+import { useAppSelector, useAppDispatch } from '@/redux/hook/index';
 
 interface CodexionStatsProps {
   rawLog: string;
 }
 
 export default function CodexionStats({ rawLog }: CodexionStatsProps) {
-  const { entries, coderIds, minTime, maxTime, segments, visualToReal, coderStats } = useMemo(() => prepareCodexionSimulation(rawLog), [rawLog]);
+  const padding = useAppSelector((state) => state.settings.instantActionPadding);
+  const { entries, coderIds, minTime, maxTime, segments, visualToReal, coderStats } = useMemo(() => prepareCodexionSimulation(rawLog, padding), [rawLog]);
 
 
   if (entries.length === 0) {

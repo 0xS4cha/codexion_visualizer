@@ -7,15 +7,18 @@ import {
 } from "@/lib/codexionSimulation";
 import GlassSurface from "@/components/utils/Components/GlassSurface/GlassSurface";
 import html2canvas from "html2canvas";
+import { useAppSelector, useAppDispatch } from '@/redux/hook/index';
+
 
 interface CodexionTimelineProps {
   rawLog: string;
 }
 
 export default function CodexionTimeline({ rawLog }: CodexionTimelineProps) {
+  const padding = useAppSelector((state) => state.settings.instantActionPadding);
   const [zoom, setZoom] = useState<number>(1);
   const timelineRef = useRef<HTMLDivElement>(null);
-  const { entries, coderIds, minTime, maxTime, segments, visualToReal } = useMemo(() => prepareCodexionSimulation(rawLog), [rawLog]);
+  const { entries, coderIds, minTime, maxTime, segments, visualToReal } = useMemo(() => prepareCodexionSimulation(rawLog, padding), [rawLog, padding]);
 
   const handleDownload = async () => {
     if (timelineRef.current === null) return;

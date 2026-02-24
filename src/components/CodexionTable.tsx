@@ -6,6 +6,7 @@ import {
   } from "@/lib/codexionSimulation";
 import GlassSurface from "@/components/utils/Components/GlassSurface/GlassSurface";
 import html2canvas from "html2canvas";
+import { useAppSelector, useAppDispatch } from '@/redux/hook/index';
 
 interface CodexionTableProps {
   rawLog: string;
@@ -13,7 +14,8 @@ interface CodexionTableProps {
 
 export default function CodexionTable({ rawLog }: CodexionTableProps) {
   const [currentTime, setCurrentTime] = useState(0);
-  const { coderIds, minTime, maxTime, segments, visualToReal } = useMemo(() => prepareCodexionSimulation(rawLog), [rawLog]);
+  const padding = useAppSelector((state) => state.settings.instantActionPadding);
+  const { coderIds, minTime, maxTime, segments, visualToReal } = useMemo(() => prepareCodexionSimulation(rawLog, padding), [rawLog, padding]);
   const tableRef = useRef<HTMLDivElement>(null);
   const radius = 200;
   const center = 250;

@@ -189,13 +189,13 @@ export function getStatusAtTime(
 
 
 
-export function prepareCodexionSimulation(rawLog: string) {
+export function prepareCodexionSimulation(rawLog: string, padding: number) {
     const entries = parseCodexionLog(rawLog);
     const coderIds = getCoderIds(entries);
 
     const minTime = 0;
 
-    const { segments, maxTime, visualToReal, coderStats } = buildSegments(entries, 10);
+    const { segments, maxTime, visualToReal, coderStats } = buildSegments(entries, padding);
 
     return {
         entries,
