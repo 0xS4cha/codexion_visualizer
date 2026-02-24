@@ -12,9 +12,14 @@ import { useAppSelector, useAppDispatch } from '@/redux/hook/index';
 export default function CodexionTimeline({}) {
   const padding = useAppSelector((state) => state.settings.instantActionPadding);
   const rawLog =  useAppSelector((state) => state.user_input.output);
+  const command = useAppSelector((state) => state.user_input.command);
   const [zoom, setZoom] = useState<number>(1);
   const timelineRef = useRef<HTMLDivElement>(null);
-  const { entries, coderIds, minTime, maxTime, segments, visualToReal } = useMemo(() => prepareCodexionSimulation(rawLog, padding), [rawLog, padding]);
+  const { entries, coderIds, minTime, maxTime, segments, visualToReal } = useMemo(() => {
+    const commandParts = command.split(' ');
+    const timeToRefactor = commandParts.length > 5 ? parseInt(commandParts[5], 10) : undefined;
+    return prepareCodexionSimulation(rawLog, padding, timeToRefactor);
+  }, [rawLog, padding, command]);
 
   const handleDownload = async () => {
     if (timelineRef.current === null) return;

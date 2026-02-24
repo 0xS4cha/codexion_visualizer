@@ -52,7 +52,8 @@ function interpolate(v: number, vKeys: number[], rValues: number[]): number {
 
 export function buildSegments(
     entries: LogEntry[],
-    instantDuration = 10
+    instantDuration = 10,
+    timeToRefactor?: number,
 ): {
     segments: Map<number, Segment[]>;
     maxTime: number;
@@ -67,6 +68,15 @@ export function buildSegments(
 
     const timestamps = new Set<number>();
     for (const e of entries) timestamps.add(e.timestamp);
+
+    if (timeToRefactor) {
+        entries.forEach(e => {
+            if (e.action === "is refactoring") {
+                timestamps.add(e.timestamp + timeToRefactor);
+            }
+        });
+    }
+    
     const sortedTimestamps = Array.from(timestamps).sort((a, b) => a - b);
     const visualMap = new Map<number, number>();
     const visualKeys: number[] = [];
@@ -120,7 +130,11 @@ export function buildSegments(
 
             let end;
             let actualRealEnd;
-            if (i + 1 < sorted.length) {
+
+            if (entry.action === "is refactoring" && timeToRefactor) {
+                actualRealEnd = realT + timeToRefactor;
+                end = visualMap.get(actualRealEnd)!;
+            } else if (i + 1 < sorted.length) {
                 const nextEntry = sorted[i + 1];
                 actualRealEnd = nextEntry.timestamp;
 
@@ -189,13 +203,13 @@ export function getStatusAtTime(
 
 
 
-export function prepareCodexionSimulation(rawLog: string, padding: number) {
+export function prepareCodexionSimulation(rawLog: string, padding: number, timeToRefactor?: number) {
     const entries = parseCodexionLog(rawLog);
     const coderIds = getCoderIds(entries);
 
     const minTime = 0;
 
-    const { segments, maxTime, visualToReal, coderStats } = buildSegments(entries, padding);
+    const { segments, maxTime, visualToReal, coderStats } = buildSegments(entries, padding, timeToRefactor);
 
     return {
         entries,
