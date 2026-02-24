@@ -1,8 +1,8 @@
 import { useMemo, useState, useRef } from "react";
 import { motion } from "motion/react";
 import {
-    prepareCodexionSimulation,
-  } from "@/lib/codexionSimulation";
+  prepareCodexionSimulation,
+} from "@/lib/codexionSimulation";
 import GlassSurface from "@/components/utils/Components/GlassSurface/GlassSurface";
 import TiltedCard from "./utils/Components/TiltedCard/TiltedCard";
 import dev_logo from "@/assets/dev.svg"
@@ -11,10 +11,16 @@ import { useAppSelector, useAppDispatch } from '@/redux/hook/index';
 
 
 
-export default function CodexionStats({}) {
+export default function CodexionStats({ }) {
   const padding = useAppSelector((state) => state.settings.instantActionPadding);
-  const rawLog =  useAppSelector((state) => state.user_input.output);
-  const { entries, coderIds, minTime, maxTime, segments, visualToReal, coderStats } = useMemo(() => prepareCodexionSimulation(rawLog, padding), [rawLog]);
+  const rawLog = useAppSelector((state) => state.user_input.output);
+  const command = useAppSelector((state) => state.user_input.command);
+  const { entries, coderIds, minTime, maxTime, segments, visualToReal, coderStats } = useMemo(() => prepareCodexionSimulation(rawLog, padding), [rawLog, padding]);
+
+  const scheduler = useMemo(() => {
+    const commandParts = command.split(' ').filter(p => p.length > 0);
+    return commandParts.length > 8 ? commandParts[8] : undefined;
+  }, [command]);
 
 
   if (entries.length === 0) {
@@ -30,10 +36,21 @@ export default function CodexionStats({}) {
     );
   }
 
-return (
+  return (
     <div className="rounded-xl border border-white/10 bg-black/20 p-6">
-      <div className="pt-10 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6 justify-items-center">
-        
+      <div className="flex items-center justify-between mb-2">
+        <h2 className="text-sm font-semibold uppercase tracking-widest text-white/80">
+          <ShinyText text="Coders Statistics" disabled={false} speed={3} className="" />
+        </h2>
+        {scheduler && (
+          <div className="flex items-center gap-2 rounded-full border border-white/5 bg-white/5 px-3 py-1 text-[10px] uppercase tracking-wider text-white/50">
+            <span className="text-white/30">Scheduler:</span>
+            <span className="font-bold text-white/70">{scheduler}</span>
+          </div>
+        )}
+      </div>
+      <div className="py-10 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6 justify-items-center">
+
         {coderIds.map((coderId) => (
           <div key={coderId} className="flex justify-center items-center">
             <TiltedCard

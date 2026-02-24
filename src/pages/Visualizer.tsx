@@ -8,6 +8,7 @@ import CodexionStats from "@/components/CodexionStats";
 import CodexionOptions from "@/components/CodexionOptions";
 import CodexionOutput from "@/components/CodexionOutput"
 import CodexionCommand from "@/components/CodexionCommand"
+import CodexionAnalysis from "@/components/CodexionAnalysis"
 
 export default function Visualizer() {
 	const [rawLog, setRawLog] = useState("");
@@ -51,6 +52,7 @@ export default function Visualizer() {
 					<CodexionCommand />
 					<CodexionOutput />
 					<CodexionOptions />
+					<CodexionAnalysis />
 					<CodexionTimeline />
 					<CodexionTable />
 					<CodexionStats />

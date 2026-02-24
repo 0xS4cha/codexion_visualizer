@@ -1,11 +1,13 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
 interface State {
-    instantActionPadding: number;
+  instantActionPadding: number;
+  dongleCooldown: number;
 }
 
 const initialState: State = {
-    instantActionPadding: 0,
+  instantActionPadding: 0,
+  dongleCooldown: 0,
 }
 
 export const settingsSlice = createSlice({
@@ -15,9 +17,12 @@ export const settingsSlice = createSlice({
     setInstantAction: (state, action: PayloadAction<number>) => {
       state.instantActionPadding = action.payload;
     },
+    setDongleCooldown: (state, action: PayloadAction<number>) => {
+      state.dongleCooldown = action.payload;
+    },
   },
 });
 
-export const { setInstantAction } = settingsSlice.actions;
+export const { setInstantAction, setDongleCooldown } = settingsSlice.actions;
 
 export default settingsSlice.reducer;

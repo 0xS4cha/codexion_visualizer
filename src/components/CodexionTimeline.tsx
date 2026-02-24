@@ -9,16 +9,17 @@ import GlassSurface from "@/components/utils/Components/GlassSurface/GlassSurfac
 import html2canvas from "html2canvas";
 import { useAppSelector, useAppDispatch } from '@/redux/hook/index';
 
-export default function CodexionTimeline({}) {
+export default function CodexionTimeline({ }) {
   const padding = useAppSelector((state) => state.settings.instantActionPadding);
-  const rawLog =  useAppSelector((state) => state.user_input.output);
+  const rawLog = useAppSelector((state) => state.user_input.output);
   const command = useAppSelector((state) => state.user_input.command);
   const [zoom, setZoom] = useState<number>(1);
   const timelineRef = useRef<HTMLDivElement>(null);
   const { entries, coderIds, minTime, maxTime, segments, visualToReal } = useMemo(() => {
-    const commandParts = command.split(' ');
+    const commandParts = command.split(' ').filter(p => p.length > 0);
     const timeToRefactor = commandParts.length > 5 ? parseInt(commandParts[5], 10) : undefined;
-    return prepareCodexionSimulation(rawLog, padding, timeToRefactor);
+    const dongleCooldown = commandParts.length > 7 ? parseInt(commandParts[7], 10) : 0;
+    return prepareCodexionSimulation(rawLog, padding, timeToRefactor, dongleCooldown);
   }, [rawLog, padding, command]);
 
   const handleDownload = async () => {
@@ -89,12 +90,12 @@ export default function CodexionTimeline({}) {
       </div>
 
       <div className="overflow-x-auto overflow-y-hidden rounded-lg border border-white/5 bg-black/10 relative">
-        
+
         <div style={{ width: `${zoom * 100}%`, minWidth: '100%' }} className="flex flex-col py-2">
           <div ref={timelineRef} className="relative flex flex-col gap-2">
             {coderIds.map((coderId) => (
               <div key={coderId} className="flex items-center h-10 group">
-                
+
                 <div className="sticky left-0 z-20 w-24 shrink-0 flex items-center justify-end px-3 font-mono text-sm text-white/80 bg-[#121212]/90 backdrop-blur-md h-full border-r border-white/10 shadow-[4px_0_15px_rgba(0,0,0,0.5)] transition-colors group-hover:bg-[#1a1a1a]/90">
                   Coder {coderId}
                 </div>
@@ -135,7 +136,7 @@ export default function CodexionTimeline({}) {
           </div>
 
           <div className="flex items-center mt-3 h-6">
-          <div className="sticky left-0 z-20 w-24 shrink-0 flex items-center justify-end px-3 font-mono text-sm text-white/80 bg-[#121212]/90 backdrop-blur-md h-full border-r border-white/10 shadow-[4px_0_15px_rgba(0,0,0,0.5)] transition-colors group-hover:bg-[#1a1a1a]/90">Time</div>
+            <div className="sticky left-0 z-20 w-24 shrink-0 flex items-center justify-end px-3 font-mono text-sm text-white/80 bg-[#121212]/90 backdrop-blur-md h-full border-r border-white/10 shadow-[4px_0_15px_rgba(0,0,0,0.5)] transition-colors group-hover:bg-[#1a1a1a]/90">Time</div>
             <div className="flex-1 relative mx-2">
               {[0, 0.25, 0.5, 0.75, 1].map((p) => {
                 const t = Math.round(minTime + (maxTime - minTime) * p);
