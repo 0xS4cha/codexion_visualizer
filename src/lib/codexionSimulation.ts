@@ -84,6 +84,10 @@ export function buildSegments(
 } {
     const coderIds = getCoderIds(entries).sort((a, b) => a - b);
     const n = coderIds.length;
+    const coderIndexById = new Map<number, number>();
+    coderIds.forEach((id, index) => {
+        coderIndexById.set(id, index);
+    });
     const issues: SimulationIssue[] = [];
     const byCoder = new Map<number, LogEntry[]>();
     for (const e of entries) {
@@ -209,8 +213,19 @@ export function buildSegments(
         const visualT = visualMap.get(realT)!;
 
         if (entry.action === "has taken a dongle") {
-            const leftDongleIdx = coderId === 1 ? n : coderId - 1;
-            const rightDongleIdx = coderId;
+            const coderIndex = coderIndexById.get(coderId);
+            if (coderIndex === undefined) {
+                issues.push({
+                    type: 'warning',
+                    message: `Unknown coderId ${coderId} encountered while taking a dongle.`,
+                    timestamp: realT,
+                    coderId
+                });
+                return;
+            }
+
+            const rightDongleIdx = coderIndex + 1;
+            const leftDongleIdx = coderIndex === 0 ? n : coderIndex;
 
             let targetDongle = 0;
             const count = coderHeldCount.get(coderId) || 0;
