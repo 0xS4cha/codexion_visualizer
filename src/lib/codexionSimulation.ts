@@ -230,10 +230,33 @@ export function buildSegments(
             let targetDongle = 0;
             const count = coderHeldCount.get(coderId) || 0;
             if (count === 0) {
-                if (dongleStatus[leftDongleIdx].owner === null) targetDongle = leftDongleIdx;
-                else if (dongleStatus[rightDongleIdx].owner === null) targetDongle = rightDongleIdx;
-                else {
-                    issues.push({ type: 'error', message: `Coder ${coderId} tried to take a dongle but both ${leftDongleIdx} and ${rightDongleIdx} are occupied.`, timestamp: realT, coderId });
+                const leftOwner = dongleStatus[leftDongleIdx].owner;
+                const rightOwner = dongleStatus[rightDongleIdx].owner;
+
+                if (leftOwner === null) {
+                    targetDongle = leftDongleIdx;
+                } else if (rightOwner === null) {
+                    targetDongle = rightDongleIdx;
+                } else {
+                    const leftIsNeighbor = Math.abs(leftOwner - coderId) === 1;
+                    const rightIsNeighbor = Math.abs(rightOwner - coderId) === 1;
+
+                    if (leftIsNeighbor && rightIsNeighbor) {
+
+                        issues.push({ 
+                            type: 'warning', 
+                            message: `Coder ${coderId} is waiting. Both dongles are legitimately held by neighbors ${leftOwner} and ${rightOwner}.`, 
+                            timestamp: realT, 
+                            coderId 
+                        });
+                    } else {
+                        issues.push({ 
+                            type: 'warning', 
+                            message: `Conflict: Coder ${coderId} blocked! Left held by ${leftOwner} (Neighbor? ${leftIsNeighbor}), Right held by ${rightOwner} (Neighbor? ${rightIsNeighbor}).`, 
+                            timestamp: realT, 
+                            coderId 
+                        });
+                    }
                 }
             } else if (count === 1) {
                 if (dongleStatus[leftDongleIdx].owner === coderId) targetDongle = rightDongleIdx;
@@ -241,6 +264,7 @@ export function buildSegments(
             }
 
             if (targetDongle > 0) {
+
                 if (dongleStatus[targetDongle].cooldownEnd > realT) {
                     issues.push({
                         type: 'warning',
@@ -251,7 +275,7 @@ export function buildSegments(
                     });
                 }
 
-                if (dongleStatus[targetDongle].owner !== null && dongleStatus[targetDongle].owner !== coderId) {
+                if (dongleStatus[targetDongle].owner !== null && dongleStatus[targetDongle].owner !== coderId && (dongleStatus[targetDongle].owner - coderId === 1 || dongleStatus[targetDongle].owner - coderId === -1))  {
                     issues.push({ type: 'error', message: `Conflict: Dongle ${targetDongle} taken by ${coderId} while held by Coder ${dongleStatus[targetDongle].owner}`, timestamp: realT, coderId, dongleId: targetDongle });
                 }
                 const dSegs = dongleSegments.get(targetDongle)!;
