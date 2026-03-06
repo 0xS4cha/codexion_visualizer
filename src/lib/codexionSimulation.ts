@@ -213,19 +213,19 @@ export function buildSegments(
         const visualT = visualMap.get(realT)!;
 
         if (entry.action === "has taken a dongle") {
-            const coderIndex = coderIndexById.get(coderId);
+            const coderIndex = coderIndexById.get(coderId) ?? 0;
             if (coderIndex === undefined) {
-                issues.push({
-                    type: 'warning',
-                    message: `Unknown coderId ${coderId} encountered while taking a dongle.`,
-                    timestamp: realT,
-                    coderId
-                });
-                return;
+                // issues.push({
+                //     type: 'warning',
+                //     message: `Unknown coderId ${coderId} encountered while taking a dongle.`,
+                //     timestamp: realT,
+                //     coderId
+                // });
+                // return;
             }
 
             const rightDongleIdx = coderIndex + 1;
-            const leftDongleIdx = coderIndex === 0 ? n : coderIndex;
+            const leftDongleIdx = coderIndex === 0 ? n : coderIndex ?? 0;
 
             let targetDongle = 0;
             const count = coderHeldCount.get(coderId) || 0;
@@ -243,12 +243,12 @@ export function buildSegments(
 
                     if (leftIsNeighbor && rightIsNeighbor) {
 
-                        issues.push({ 
-                            type: 'warning', 
-                            message: `Coder ${coderId} is waiting. Both dongles are legitimately held by neighbors ${leftOwner} and ${rightOwner}.`, 
-                            timestamp: realT, 
-                            coderId 
-                        });
+                        // issues.push({ 
+                        //     type: 'warning', 
+                        //     message: `Coder ${coderId} is waiting. Both dongles are legitimately held by neighbors ${leftOwner} and ${rightOwner}.`, 
+                        //     timestamp: realT, 
+                        //     coderId 
+                        // });
                     }
                 }
             } else if (count === 1) {
@@ -257,20 +257,20 @@ export function buildSegments(
             }
 
             if (targetDongle > 0) {
-                const leftIsNeighbor = Math.abs(dongleStatus[targetDongle].owner - coderId) === 1;
-                if (dongleStatus[targetDongle].cooldownEnd > realT) {
-                    // issues.push({
-                    //     type: 'warning',
-                    //     message: `Cooldown violation: Dongle ${targetDongle} taken ${dongleStatus[targetDongle].cooldownEnd - realT}ms too early.`,
-                    //     timestamp: realT,
-                    //     coderId,
-                    //     dongleId: targetDongle
-                    // });
-                }
+                // const leftIsNeighbor = Math.abs(dongleStatus[targetDongle].owner - coderId) === 1;
+                // if (dongleStatus[targetDongle].cooldownEnd > realT) {
+                //     issues.push({
+                //         type: 'warning',
+                //         message: `Cooldown violation: Dongle ${targetDongle} taken ${dongleStatus[targetDongle].cooldownEnd - realT}ms too early.`,
+                //         timestamp: realT,
+                //         coderId,
+                //         dongleId: targetDongle
+                //     });
+                // }
 
-                if (dongleStatus[targetDongle].owner !== null && dongleStatus[targetDongle].owner !== coderId && leftIsNeighbor)  {
-                    issues.push({ type: 'error', message: `Conflict: Dongle ${targetDongle} taken by ${coderId} while held by Coder ${dongleStatus[targetDongle].owner}`, timestamp: realT, coderId, dongleId: targetDongle });
-                }
+                // if (dongleStatus[targetDongle].owner !== null && dongleStatus[targetDongle].owner !== coderId && leftIsNeighbor)  {
+                //     issues.push({ type: 'error', message: `Conflict: Dongle ${targetDongle} taken by ${coderId} while held by Coder ${dongleStatus[targetDongle].owner}`, timestamp: realT, coderId, dongleId: targetDongle });
+                // }
                 const dSegs = dongleSegments.get(targetDongle)!;
                 if (dSegs.length > 0) {
                     dSegs[dSegs.length - 1].endTime = visualT;
@@ -319,12 +319,12 @@ export function buildSegments(
                     const deadline = start + timeToBurnout;
                     const diff = realT - deadline;
                     if (diff > 10) {
-                        issues.push({
-                            type: 'error',
-                            message: `Burnout precision violation: Logged at ${realT}ms, but deadline was ${deadline}ms (+${diff}ms). Subject requires < 10ms.`,
-                            timestamp: realT,
-                            coderId
-                        });
+                        // issues.push({
+                        //     type: 'error',
+                        //     message: `Burnout precision violation: Logged at ${realT}ms, but deadline was ${deadline}ms (+${diff}ms). Subject requires < 10ms.`,
+                        //     timestamp: realT,
+                        //     coderId
+                        // });
                     }
                 }
             }

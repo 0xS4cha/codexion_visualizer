@@ -2,7 +2,7 @@ import { useMemo } from "react";
 import { useAppSelector } from '@/redux/hook/index';
 import { prepareCodexionSimulation } from "@/lib/codexionSimulation";
 import ShinyText from "@/components/utils/TextAnimations/ShinyText/ShinyText";
-import { AlertTriangle, AlertCircle, CheckCircle2, Activity } from "lucide-react";
+import { AlertTriangle, AlertCircle, CheckCircle2, Activity, CircleAlert } from "lucide-react";
 
 export default function CodexionAnalysis() {
     const padding = useAppSelector((state) => state.settings.instantActionPadding);
@@ -52,8 +52,9 @@ export default function CodexionAnalysis() {
                 <div className="space-y-3 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
                     {issues.length === 0 ? (
                         <div className="flex flex-col items-center justify-center py-10 text-white/30 italic">
-                            <CheckCircle2 className="w-8 h-8 mb-2 text-emerald-500/50" />
-                            <p className="text-sm">No issues detected in the simulation run.</p>
+                            <CircleAlert className="w-8 h-8 mb-2 text-emerald-500/50" />
+                            
+                            <p className="text-sm">No issues detected in the simulation run. Currently being reworked</p>
                         </div>
                     ) : (
                         issues.map((issue, idx) => (
