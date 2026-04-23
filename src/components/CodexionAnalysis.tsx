@@ -2,7 +2,7 @@ import { useMemo } from "react";
 import { useAppSelector } from '@/redux/hook/index';
 import { prepareCodexionSimulation } from "@/lib/codexionSimulation";
 import ShinyText from "@/components/utils/TextAnimations/ShinyText/ShinyText";
-import { AlertTriangle, AlertCircle, CheckCircle2, Activity, CircleAlert } from "lucide-react";
+import { AlertTriangle, AlertCircle, Activity, CircleAlert } from "lucide-react";
 
 export default function CodexionAnalysis() {
     const padding = useAppSelector((state) => state.settings.instantActionPadding);
@@ -21,7 +21,8 @@ export default function CodexionAnalysis() {
             padding,
             timeToRefactor,
             cmdDongleCooldown !== undefined ? cmdDongleCooldown : dongleCooldown,
-            timeToBurnout
+            timeToBurnout,
+            command
         );
     }, [rawLog, padding, command, dongleCooldown]);
 

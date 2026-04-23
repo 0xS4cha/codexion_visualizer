@@ -1,5 +1,5 @@
 import { useAppSelector, useAppDispatch } from '@/redux/hook/index';
-import { setCommand, setOutput } from "@/redux/slice/inputSlice";
+import { setCommand } from "@/redux/slice/inputSlice";
 import ShinyText from "@/components/utils/TextAnimations/ShinyText/ShinyText"; // Utilisé pour le titre
 
 export default function CodexionOptions() {

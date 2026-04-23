@@ -19,7 +19,7 @@ export default function CodexionTimeline({ }) {
     const commandParts = command.split(' ').filter(p => p.length > 0);
     const timeToRefactor = commandParts.length > 5 ? parseInt(commandParts[5], 10) : undefined;
     const dongleCooldown = commandParts.length > 7 ? parseInt(commandParts[7], 10) : 0;
-    return prepareCodexionSimulation(rawLog, padding, timeToRefactor, dongleCooldown);
+    return prepareCodexionSimulation(rawLog, padding, timeToRefactor, dongleCooldown, 0, command);
   }, [rawLog, padding, command]);
 
   const handleDownload = async () => {

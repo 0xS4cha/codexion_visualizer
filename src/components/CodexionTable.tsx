@@ -7,7 +7,7 @@ import {
 } from "@/lib/codexionSimulation";
 import GlassSurface from "@/components/utils/Components/GlassSurface/GlassSurface";
 import html2canvas from "html2canvas";
-import { useAppSelector, useAppDispatch } from '@/redux/hook/index';
+import { useAppSelector } from '@/redux/hook/index';
 
 export default function CodexionTable({ }) {
   const [currentTime, setCurrentTime] = useState(0);
@@ -26,7 +26,8 @@ export default function CodexionTable({ }) {
       padding,
       timeToRefactor,
       cmdDongleCooldown !== undefined ? cmdDongleCooldown : dongleCooldown,
-      timeToBurnout
+      timeToBurnout,
+      command
     );
   }, [rawLog, padding, command, dongleCooldown]);
 

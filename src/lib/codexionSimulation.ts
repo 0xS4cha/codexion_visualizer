@@ -74,6 +74,7 @@ export function buildSegments(
     timeToRefactor?: number,
     dongleCooldown = 0,
     timeToBurnout = 0,
+    command?: string,
 ): {
     segments: Map<number, Segment[]>;
     dongleSegments: Map<number, DongleSegment[]>;
@@ -82,7 +83,7 @@ export function buildSegments(
     coderStats: any;
     issues: SimulationIssue[];
 } {
-    const coderIds = getCoderIds(entries).sort((a, b) => a - b);
+    const coderIds = getCoderIds(entries, command).sort((a, b) => a - b);
     const n = coderIds.length;
     const coderIndexById = new Map<number, number>();
     coderIds.forEach((id, index) => {
@@ -400,13 +401,13 @@ export function getDongleStatusAtTime(
     return seg;
 }
 
-export function prepareCodexionSimulation(rawLog: string, padding: number, timeToRefactor?: number, dongleCooldown = 0, timeToBurnout = 0) {
+export function prepareCodexionSimulation(rawLog: string, padding: number, timeToRefactor?: number, dongleCooldown = 0, timeToBurnout = 0, command?: string) {
     const entries = parseCodexionLog(rawLog);
-    const coderIds = getCoderIds(entries);
+    const coderIds = getCoderIds(entries, command);
 
     const minTime = 0;
 
-    const { segments, dongleSegments, maxTime, visualToReal, coderStats, issues } = buildSegments(entries, padding, timeToRefactor, dongleCooldown, timeToBurnout);
+    const { segments, dongleSegments, maxTime, visualToReal, coderStats, issues } = buildSegments(entries, padding, timeToRefactor, dongleCooldown, timeToBurnout, command);
 
     return {
         entries,

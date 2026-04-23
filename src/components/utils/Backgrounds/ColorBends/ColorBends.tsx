@@ -15,6 +15,9 @@ type ColorBendsProps = {
   mouseInfluence?: number;
   parallax?: number;
   noise?: number;
+  iterations?: number;
+  intensity?: number;
+  bandWidth?: number;
 };
 
 const MAX_COLORS = 8 as const;
@@ -35,6 +38,9 @@ uniform vec2 uPointer; // in NDC [-1,1]
 uniform float uMouseInfluence;
 uniform float uParallax;
 uniform float uNoise;
+uniform int uIterations;
+uniform float uIntensity;
+uniform float uBandWidth;
 varying vec2 vUv;
 
 void main() {
@@ -48,6 +54,12 @@ void main() {
   q += 0.2 * cos(t) - 7.56;
   vec2 toward = (uPointer - rp);
   q += toward * uMouseInfluence * 0.2;
+
+    for (int j = 0; j < 5; j++) {
+      if (j >= uIterations - 1) break;
+      vec2 rr = sin(1.5 * (q.yx * uFrequency) + 2.0 * cos(q * uFrequency));
+      q += (rr - q) * 0.15;
+    }
 
     vec3 col = vec3(0.0);
     float a = 1.0;
@@ -68,7 +80,7 @@ void main() {
             vec2 warped = s + disp * gain;
             float m1 = length(warped + sin(5.0 * warped.y * uFrequency - 3.0 * t + float(i)) / 4.0);
             float m = mix(m0, m1, kMix);
-            float w = 1.0 - exp(-6.0 / exp(6.0 * m));
+            float w = 1.0 - exp(-uBandWidth / exp(uBandWidth * m));
             sumCol += uColors[i] * w;
             cover = max(cover, w);
       }
@@ -87,10 +99,12 @@ void main() {
             vec2 warped = s + disp * gain;
             float m1 = length(warped + sin(5.0 * warped.y * uFrequency - 3.0 * t + float(k)) / 4.0);
             float m = mix(m0, m1, kMix);
-            col[k] = 1.0 - exp(-6.0 / exp(6.0 * m));
+            col[k] = 1.0 - exp(-uBandWidth / exp(uBandWidth * m));
         }
         a = uTransparent > 0 ? max(max(col.r, col.g), col.b) : 1.0;
     }
+
+    col *= uIntensity;
 
     if (uNoise > 0.0001) {
       float n = fract(sin(dot(gl_FragCoord.xy + vec2(uTime), vec2(12.9898, 78.233))) * 43758.5453123);
@@ -114,7 +128,7 @@ void main() {
 export default function ColorBends({
   className,
   style,
-  rotation = 45,
+  rotation = 90,
   speed = 0.2,
   colors = [],
   transparent = true,
@@ -124,7 +138,10 @@ export default function ColorBends({
   warpStrength = 1,
   mouseInfluence = 1,
   parallax = 0.5,
-  noise = 0.1
+  noise = 0.15,
+  iterations = 1,
+  intensity = 1.5,
+  bandWidth = 6
 }: ColorBendsProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
@@ -161,7 +178,10 @@ export default function ColorBends({
         uPointer: { value: new THREE.Vector2(0, 0) },
         uMouseInfluence: { value: mouseInfluence },
         uParallax: { value: parallax },
-        uNoise: { value: noise }
+        uNoise: { value: noise },
+        uIterations: { value: iterations },
+        uIntensity: { value: intensity },
+        uBandWidth: { value: bandWidth }
       },
       premultipliedAlpha: true,
       transparent: true
@@ -232,6 +252,7 @@ export default function ColorBends({
       geometry.dispose();
       material.dispose();
       renderer.dispose();
+      renderer.forceContextLoss();
       if (renderer.domElement && renderer.domElement.parentElement === container) {
         container.removeChild(renderer.domElement);
       }
@@ -252,6 +273,9 @@ export default function ColorBends({
     material.uniforms.uMouseInfluence.value = mouseInfluence;
     material.uniforms.uParallax.value = parallax;
     material.uniforms.uNoise.value = noise;
+    material.uniforms.uIterations.value = iterations;
+    material.uniforms.uIntensity.value = intensity;
+    material.uniforms.uBandWidth.value = bandWidth;
 
     const toVec3 = (hex: string) => {
       const h = hex.replace('#', '').trim();
@@ -282,6 +306,9 @@ export default function ColorBends({
     mouseInfluence,
     parallax,
     noise,
+    iterations,
+    intensity,
+    bandWidth,
     colors,
     transparent
   ]);

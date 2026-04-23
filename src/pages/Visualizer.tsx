@@ -1,4 +1,3 @@
-import { useState } from "react";
 import Silk from "@/components/utils/Backgrounds/Silk/Silk";
 import GlassSurface from "@/components/utils/Components/GlassSurface/GlassSurface";
 import ShinyText from "@/components/utils/TextAnimations/ShinyText/ShinyText";
@@ -11,8 +10,6 @@ import CodexionCommand from "@/components/CodexionCommand"
 import CodexionAnalysis from "@/components/CodexionAnalysis"
 
 export default function Visualizer() {
-	const [rawLog, setRawLog] = useState("");
-
 	return (
 		<>
 			<div className="fixed inset-0 -z-10 pointer-events-none">

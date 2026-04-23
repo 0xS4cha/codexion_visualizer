@@ -29,9 +29,34 @@ export function parseCodexionLog(raw: string): LogEntry[] {
   return entries;
 }
 
-export function getCoderIds(entries: LogEntry[]): number[] {
+export function getCoderIds(entries: LogEntry[], command?: string): number[] {
+  const commandParts = (command ?? "").split(" ").filter((p) => p.length > 0);
+
+  const codersNum = commandParts.length > 1 ? parseInt(commandParts[1], 10) : undefined;
+
   const ids = new Set(entries.map((e) => e.coderId));
-  return Array.from(ids).sort((a, b) => a - b);
+  const sortedIds = Array.from(ids).sort((a, b) => a - b);
+
+  if (codersNum !== undefined && !isNaN(codersNum)) {
+    if (sortedIds.length >= codersNum) {
+      return sortedIds.slice(0, codersNum);
+    }
+
+    const filledIds = [...sortedIds];
+    const knownIds = new Set(filledIds);
+    let candidateId = 1;
+
+    while (filledIds.length < codersNum) {
+      if (!knownIds.has(candidateId)) {
+        filledIds.push(candidateId);
+        knownIds.add(candidateId);
+      }
+      candidateId++;
+    }
+
+    return filledIds.sort((a, b) => a - b);
+  }
+  return sortedIds;
 }
 
 export function getTimeRange(entries: LogEntry[]): [number, number] {

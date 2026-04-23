@@ -15,7 +15,7 @@ export default function CodexionStats({ }) {
   const padding = useAppSelector((state) => state.settings.instantActionPadding);
   const rawLog = useAppSelector((state) => state.user_input.output);
   const command = useAppSelector((state) => state.user_input.command);
-  const { entries, coderIds, minTime, maxTime, segments, visualToReal, coderStats } = useMemo(() => prepareCodexionSimulation(rawLog, padding), [rawLog, padding]);
+  const { entries, coderIds, minTime, maxTime, segments, visualToReal, coderStats } = useMemo(() => prepareCodexionSimulation(rawLog, padding, undefined, 0, 0, command), [rawLog, padding, command]);
 
   const scheduler = useMemo(() => {
     const commandParts = command.split(' ').filter(p => p.length > 0);
