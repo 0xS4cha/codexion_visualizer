@@ -3,7 +3,6 @@ import { adminAuth, adminDb } from '../_utils/firebaseAdmin';
 import * as admin from 'firebase-admin';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  // CORS
   res.setHeader('Access-Control-Allow-Credentials', 'true');
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
@@ -42,7 +41,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       authorDisplayName
     } = req.body;
 
-    // Validate minimal fields
     if (!title || !description) {
       return res.status(400).json({ error: 'Missing required fields' });
     }

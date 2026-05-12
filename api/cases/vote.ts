@@ -28,9 +28,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const token = authHeader.split('Bearer ')[1];
     const decodedToken = await adminAuth.verifyIdToken(token);
     
-    // We use the authenticated user's ID to prevent them from voting for someone else
     const uid = decodedToken.uid;
-    // But since the frontend uses user.login (from 42), we need to extract that
     const { id, voteType, userLogin } = req.body;
 
     if (!id || !voteType || !['up', 'down'].includes(voteType) || !userLogin) {
