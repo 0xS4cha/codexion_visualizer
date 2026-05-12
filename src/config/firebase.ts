@@ -1,6 +1,6 @@
-import { initializeApp } from "firebase/app";
+import { initializeApp, getApps, getApp } from "firebase/app";
 import { getFirestore, collection, getDocs, query, orderBy } from "firebase/firestore";
-import { initializeAuth, browserLocalPersistence } from "firebase/auth";
+import { getAuth } from "firebase/auth";
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -10,15 +10,13 @@ const firebaseConfig = {
   messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
   appId: import.meta.env.VITE_FIREBASE_APP_ID
 };
-console.log(1);
-const app = initializeApp(firebaseConfig);
-console.log(2);
-export const auth = initializeAuth(app, {
-  persistence: browserLocalPersistence,
-})
-console.log(3);
+
+const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
+
+export const auth = getAuth(app);
+
 export const db = getFirestore(app);
-console.log(4);
+
 export type EachcaseData = {
   title: string;
   description: string;
