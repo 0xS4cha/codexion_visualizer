@@ -76,8 +76,9 @@ export default function CodexionAnalysis() {
                                         {issue.message}
                                     </p>
                                     <div className="mt-1 flex items-center gap-2 text-[10px] text-white/30">
-                                        <span>at {issue.timestamp}ms</span>
-                                        {issue.coderId && <span>• Coder {issue.coderId}</span>}
+                                        {issue.timestamp && <span>at {issue.timestamp}ms</span>}
+                                        {issue.timestamp && issue.coderId && <span> • </span>}
+                                        {issue.coderId && <span>Coder {issue.coderId}</span>}
                                     </div>
                                 </div>
                             </div>

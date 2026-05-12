@@ -24,7 +24,7 @@ export interface DongleSegment {
 export interface SimulationIssue {
     type: 'warning' | 'error';
     message: string;
-    timestamp: number;
+    timestamp?: number;
     coderId?: number;
     dongleId?: number;
 }
@@ -83,7 +83,7 @@ export function buildSegments(
     coderStats: any;
     issues: SimulationIssue[];
 } {
-    const coderIds = getCoderIds(entries, command).sort((a, b) => a - b);
+    const [coderIds, create] = getCoderIds(entries, command).sort((a, b) => a - b);
     const n = coderIds.length;
     const coderIndexById = new Map<number, number>();
     coderIds.forEach((id, index) => {
@@ -320,12 +320,12 @@ export function buildSegments(
                     const deadline = start + timeToBurnout;
                     const diff = realT - deadline;
                     if (diff > 10) {
-                        // issues.push({
-                        //     type: 'error',
-                        //     message: `Burnout precision violation: Logged at ${realT}ms, but deadline was ${deadline}ms (+${diff}ms). Subject requires < 10ms.`,
-                        //     timestamp: realT,
-                        //     coderId
-                        // });
+                        issues.push({
+                            type: 'error',
+                            message: `Burnout precision violation: Logged at ${realT}ms, but deadline was ${deadline}ms (+${diff}ms). Subject requires < 10ms.`,
+                            timestamp: realT,
+                            coderId
+                        });
                     }
                 }
             }
@@ -366,6 +366,17 @@ export function buildSegments(
         }
     });
 
+    if (create.length > 0) {
+        create.forEach((id) => {
+            issues.push({
+                type: 'warning',
+                message: `The code trend did no action.`,
+                coderId: id,
+            });
+            }
+        )
+    }
+
     return { segments, dongleSegments, maxTime: globalMaxTime, visualToReal, coderStats, issues };
 }
 
@@ -403,7 +414,7 @@ export function getDongleStatusAtTime(
 
 export function prepareCodexionSimulation(rawLog: string, padding: number, timeToRefactor?: number, dongleCooldown = 0, timeToBurnout = 0, command?: string) {
     const entries = parseCodexionLog(rawLog);
-    const coderIds = getCoderIds(entries, command);
+    const [coderIds, create] = getCoderIds(entries, command);
 
     const minTime = 0;
 
