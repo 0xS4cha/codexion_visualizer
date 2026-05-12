@@ -1,6 +1,6 @@
-import { useAppSelector, useAppDispatch } from '@/redux/hook/index';
-import { setOutput } from "@/redux/slice/inputSlice";
-import ShinyText from "@/components/utils/TextAnimations/ShinyText/ShinyText"; // Utilisé pour le titre
+import { useAppSelector, useAppDispatch } from '@/store/hooks';
+import { setOutput } from "@/store/features/inputSlice";
+import ShinyText from "@/components/ui/TextAnimations/ShinyText/ShinyText"; // Utilisé pour le titre
 
 export default function CodexionOptions() {
   const output = useAppSelector((state) => state.user_input.output);

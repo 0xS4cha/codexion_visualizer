@@ -1,8 +1,8 @@
-import type { LogEntry } from "@/lib/parseCodexionLog";
+import type { LogEntry } from "@/core/parseCodexionLog";
 import {
     parseCodexionLog,
     getCoderIds,
-} from "@/lib/parseCodexionLog";
+} from "@/core/parseCodexionLog";
 
 export interface Segment {
     startTime: number;
@@ -68,21 +68,23 @@ function interpolate(v: number, vKeys: number[], rValues: number[]): number {
     return Math.round(r0 + t * (r1 - r0));
 }
 
-export function buildSegments(
+const yieldToMain = () => new Promise(r => setTimeout(r, 0));
+
+export async function buildSegments(
     entries: LogEntry[],
     instantDuration = 10,
     timeToRefactor?: number,
     dongleCooldown = 0,
     timeToBurnout = 0,
     command?: string,
-): {
+): Promise<{
     segments: Map<number, Segment[]>;
     dongleSegments: Map<number, DongleSegment[]>;
     maxTime: number;
     visualToReal: (v: number) => number;
     coderStats: any;
     issues: SimulationIssue[];
-} {
+} > {
     const [coderIds, create] = getCoderIds(entries, command);
     coderIds.sort((a, b) => a - b);
     const n = coderIds.length;
@@ -92,9 +94,14 @@ export function buildSegments(
     });
     const issues: SimulationIssue[] = [];
     const byCoder = new Map<number, LogEntry[]>();
+    const countsPerTimeAndCoder = new Map<number, Map<number, number>>();
     for (const e of entries) {
         if (!byCoder.has(e.coderId)) byCoder.set(e.coderId, []);
         byCoder.get(e.coderId)!.push(e);
+
+        if (!countsPerTimeAndCoder.has(e.timestamp)) countsPerTimeAndCoder.set(e.timestamp, new Map());
+        const timeMap = countsPerTimeAndCoder.get(e.timestamp)!;
+        timeMap.set(e.coderId, (timeMap.get(e.coderId) || 0) + 1);
     }
 
     const lastCompileStart = new Map<number, number>();
@@ -123,14 +130,15 @@ export function buildSegments(
     }
 
     for (let i = 0; i < sortedTimestamps.length - 1; i++) {
+        if (i % 500 === 0) await yieldToMain();
         const tCurr = sortedTimestamps[i];
         const tNext = sortedTimestamps[i + 1];
         const realDelta = tNext - tCurr;
 
         let maxStack = 0;
-        for (const evts of byCoder.values()) {
-            const count = evts.filter(e => e.timestamp === tCurr).length;
-            if (count > 0) {
+        const countsMap = countsPerTimeAndCoder.get(tCurr);
+        if (countsMap) {
+            for (const count of countsMap.values()) {
                 maxStack = Math.max(maxStack, count * instantDuration);
             }
         }
@@ -209,7 +217,9 @@ export function buildSegments(
         return 0;
     });
 
-    sortedEntries.forEach((entry) => {
+    for (let index = 0; index < sortedEntries.length; index++) {
+        const entry = sortedEntries[index];
+        if (index % 500 === 0) await yieldToMain();
         const coderId = entry.coderId;
         const realT = entry.timestamp;
         const visualT = visualMap.get(realT)!;
@@ -331,7 +341,7 @@ export function buildSegments(
                 }
             }
         }
-    });
+    }
 
     dongleSegments.forEach((segs) => {
         if (segs.length > 0) {
@@ -414,13 +424,13 @@ export function getDongleStatusAtTime(
     return seg;
 }
 
-export function prepareCodexionSimulation(rawLog: string, padding: number, timeToRefactor?: number, dongleCooldown = 0, timeToBurnout = 0, command?: string) {
+export async function prepareCodexionSimulation(rawLog: string, padding: number, timeToRefactor?: number, dongleCooldown = 0, timeToBurnout = 0, command?: string) {
     const entries = parseCodexionLog(rawLog);
     const [coderIds, create] = getCoderIds(entries, command);
 
     const minTime = 0;
 
-    const { segments, dongleSegments, maxTime, visualToReal, coderStats, issues } = buildSegments(entries, padding, timeToRefactor, dongleCooldown, timeToBurnout, command);
+    const { segments, dongleSegments, maxTime, visualToReal, coderStats, issues } = await buildSegments(entries, padding, timeToRefactor, dongleCooldown, timeToBurnout, command);
 
     return {
         entries,

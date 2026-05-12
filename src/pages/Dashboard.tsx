@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { DashboardUser, StatCardProps, ActionChipProps}  from "@/types/user"
-import Silk from "@/components/utils/Backgrounds/Silk/Silk";
-import GlassSurface from "@/components/utils/Components/GlassSurface/GlassSurface";
-import ShinyText from "@/components/utils/TextAnimations/ShinyText/ShinyText";
+import Silk from "@/components/ui/Backgrounds/Silk/Silk";
+import GlassSurface from "@/components/ui/Components/GlassSurface/GlassSurface";
+import ShinyText from "@/components/ui/TextAnimations/ShinyText/ShinyText";
 
 
 export default function Dashboard() {

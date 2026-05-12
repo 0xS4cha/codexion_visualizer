@@ -1,4 +1,5 @@
-export default function handler(req, res) {
+﻿import type { VercelRequest, VercelResponse } from '@vercel/node';
+export default function handler(req: VercelRequest, res: VercelResponse) {
   const params = new URLSearchParams({
     client_id: process.env.FORTY_TWO_CLIENT_ID,
     redirect_uri: process.env.FORTY_TWO_REDIRECT_URI,

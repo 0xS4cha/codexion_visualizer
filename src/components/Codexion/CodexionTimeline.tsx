@@ -1,13 +1,13 @@
 import { useMemo, useState, useRef } from "react";
 import { motion } from "motion/react";
 import {
-  prepareCodexionSimulation,
   getActionColor,
   ACTION_COLORS
-} from "@/lib/codexionSimulation";
-import GlassSurface from "@/components/utils/Components/GlassSurface/GlassSurface";
+} from "@/core/codexionSimulation";
+import { useCodexionSimulation } from "@/hooks/useCodexionSimulation";
+import GlassSurface from "@/components/ui/Components/GlassSurface/GlassSurface";
 import html2canvas from "html2canvas";
-import { useAppSelector, useAppDispatch } from '@/redux/hook/index';
+import { useAppSelector, useAppDispatch } from '@/store/hooks';
 
 export default function CodexionTimeline({ }) {
   const padding = useAppSelector((state) => state.settings.instantActionPadding);
@@ -15,12 +15,16 @@ export default function CodexionTimeline({ }) {
   const command = useAppSelector((state) => state.user_input.command);
   const [zoom, setZoom] = useState<number>(1);
   const timelineRef = useRef<HTMLDivElement>(null);
-  const { entries, coderIds, minTime, maxTime, segments, visualToReal } = useMemo(() => {
+
+  const { timeToRefactor, dongleCooldown } = useMemo(() => {
     const commandParts = command.split(' ').filter(p => p.length > 0);
-    const timeToRefactor = commandParts.length > 5 ? parseInt(commandParts[5], 10) : undefined;
-    const dongleCooldown = commandParts.length > 7 ? parseInt(commandParts[7], 10) : 0;
-    return prepareCodexionSimulation(rawLog, padding, timeToRefactor, dongleCooldown, 0, command);
-  }, [rawLog, padding, command]);
+    return {
+      timeToRefactor: commandParts.length > 5 ? parseInt(commandParts[5], 10) : undefined,
+      dongleCooldown: commandParts.length > 7 ? parseInt(commandParts[7], 10) : 0
+    };
+  }, [command]);
+
+  const { data, isLoading } = useCodexionSimulation(rawLog, padding, timeToRefactor, dongleCooldown, 0, command);
 
   const handleDownload = async () => {
     if (timelineRef.current === null) return;
@@ -43,7 +47,20 @@ export default function CodexionTimeline({ }) {
     }
   };
 
-  if (entries.length === 0) {
+  if (isLoading || !data) {
+    return (
+      <GlassSurface
+        width="100%"
+        height={56}
+        borderRadius={16}
+        className="rounded-xl border border-white/10 bg-white/5 p-8 text-center text-white/40"
+      >
+        Paste the Codexion logs above to view them.
+      </GlassSurface>
+    );
+  }
+  const { entries, coderIds, minTime, maxTime, segments, visualToReal } = data;
+  if (entries && entries.length === 0) {
     return (
       <GlassSurface
         width="100%"

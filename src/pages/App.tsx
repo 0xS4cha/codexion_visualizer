@@ -11,7 +11,7 @@ export default function App() {
             <Route path="/" element={<Visualizer />} />
             <Route path="/login" element={<Login />} />
             <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/eachcase" element={<Eachcase />} />
+            <Route path="/hub" element={<Eachcase />} />
           </Routes>
         </BrowserRouter>
   );

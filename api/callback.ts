@@ -1,4 +1,5 @@
-export default async function handler(req, res) {
+﻿import type { VercelRequest, VercelResponse } from '@vercel/node';
+export default async function handler(req: VercelRequest, res: VercelResponse) {
   const { code, error } = req.query;
 
   if (error) {
@@ -6,7 +7,7 @@ export default async function handler(req, res) {
   }
 
   if (!code) {
-    return res.status(400).json({ error: "Code manquant" });
+    return res.status(400).json({ error: "Code not found" });
   }
 
   try {
@@ -24,7 +25,7 @@ export default async function handler(req, res) {
 
     if (!tokenResponse.ok) {
       const err = await tokenResponse.text();
-      console.error("Erreur token 42:", err);
+      console.error("Error token 42:", err);
       return res.redirect("/?error=token_exchange_failed");
     }
 
@@ -53,10 +54,9 @@ export default async function handler(req, res) {
 
     const encoded = Buffer.from(JSON.stringify(userData)).toString("base64url");
 
-    // Rediriger vers le frontend avec les données encodées
-    res.redirect(`/dashboard?user=${encoded}`);
+    res.redirect(`/hub?user=${encoded}`);
   } catch (err) {
-    console.error("Erreur OAuth:", err);
+    console.error("Error OAuth:", err);
     res.redirect("/?error=server_error");
   }
 }

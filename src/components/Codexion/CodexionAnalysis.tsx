@@ -1,8 +1,10 @@
 import { useMemo } from "react";
-import { useAppSelector } from '@/redux/hook/index';
-import { prepareCodexionSimulation } from "@/lib/codexionSimulation";
-import ShinyText from "@/components/utils/TextAnimations/ShinyText/ShinyText";
+import { useAppSelector } from '@/store/hooks';
+import { useCodexionSimulation } from "@/hooks/useCodexionSimulation";
+import ShinyText from "@/components/ui/TextAnimations/ShinyText/ShinyText";
 import { AlertTriangle, AlertCircle, Activity, CircleAlert } from "lucide-react";
+import GlassSurface from "@/components/ui/Components/GlassSurface/GlassSurface";
+
 
 export default function CodexionAnalysis() {
     const padding = useAppSelector((state) => state.settings.instantActionPadding);
@@ -10,23 +12,37 @@ export default function CodexionAnalysis() {
     const command = useAppSelector((state) => state.user_input.command);
     const dongleCooldown = useAppSelector((state) => state.settings.dongleCooldown);
 
-    const { issues, coderStats, coderIds } = useMemo(() => {
+    const { timeToBurnout, timeToRefactor, cmdDongleCooldown } = useMemo(() => {
         const parts = command.split(' ').filter(p => p.length > 0);
-        const timeToBurnout = parts.length > 2 ? parseInt(parts[2], 10) : 0;
-        const timeToRefactor = parts.length > 5 ? parseInt(parts[5], 10) : undefined;
-        const cmdDongleCooldown = parts.length > 7 ? parseInt(parts[7], 10) : undefined;
+        return {
+            timeToBurnout: parts.length > 2 ? parseInt(parts[2], 10) : 0,
+            timeToRefactor: parts.length > 5 ? parseInt(parts[5], 10) : undefined,
+            cmdDongleCooldown: parts.length > 7 ? parseInt(parts[7], 10) : undefined
+        };
+    }, [command]);
 
-        return prepareCodexionSimulation(
-            rawLog,
-            padding,
-            timeToRefactor,
-            cmdDongleCooldown !== undefined ? cmdDongleCooldown : dongleCooldown,
-            timeToBurnout,
-            command
+    const finalDongleCooldown = cmdDongleCooldown !== undefined ? cmdDongleCooldown : dongleCooldown;
+
+    const { data, isLoading } = useCodexionSimulation(
+        rawLog,
+        padding,
+        timeToRefactor,
+        finalDongleCooldown,
+        timeToBurnout,
+        command
+    );
+
+    if (isLoading || !data) {
+        return (
+        <GlassSurface width="100%" height={56} borderRadius={16} className="rounded-xl border border-white/10 bg-white/5 p-8 text-center text-white/40">
+            Paste the Codexion logs above to view them.
+        </GlassSurface>
         );
-    }, [rawLog, padding, command, dongleCooldown]);
+    }
 
-    if (coderIds.length === 0) return null;
+    const { issues, coderStats, coderIds } = data;
+
+    if (coderIds && coderIds.length === 0) return null;
 
     const errors = issues.filter(i => i.type === 'error');
     const warnings = issues.filter(i => i.type === 'warning');

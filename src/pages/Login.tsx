@@ -1,8 +1,8 @@
 import { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import Squares from '@/components/utils/Backgrounds/Squares/Squares';
-import ShinyText from '@/components/utils/TextAnimations/ShinyText/ShinyText';
-import SplitText from '@/components/utils/TextAnimations/SplitText/SplitText';
+import Squares from '@/components/ui/Backgrounds/Squares/Squares';
+import ShinyText from '@/components/ui/TextAnimations/ShinyText/ShinyText';
+import SplitText from '@/components/ui/TextAnimations/SplitText/SplitText';
 import logo42 from '../assets/42_Logo.svg';
 
 export default function Login() {

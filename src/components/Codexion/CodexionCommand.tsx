@@ -1,11 +1,22 @@
-import { useAppSelector, useAppDispatch } from '@/redux/hook/index';
-import { setCommand } from "@/redux/slice/inputSlice";
-import ShinyText from "@/components/utils/TextAnimations/ShinyText/ShinyText"; // Utilisé pour le titre
+import { useAppSelector, useAppDispatch } from '@/store/hooks';
+import { setCommand } from "@/store/features/inputSlice";
+import { useNavigate } from "react-router-dom";
+import ShinyText from "@/components/ui/TextAnimations/ShinyText/ShinyText"; // Utilisé pour le titre
 
-export default function CodexionOptions() {
+export default function CodexionCommand() {
     const command = useAppSelector((state) => state.user_input.command);
     const dispatch = useAppDispatch();
+    const navigate = useNavigate();
     const hasCommand = command.trim().length > 0;
+    
+    const handleAction = () => {
+        if (hasCommand) {
+            navigate("/hub");
+        } else {
+            navigate("/hub"); // or maybe somewhere else? The prompt says link to Eachcase.
+        }
+    };
+
     return (
     <div className="flex flex-col rounded-xl border border-white/10 bg-black/20 p-4">
         <div className="flex w-full flex-1 flex-col gap-2 self-stretch p-4">
@@ -30,14 +41,15 @@ export default function CodexionOptions() {
                 className="flex-1 resize-none rounded-lg border border-white/10 bg-black/30 px-4 py-3 font-mono text-sm text-white/90 placeholder:text-white/30 focus:border-white/30 focus:outline-none focus:ring-1 focus:ring-white/20"
                 spellCheck={false}
             />
-            {/* <div className="flex justify-end pt-2">
+            <div className="flex justify-end pt-2">
                 <button
                     type="button"
+                    onClick={handleAction}
                     className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs font-medium tracking-wide text-white/70 transition hover:bg-white/10 hover:text-white"
                 >
                     {hasCommand ? "Share an Each case" : "Tests an each Case"}
                 </button>
-            </div> */}
+            </div>
         </div>
     </div>
   )

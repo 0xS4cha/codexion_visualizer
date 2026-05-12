@@ -1,13 +1,11 @@
-import { useMemo, useState, useRef } from "react";
+﻿import { useMemo, useState, useRef } from "react";
 import { motion } from "motion/react";
-import {
-  prepareCodexionSimulation,
-} from "@/lib/codexionSimulation";
-import GlassSurface from "@/components/utils/Components/GlassSurface/GlassSurface";
-import TiltedCard from "./utils/Components/TiltedCard/TiltedCard";
+import { useCodexionSimulation } from "@/hooks/useCodexionSimulation";
+import GlassSurface from "@/components/ui/Components/GlassSurface/GlassSurface";
+import TiltedCard from "@/components/ui/Components/TiltedCard/TiltedCard";
 import dev_logo from "@/assets/dev.svg"
-import ShinyText from "@/components/utils/TextAnimations/ShinyText/ShinyText"
-import { useAppSelector, useAppDispatch } from '@/redux/hook/index';
+import ShinyText from "@/components/ui/TextAnimations/ShinyText/ShinyText"
+import { useAppSelector } from '@/store/hooks';
 
 
 
@@ -15,15 +13,24 @@ export default function CodexionStats({ }) {
   const padding = useAppSelector((state) => state.settings.instantActionPadding);
   const rawLog = useAppSelector((state) => state.user_input.output);
   const command = useAppSelector((state) => state.user_input.command);
-  const { entries, coderIds, minTime, maxTime, segments, visualToReal, coderStats } = useMemo(() => prepareCodexionSimulation(rawLog, padding, undefined, 0, 0, command), [rawLog, padding, command]);
+  const { data, isLoading } = useCodexionSimulation(rawLog, padding, undefined, 0, 0, command);
 
   const scheduler = useMemo(() => {
     const commandParts = command.split(' ').filter(p => p.length > 0);
     return commandParts.length > 8 ? commandParts[8] : undefined;
   }, [command]);
 
+  if (isLoading || !data) {
+    return (
+      <GlassSurface width="100%" height={56} borderRadius={16} className="rounded-xl border border-white/10 bg-white/5 p-8 text-center text-white/40">
+        Paste the Codexion logs above to view them.
+      </GlassSurface>
+    );
+  }
 
-  if (entries.length === 0) {
+  const { entries, coderIds, minTime, maxTime, segments, visualToReal, coderStats } = data;
+
+  if (entries && entries.length === 0) {
     return (
       <GlassSurface
         width="100%"
@@ -51,7 +58,7 @@ export default function CodexionStats({ }) {
       </div>
       <div className="py-10 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6 justify-items-center">
 
-        {coderIds.map((coderId) => (
+        {coderIds && coderIds.map((coderId) => (
           <div key={coderId} className="flex justify-center items-center">
             <TiltedCard
               imageSrc={dev_logo}

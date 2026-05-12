@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useAppSelector, useAppDispatch } from '@/redux/hook/index';
-import { setInstantAction, setDongleCooldown } from "@/redux/slice/settingsSlice";
-import ShinyText from "@/components/utils/TextAnimations/ShinyText/ShinyText";
+import { useAppSelector, useAppDispatch } from '@/store/hooks';
+import { setInstantAction, setDongleCooldown } from "@/store/features/settingsSlice";
+import ShinyText from "@/components/ui/TextAnimations/ShinyText/ShinyText";
 
 export default function CodexionOptions() {
   const padding = useAppSelector((state) => state.settings.instantActionPadding);

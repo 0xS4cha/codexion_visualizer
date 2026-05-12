@@ -1,13 +1,13 @@
-import Silk from "@/components/utils/Backgrounds/Silk/Silk";
-import GlassSurface from "@/components/utils/Components/GlassSurface/GlassSurface";
-import ShinyText from "@/components/utils/TextAnimations/ShinyText/ShinyText";
-import CodexionTimeline from "@/components/CodexionTimeline";
-import CodexionTable from "@/components/CodexionTable";
-import CodexionStats from "@/components/CodexionStats";
-import CodexionOptions from "@/components/CodexionOptions";
-import CodexionOutput from "@/components/CodexionOutput"
-import CodexionCommand from "@/components/CodexionCommand"
-import CodexionAnalysis from "@/components/CodexionAnalysis"
+import Silk from "@/components/ui/Backgrounds/Silk/Silk";
+import GlassSurface from "@/components/ui/Components/GlassSurface/GlassSurface";
+import ShinyText from "@/components/ui/TextAnimations/ShinyText/ShinyText";
+import CodexionTimeline from "@/components/Codexion/CodexionTimeline";
+import CodexionTable from "@/components/Codexion/CodexionTable";
+import CodexionStats from "@/components/Codexion/CodexionStats";
+import CodexionOptions from "@/components/Codexion/CodexionOptions";
+import CodexionOutput from "@/components/Codexion/CodexionOutput"
+import CodexionCommand from "@/components/Codexion/CodexionCommand"
+import CodexionAnalysis from "@/components/Codexion/CodexionAnalysis"
 
 export default function Visualizer() {
 	return (
