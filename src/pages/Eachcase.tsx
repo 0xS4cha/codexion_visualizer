@@ -4,8 +4,9 @@ import { DashboardUser } from "@/types/user";
 import Silk from "@/components/ui/Backgrounds/Silk/Silk";
 import GlassSurface from "@/components/ui/Components/GlassSurface/GlassSurface";
 import ShinyText from "@/components/ui/TextAnimations/ShinyText/ShinyText";
+import { signInWithCustomToken } from "firebase/auth";
 import { useAppSelector, useAppDispatch } from "@/store/hooks";
-import { getEachcases, EachcaseData } from "@/config/firebase";
+import { auth, getEachcases, EachcaseData } from "@/config/firebase";
 import { setCommand, setOutput } from "@/store/features/inputSlice";
 import { setInstantAction, setDongleCooldown } from "@/store/features/settingsSlice";
 import { useSecureApi } from "@/hooks/useSecureApi";
@@ -64,13 +65,25 @@ export default function Eachcase() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const encoded = params.get("user");
+    const token = params.get("token");
 
     if (encoded) {
       try {
         const decoded = JSON.parse(atob(encoded));
         setUser(decoded);
-        window.history.replaceState({}, "", "/eachcase");
         sessionStorage.setItem("42_user", JSON.stringify(decoded));
+        
+        if (token) {
+          signInWithCustomToken(auth, token)
+            .then(() => {
+              window.history.replaceState({}, "", "/hub");
+            })
+            .catch((err) => {
+              console.error("Firebase Auth Error:", err);
+            });
+        } else {
+          window.history.replaceState({}, "", "/hub");
+        }
       } catch {
         navigate("/?error=invalid_data");
       }
@@ -86,7 +99,9 @@ export default function Eachcase() {
 
   const handleLogout = () => {
     sessionStorage.removeItem("42_user");
-    navigate("/");
+    auth.signOut().then(() => {
+      navigate("/");
+    });
   };
 
   const handlePublish = async () => {

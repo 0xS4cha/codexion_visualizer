@@ -10,13 +10,11 @@ const firebaseConfig = {
   messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
   appId: import.meta.env.VITE_FIREBASE_APP_ID
 };
-console.log(1);
+
 const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
-console.log(2);
+console.log("app", app);
 export const auth = getAuth(app);
-console.log(3);
 export const db = getFirestore(app);
-console.log(4);
 export type EachcaseData = {
   title: string;
   description: string;

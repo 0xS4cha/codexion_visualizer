@@ -1,6 +1,6 @@
 import { VercelRequest, VercelResponse } from '@vercel/node';
 import { adminAuth, adminDb } from '../_utils/firebaseAdmin';
-import * as admin from 'firebase-admin';
+import { FieldValue } from 'firebase-admin/firestore';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader('Access-Control-Allow-Credentials', 'true');
@@ -57,7 +57,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       authorDisplayName: authorDisplayName || 'Unknown User',
       votes: 0,
       votedBy: {},
-      createdAt: admin.firestore.FieldValue.serverTimestamp()
+      createdAt: FieldValue.serverTimestamp()
     });
 
     return res.status(200).json({ success: true, id: docRef.id });

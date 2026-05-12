@@ -1,4 +1,6 @@
 ﻿import type { VercelRequest, VercelResponse } from '@vercel/node';
+import { adminAuth } from './_utils/firebaseAdmin';
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   const { code, error } = req.query;
 
@@ -53,10 +55,18 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     };
 
     const encoded = Buffer.from(JSON.stringify(userData)).toString("base64url");
+    
+    let customToken = "";
+    try {
+      customToken = await adminAuth.createCustomToken(user.id.toString());
+    } catch (firebaseErr: any) {
+      console.error("Firebase Admin Custom Token Error:", firebaseErr);
+      throw new Error(`Firebase Token Error: ${firebaseErr.message}`);
+    }
 
-    res.redirect(`/hub?user=${encoded}`);
-  } catch (err) {
+    res.redirect(`/hub?user=${encoded}&token=${customToken}`);
+  } catch (err: any) {
     console.error("Error OAuth:", err);
-    res.redirect("/?error=server_error");
+    res.redirect(`/?error=server_error&details=${encodeURIComponent(err.message || 'unknown')}`);
   }
 }

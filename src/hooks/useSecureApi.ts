@@ -11,10 +11,13 @@ export function useSecureApi() {
     setError(null);
 
     try {
+      await auth.authStateReady();
+      
       const currentUser = auth.currentUser;
-      console.log(auth)
+      console.log('Firebase Auth User:', currentUser?.uid);
+      
       if (!currentUser) {
-        throw new Error('User not connected');
+        throw new Error('User not connected (Firebase Session missing)');
       }
 
       const token = await currentUser.getIdToken();
