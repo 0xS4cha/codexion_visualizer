@@ -83,7 +83,8 @@ export function buildSegments(
     coderStats: any;
     issues: SimulationIssue[];
 } {
-    const [coderIds, create] = getCoderIds(entries, command).sort((a, b) => a - b);
+    const [coderIds, create] = getCoderIds(entries, command);
+    coderIds.sort((a, b) => a - b);
     const n = coderIds.length;
     const coderIndexById = new Map<number, number>();
     coderIds.forEach((id, index) => {
