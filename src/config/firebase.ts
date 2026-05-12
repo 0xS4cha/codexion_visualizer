@@ -10,15 +10,15 @@ const firebaseConfig = {
   messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
   appId: import.meta.env.VITE_FIREBASE_APP_ID
 };
-
+console.log(1);
 const app = initializeApp(firebaseConfig);
-
+console.log(2);
 export const auth = initializeAuth(app, {
   persistence: browserLocalPersistence,
 })
-
+console.log(3);
 export const db = getFirestore(app);
-
+console.log(4);
 export type EachcaseData = {
   title: string;
   description: string;
