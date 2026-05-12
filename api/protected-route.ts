@@ -1,5 +1,5 @@
 import { VercelRequest, VercelResponse } from '@vercel/node';
-import { adminAuth } from './_utils/firebaseAdmin';
+import { getAdminAuth } from './_utils/firebaseAdmin';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader('Access-Control-Allow-Credentials', 'true');
@@ -20,6 +20,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(401).json({ error: 'Token not found or format invalid' });
     }
 
+    const adminAuth = getAdminAuth();
     const token = authHeader.split('Bearer ')[1];
 
     const decodedToken = await adminAuth.verifyIdToken(token);
