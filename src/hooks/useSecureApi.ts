@@ -12,6 +12,7 @@ export function useSecureApi() {
 
     try {
       const currentUser = auth.currentUser;
+      console.log(auth)
       if (!currentUser) {
         throw new Error('User not connected');
       }
