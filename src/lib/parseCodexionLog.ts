@@ -39,7 +39,7 @@ export function getCoderIds(entries: LogEntry[], command?: string): [number[], n
 
   if (codersNum !== undefined && !isNaN(codersNum)) {
     if (sortedIds.length >= codersNum) {
-      return [sortedIds.slice(0, codersNum), [0]];
+      return [sortedIds.slice(0, codersNum), []];
     }
 
     const filledIds = [...sortedIds];

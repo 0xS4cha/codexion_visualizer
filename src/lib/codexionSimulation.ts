@@ -369,9 +369,10 @@ export function buildSegments(
 
     if (create.length > 0) {
         create.forEach((id) => {
+            console.log(create, id)
             issues.push({
                 type: 'warning',
-                message: `The code trend did no action.`,
+                message: `The coder thread did no action.`,
                 coderId: id,
             });
             }
