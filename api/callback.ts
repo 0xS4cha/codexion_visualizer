@@ -1,5 +1,5 @@
 ﻿import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { adminAuth } from './_utils/firebaseAdmin';
+import { getAdminAuth } from './_utils/firebaseAdmin';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   const { code, error } = req.query;
@@ -58,6 +58,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     
     let customToken = "";
     try {
+      const adminAuth = getAdminAuth();
       customToken = await adminAuth.createCustomToken(user.id.toString());
     } catch (firebaseErr: any) {
       console.error("Firebase Admin Custom Token Error:", firebaseErr);

@@ -1,5 +1,5 @@
 import { VercelRequest, VercelResponse } from '@vercel/node';
-import { adminAuth, adminDb } from '../_utils/firebaseAdmin';
+import { getAdminAuth, getAdminDb } from '../_utils/firebaseAdmin';
 import { FieldValue } from 'firebase-admin/firestore';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -25,6 +25,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(401).json({ error: 'Token not found or format invalid' });
     }
 
+    const adminAuth = getAdminAuth();
     const token = authHeader.split('Bearer ')[1];
     const decodedToken = await adminAuth.verifyIdToken(token);
     const uid = decodedToken.uid;
@@ -45,6 +46,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(400).json({ error: 'Missing required fields' });
     }
 
+    const adminDb = getAdminDb();
     const docRef = await adminDb.collection('eachcases').add({
       title,
       description,
