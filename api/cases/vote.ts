@@ -72,7 +72,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const newVotes = currentVotes + voteChange;
 
       transaction.update(eachcaseRef, {
-        votes: admin.firestore.FieldValue.increment(voteChange),
+        votes: FieldValue.increment(voteChange),
         votedBy: newVotedBy
       });
 
