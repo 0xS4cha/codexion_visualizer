@@ -129,7 +129,9 @@ export default function Eachcase() {
       
       setIsLoadingList(true);
       const data = await getEachcases();
+      console.log("data", data)
       setEachcases(data);
+      setIsLoadingList(false);
     } catch (e) {
       console.error(e);
       alert("Failed to publish eachcase.");
@@ -487,7 +489,9 @@ function EachcaseCard({ title, author, tags, description, votes, userVote, onOpe
         </button>
         <span className={`text-sm font-medium ${userVote === 'up' ? 'text-green-500' : userVote === 'down' ? 'text-red-500' : 'text-white/80'}`}>{votes}</span>
         <button 
-          onClick={() => onVote('down')} 
+          onClick={() => {
+            onVote('down')
+          }} 
           className={`p-1 rounded transition ${userVote === 'down' ? 'text-red-500' : 'text-white/40 hover:text-red-400 hover:bg-white/5'}`}
         >
           <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6"/></svg>

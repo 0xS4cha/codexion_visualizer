@@ -379,7 +379,6 @@ export async function buildSegments(
 
     if (create.length > 0) {
         create.forEach((id) => {
-            console.log(create, id)
             issues.push({
                 type: 'warning',
                 message: `The coder thread did no action.`,
