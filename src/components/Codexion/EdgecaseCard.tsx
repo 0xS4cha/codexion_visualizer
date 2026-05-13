@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-type EachcaseCardProps = {
+type edgecaseCardProps = {
   id: string;
   title: string;
   author: string;
@@ -12,7 +12,7 @@ type EachcaseCardProps = {
   onVote: (voteType: "up" | "down") => void;
 };
 
-export function EachcaseCard({
+export function EdgecaseCard({
   title,
   author,
   tags,
@@ -21,12 +21,12 @@ export function EachcaseCard({
   userVote,
   onOpen,
   onVote,
-}: EachcaseCardProps) {
+}: edgecaseCardProps) {
   const [optimisticVotes, setOptimisticVotes] = useState(votes);
   const [optimisticUserVote, setOptimisticUserVote] = useState(userVote);
   const handleDownVote = () => {
     if (optimisticUserVote === "down") return;
-    const delta = optimisticUserVote === "up" ? 2 : 1;
+    const delta = optimisticUserVote === "up" && optimisticVotes == 1 ? 2 : 1;
     setOptimisticVotes((v) => v - delta);
     setOptimisticUserVote("down");
 
@@ -35,7 +35,7 @@ export function EachcaseCard({
 
   const handleUpVote = () => {
     if (optimisticUserVote === "up") return;
-    const delta = optimisticUserVote === "down" ? 2 : 1;
+    const delta = optimisticUserVote === "down" && optimisticVotes == -1 ? 2 : 1;
     setOptimisticVotes((v) => v + delta);
     setOptimisticUserVote("up");
 

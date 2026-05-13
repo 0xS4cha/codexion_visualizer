@@ -37,10 +37,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     const adminDb = getAdminDb();
-    const eachcaseRef = adminDb.collection("eachcases").doc(id);
+    const edgecaseRef = adminDb.collection("edgecases").doc(id);
     
     const result = await adminDb.runTransaction(async (transaction: any) => {
-      const docSnap = await transaction.get(eachcaseRef);
+      const docSnap = await transaction.get(edgecaseRef);
       if (!docSnap.exists) {
         throw new Error('Document does not exist!');
       }
@@ -71,7 +71,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const currentVotes = data.votes || 0;
       const newVotes = currentVotes + voteChange;
 
-      transaction.update(eachcaseRef, {
+      transaction.update(edgecaseRef, {
         votes: FieldValue.increment(voteChange),
         votedBy: newVotedBy
       });
@@ -81,7 +81,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     return res.status(200).json(result);
   } catch (error: any) {
-    console.error('Error voting on eachcase:', error);
+    console.error('Error voting on edgecase:', error);
     return res.status(500).json({ error: 'Internal server error' });
   }
 }

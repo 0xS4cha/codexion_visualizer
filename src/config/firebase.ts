@@ -14,7 +14,7 @@ const firebaseConfig = {
 const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 export const db = getFirestore(app);
-export type EachcaseData = {
+export type edgecaseData = {
   title: string;
   description: string;
   tags: string[];
@@ -29,9 +29,9 @@ export type EachcaseData = {
   votedBy?: Record<string, 'up' | 'down'>;
 };
 
-export const getEachcases = async () => {
-  const q = query(collection(db, "eachcases"), orderBy("createdAt", "desc"));
+export const getedgecases = async () => {
+  const q = query(collection(db, "edgecases"), orderBy("createdAt", "desc"));
   const querySnapshot = await getDocs(q);
-  return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as EachcaseData & { id: string }));
+  return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as edgecaseData & { id: string }));
 };
 

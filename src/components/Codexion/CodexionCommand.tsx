@@ -13,7 +13,7 @@ export default function CodexionCommand() {
         if (hasCommand) {
             navigate("/hub");
         } else {
-            navigate("/hub"); // or maybe somewhere else? The prompt says link to Eachcase.
+            navigate("/hub"); // or maybe somewhere else? The prompt says link to edgecase.
         }
     };
 

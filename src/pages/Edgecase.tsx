@@ -6,11 +6,11 @@ import GlassSurface from "@/components/ui/Components/GlassSurface/GlassSurface";
 import ShinyText from "@/components/ui/TextAnimations/ShinyText/ShinyText";
 import { signInWithCustomToken } from "firebase/auth";
 import { useAppSelector, useAppDispatch } from "@/store/hooks";
-import { auth, getEachcases, EachcaseData } from "@/config/firebase";
+import { auth, getedgecases, edgecaseData } from "@/config/firebase";
 import { setCommand, setOutput } from "@/store/features/inputSlice";
 import { setInstantAction, setDongleCooldown } from "@/store/features/settingsSlice";
 import { useSecureApi } from "@/hooks/useSecureApi";
-import { EachcaseCard } from "@/components/Codexion/EachcaseCard"
+import { EdgecaseCard } from "@/components/Codexion/EdgecaseCard"
 
 const AVAILABLE_TAGS = [
   "Burnout",
@@ -23,7 +23,7 @@ const AVAILABLE_TAGS = [
   "Leaks"
 ];
 
-export default function Eachcase() {
+export default function edgecase() {
   const [user, setUser] = useState<DashboardUser | null>(null);
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
@@ -34,7 +34,7 @@ export default function Eachcase() {
   const [description, setDescription] = useState("");
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [eachcases, setEachcases] = useState<(EachcaseData & { id: string })[]>([]);
+  const [edgecases, setedgecases] = useState<(edgecaseData & { id: string })[]>([]);
   const [isLoadingList, setIsLoadingList] = useState(true);
 
   const [searchQuery, setSearchQuery] = useState("");
@@ -52,10 +52,10 @@ export default function Eachcase() {
   useEffect(() => {
     const fetchCases = async () => {
       try {
-        const data = await getEachcases();
-        setEachcases(data);
+        const data = await getedgecases();
+        setedgecases(data);
       } catch (error) {
-        console.error("Failed to fetch eachcases", error);
+        console.error("Failed to fetch edgecases", error);
       } finally {
         setIsLoadingList(false);
       }
@@ -129,13 +129,13 @@ export default function Eachcase() {
       setSelectedTags([]);
       
       setIsLoadingList(true);
-      const data = await getEachcases();
+      const data = await getedgecases();
       console.log("data", data)
-      setEachcases(data);
+      setedgecases(data);
       setIsLoadingList(false);
     } catch (e) {
       console.error(e);
-      alert("Failed to publish eachcase.");
+      alert("Failed to publish edgecase.");
     } finally {
       setIsSubmitting(false);
     }
@@ -148,7 +148,7 @@ export default function Eachcase() {
         method: 'POST',
         body: JSON.stringify({ id, voteType, userLogin: user.login })
       });
-      setEachcases(prev => prev.map(ec => {
+      setedgecases(prev => prev.map(ec => {
         if (ec.id === id) {
           return { ...ec, votes: newVotes, votedBy: newVotedBy };
         }
@@ -171,7 +171,7 @@ export default function Eachcase() {
     setCurrentPage(1);
   };
 
-  const filteredEachcases = eachcases.filter(ec => {
+  const filterededgecases = edgecases.filter(ec => {
     const searchLower = searchQuery.toLowerCase();
     const matchesSearch = !searchQuery || 
       (ec.title && ec.title.toLowerCase().includes(searchLower)) ||
@@ -185,8 +185,8 @@ export default function Eachcase() {
     return matchesSearch && matchesTags;
   });
 
-  const totalPages = Math.ceil(filteredEachcases.length / itemsPerPage);
-  const paginatedEachcases = filteredEachcases.slice(
+  const totalPages = Math.ceil(filterededgecases.length / itemsPerPage);
+  const paginatededgecases = filterededgecases.slice(
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   );
@@ -216,7 +216,7 @@ export default function Eachcase() {
             <span className="text-2xl font-bold tabular-nums text-white/90">42</span>
             <span className="text-white/40">|</span>
             <ShinyText
-              text="Eachcase Hub"
+              text="Edgecase Hub"
               className="text-xl font-bold tracking-tight"
               color="#a0a0a0"
               shineColor="#e8e8e8"
@@ -246,7 +246,7 @@ export default function Eachcase() {
                     <input
                       value={searchQuery}
                       onChange={handleSearchChange}
-                      placeholder="Search an eachcase, a tag, or an author..."
+                      placeholder="Search an edgecase, a tag, or an author..."
                       className="w-full rounded-lg border border-white/10 bg-black/30 px-4 py-3 text-sm text-white/90 placeholder:text-white/30 focus:border-white/30 focus:outline-none focus:ring-1 focus:ring-white/20"
                     />
                     <div className="flex flex-wrap gap-2">
@@ -291,7 +291,7 @@ export default function Eachcase() {
                   </div>
                   <div>
                     <div className="text-xs uppercase tracking-widest text-white/40">Share</div>
-                    <h3 className="mt-2 text-lg font-semibold text-white/85">Share an eachcase</h3>
+                    <h3 className="mt-2 text-lg font-semibold text-white/85">Share an edgecase</h3>
                   </div>
                   <button 
                     onClick={() => {
@@ -323,13 +323,13 @@ export default function Eachcase() {
 
               <div className="grid gap-4">
                 {isLoadingList ? (
-                  <div className="text-white/50 text-center py-8">Loading eachcases...</div>
-                ) : filteredEachcases.length === 0 ? (
-                  <div className="text-white/50 text-center py-8">No eachcases found.</div>
+                  <div className="text-white/50 text-center py-8">Loading edgecases...</div>
+                ) : filterededgecases.length === 0 ? (
+                  <div className="text-white/50 text-center py-8">No edgecases found.</div>
                 ) : (
                   <>
-                    {paginatedEachcases.map((ec) => (
-                      <EachcaseCard
+                    {paginatededgecases.map((ec) => (
+                      <EdgecaseCard
                         key={ec.id}
                         id={ec.id}
                         title={ec.title}
@@ -382,7 +382,7 @@ export default function Eachcase() {
           <div className="w-full max-w-2xl">
           <div className="flex flex-col rounded-xl border border-white/10 bg-black/20 p-4">
               <div className="flex items-center justify-between">
-                <h2 className="text-xl font-bold text-white/90">Share your Eachcase</h2>
+                <h2 className="text-xl font-bold text-white/90">Share your edgecase</h2>
                 <button onClick={() => setIsModalOpen(false)} className="text-white/50 hover:text-white transition">
                   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
                 </button>
@@ -395,7 +395,7 @@ export default function Eachcase() {
                 </div>
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-white/70">Description</label>
-                  <input value={description} onChange={e => setDescription(e.target.value)} placeholder="What happened in this eachcase?" className="w-full rounded-lg border border-white/10 bg-black/30 px-4 py-3 text-sm text-white/90 focus:outline-none" />
+                  <input value={description} onChange={e => setDescription(e.target.value)} placeholder="What happened in this edgecase?" className="w-full rounded-lg border border-white/10 bg-black/30 px-4 py-3 text-sm text-white/90 focus:outline-none" />
                 </div>
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-white/70">Tags</label>
@@ -433,7 +433,7 @@ export default function Eachcase() {
                 </div>
 
                 <button onClick={handlePublish} disabled={isSubmitting} className="w-full rounded-full bg-white text-black px-4 py-3 font-semibold hover:bg-white/90 transition disabled:opacity-50">
-                  {isSubmitting ? "Publishing..." : "Publish Eachcase"}
+                  {isSubmitting ? "Publishing..." : "Publish edgecase"}
                 </button>
               </div>
             </div>

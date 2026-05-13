@@ -2,7 +2,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Visualizer from "./Visualizer";
 import Login from "./Login";
 import Dashboard from "./Dashboard";
-import Eachcase from "./Eachcase";
+import Edgecase from "./Edgecase";
 
 export default function App() {
   return (
@@ -11,7 +11,7 @@ export default function App() {
             <Route path="/" element={<Visualizer />} />
             <Route path="/login" element={<Login />} />
             <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/hub" element={<Eachcase />} />
+            <Route path="/hub" element={<Edgecase />} />
           </Routes>
         </BrowserRouter>
   );

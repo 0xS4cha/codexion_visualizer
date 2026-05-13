@@ -47,7 +47,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     const adminDb = getAdminDb();
-    const docRef = await adminDb.collection('eachcases').add({
+    const docRef = await adminDb.collection('edgecases').add({
       title,
       description,
       tags: tags || [],
@@ -64,7 +64,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     return res.status(200).json({ success: true, id: docRef.id });
   } catch (error: any) {
-    console.error('Error saving eachcase:', error);
+    console.error('Error saving edgecase:', error);
     return res.status(500).json({ error: 'Internal server error' });
   }
 }
