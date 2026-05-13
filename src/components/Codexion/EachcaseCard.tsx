@@ -46,7 +46,7 @@ export function EachcaseCard({
       <div className="flex flex-col items-center justify-start gap-1">
         <button
           onClick={handleUpVote}
-          className={`p-1 rounded transition ${userVote === "up" ? "text-green-500" : "text-white/40 hover:text-green-400 hover:bg-white/5"}`}
+          className={`p-1 rounded transition ${optimisticUserVote === "up" ? "text-green-500" : "text-white/40 hover:text-green-400 hover:bg-white/5"}`}
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -63,13 +63,13 @@ export function EachcaseCard({
           </svg>
         </button>
         <span
-          className={`text-sm font-medium ${userVote === "up" ? "text-green-500" : userVote === "down" ? "text-red-500" : "text-white/80"}`}
+          className={`text-sm font-medium ${optimisticUserVote === "up" ? "text-green-500" : optimisticUserVote === "down" ? "text-red-500" : "text-white/80"}`}
         >
           {optimisticVotes}
         </span>
         <button
           onClick={handleDownVote}
-          className={`p-1 rounded transition ${userVote === "down" ? "text-red-500" : "text-white/40 hover:text-red-400 hover:bg-white/5"}`}
+          className={`p-1 rounded transition ${optimisticUserVote === "down" ? "text-red-500" : "text-white/40 hover:text-red-400 hover:bg-white/5"}`}
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
