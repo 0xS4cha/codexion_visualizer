@@ -10,7 +10,6 @@ export default function Login() {
     window.location.href = "/api/login";
   };
 
-
   return (
     <div className="relative h-screen w-full overflow-x-hidden">
       <div className="absolute inset-0 z-0">
