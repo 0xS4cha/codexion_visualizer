@@ -2,6 +2,17 @@ import { VercelRequest, VercelResponse } from '@vercel/node';
 import { getAdminAuth, getAdminDb } from '../_utils/firebaseAdmin.js';
 import { FieldValue } from 'firebase-admin/firestore';
 
+const AVAILABLE_TAGS = [
+  "Burnout",
+  "Deadlock",
+  "Tricky",
+  "Stack",
+  "Memory",
+  "Infinite Loop",
+  "Segfault",
+  "Leaks"
+];
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader('Access-Control-Allow-Credentials', 'true');
   res.setHeader('Access-Control-Allow-Origin', '*');
