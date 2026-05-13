@@ -95,7 +95,6 @@ export default function CodexionOptions() {
                   Visualizes the period where dongles are unavailable after release.
                 </p>
               </div>
-
             </div>
           </motion.div>
         )}

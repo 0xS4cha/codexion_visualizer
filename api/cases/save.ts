@@ -38,8 +38,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       instantActionPadding,
       dongleCooldown,
       output,
-      author,
-      authorDisplayName
+      author
     } = req.body;
 
     if (!title || !description) {
@@ -55,8 +54,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       instantActionPadding: instantActionPadding || 0,
       dongleCooldown: dongleCooldown || 0,
       output,
-      author: author || uid, 
-      authorDisplayName: authorDisplayName || 'Unknown User',
+      author: author || uid,
       votes: 0,
       votedBy: {},
       createdAt: FieldValue.serverTimestamp()

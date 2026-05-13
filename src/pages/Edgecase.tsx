@@ -120,7 +120,6 @@ export default function edgecase() {
           dongleCooldown: localCooldown,
           output,
           author: user!.login,
-          authorDisplayName: user!.displayName,
         })
       });
       setIsModalOpen(false);

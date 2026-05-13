@@ -41,7 +41,7 @@ export default function CodexionCommand() {
                 className="flex-1 resize-none rounded-lg border border-white/10 bg-black/30 px-4 py-3 font-mono text-sm text-white/90 placeholder:text-white/30 focus:border-white/30 focus:outline-none focus:ring-1 focus:ring-white/20"
                 spellCheck={false}
             />
-            <div className="flex justify-end pt-2">
+            <div className="flex justify pt-2">
                 <button
                     type="button"
                     onClick={handleAction}

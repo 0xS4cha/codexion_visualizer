@@ -23,7 +23,6 @@ export type edgecaseData = {
   dongleCooldown: number;
   output: string;
   author: string;
-  authorDisplayName: string;
   createdAt: any;
   votes?: number;
   votedBy?: Record<string, 'up' | 'down'>;
