@@ -1,4 +1,5 @@
 import { useState } from "react";
+import BorderGlow from "@/components/ui/Components/BorderGlow/BorderGlow"
 
 type edgecaseCardProps = {
   id: string;
@@ -42,7 +43,18 @@ export function EdgecaseCard({
     onVote("up");
   };
   return (
-    <div className="flex gap-4 rounded-xl border border-white/10 bg-black/20 p-4">
+    <BorderGlow
+      edgeSensitivity={30}
+      glowColor="40 0 80"
+      backgroundColor="bg-black/20"
+      borderRadius={28}
+      glowRadius={40}
+      glowIntensity={1}
+      coneSpread={25}
+      animated={true}
+      colors={['#dddddd', '#525252', '#ffffff']}
+      className="flex gap-4 rounded-xl border border-white/10 bg-black/20 p-4"
+    >
       <div className="flex flex-col items-center justify-start gap-1">
         <button
           onClick={handleUpVote}
@@ -113,6 +125,6 @@ export function EdgecaseCard({
           Open
         </button>
       </div>
-    </div>
+    </BorderGlow>
   );
 }
