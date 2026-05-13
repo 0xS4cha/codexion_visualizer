@@ -118,8 +118,7 @@ export default function edgecase() {
           command: localCommand,
           instantActionPadding: localPadding,
           dongleCooldown: localCooldown,
-          output,
-          author: user!.login,
+          output
         })
       });
       setIsModalOpen(false);
@@ -145,7 +144,7 @@ export default function edgecase() {
     try {
       const { newVotes, newVotedBy } = await fetchSecure('/api/cases/vote', {
         method: 'POST',
-        body: JSON.stringify({ id, voteType, userLogin: user.login })
+        body: JSON.stringify({ id, voteType })
       });
       setedgecases(prev => prev.map(ec => {
         if (ec.id === id) {

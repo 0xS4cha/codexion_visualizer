@@ -30,7 +30,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const decodedToken = await adminAuth.verifyIdToken(token);
     
     const uid = decodedToken.uid;
-    const { id, voteType, userLogin } = req.body;
+    const userLogin = decodedToken.login;
+    const { id, voteType } = req.body;
 
     if (!id || !voteType || !['up', 'down'].includes(voteType) || !userLogin) {
       return res.status(400).json({ error: 'Invalid parameters' });

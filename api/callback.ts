@@ -59,7 +59,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     let customToken = "";
     try {
       const adminAuth = getAdminAuth();
-      customToken = await adminAuth.createCustomToken(user.id.toString());
+      customToken = await adminAuth.createCustomToken(user.id.toString(), { login: user.login });
     } catch (firebaseErr: any) {
       console.error("Firebase Admin Custom Token Error:", firebaseErr);
       throw new Error(`Firebase Token Error: ${firebaseErr.message}`);

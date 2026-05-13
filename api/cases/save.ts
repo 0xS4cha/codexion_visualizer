@@ -29,6 +29,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const token = authHeader.split('Bearer ')[1];
     const decodedToken = await adminAuth.verifyIdToken(token);
     const uid = decodedToken.uid;
+    const userLogin = decodedToken.login;
 
     const {
       title,
@@ -37,8 +38,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       command,
       instantActionPadding,
       dongleCooldown,
-      output,
-      author
+      output
     } = req.body;
 
     if (!title || !description) {
@@ -54,7 +54,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       instantActionPadding: instantActionPadding || 0,
       dongleCooldown: dongleCooldown || 0,
       output,
-      author: author || uid,
+      author: userLogin || uid,
       votes: 0,
       votedBy: {},
       createdAt: FieldValue.serverTimestamp()
