@@ -8,8 +8,14 @@ import CodexionOptions from "@/components/Codexion/CodexionOptions";
 import CodexionOutput from "@/components/Codexion/CodexionOutput"
 import CodexionCommand from "@/components/Codexion/CodexionCommand"
 import CodexionAnalysis from "@/components/Codexion/CodexionAnalysis"
+import BorderGlow from "@/components/ui/Components/BorderGlow/BorderGlow"
+import { useNavigate, Link } from "react-router-dom";
 
 export default function Visualizer() {
+	const navigate = useNavigate();
+	const handleHub = () => {
+		navigate("/hub");
+	}
 	return (
 		<>
 			<div className="fixed inset-0 -z-10 pointer-events-none">
@@ -46,6 +52,37 @@ export default function Visualizer() {
 
 			<main className="min-h-screen pt-24 pb-32 px-4 sm:px-6">
 				<div className="mx-auto max-w-6xl space-y-6">
+					<BorderGlow
+						edgeSensitivity={30}
+						glowColor="40 0 80"
+						backgroundColor="bg-black/20"
+						borderRadius={28}
+						glowRadius={40}
+						glowIntensity={1}
+						coneSpread={25}
+						animated={true}
+						colors={['#c084fc', '#f472b6', '#38bdf8']}
+						className="w-full rounded-xl border border-white/10 bg-black/20"
+					>
+						<div className="flex w-full items-center justify-between gap-4 p-4 px-6 text-white">
+							<div className="flex items-center gap-4">
+								<span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white/10 text-xl">
+									i
+								</span>
+								<div className="text-left">
+									<h3 className="font-semibold text-white/90">New feature !</h3>
+									<p className="text-sm text-white/60">Discover the Community Hub to share and explore edge cases.</p>
+								</div>
+							</div>
+							<button
+								type="button"
+								onClick={handleHub}
+								className="shrink-0 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs font-medium tracking-wide text-white/70 transition hover:bg-white/10 hover:text-white"
+							>
+								Discover the Hub
+							</button>
+						</div>
+					</BorderGlow>
 					<CodexionCommand />
 					<CodexionOutput />
 					<CodexionOptions />

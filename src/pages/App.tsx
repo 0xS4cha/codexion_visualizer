@@ -10,7 +10,7 @@ export default function App() {
           <Routes>
             <Route path="/" element={<Visualizer />} />
             <Route path="/login" element={<Login />} />
-            <Route path="/dashboard" element={<Dashboard />} />
+            {/* <Route path="/dashboard" element={<Dashboard />} /> */}
             <Route path="/hub" element={<Edgecase />} />
           </Routes>
         </BrowserRouter>
