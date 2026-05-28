@@ -20,7 +20,9 @@ const AVAILABLE_TAGS = [
   "Memory",
   "Infinite Loop",
   "Segfault",
-  "Leaks"
+  "Leaks",
+  "Parsing",
+  "Other"
 ];
 
 export default function edgecase() {
