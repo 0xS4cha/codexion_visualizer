@@ -1,5 +1,4 @@
 import { createRoot } from 'react-dom/client'
-import 'tailwindcss/tailwind.css'
 import '@/index.css'
 import App from '@/pages/App'
 import { Provider } from 'react-redux';

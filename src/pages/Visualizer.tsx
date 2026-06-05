@@ -9,7 +9,8 @@ import CodexionOutput from "@/components/Codexion/CodexionOutput"
 import CodexionCommand from "@/components/Codexion/CodexionCommand"
 import CodexionAnalysis from "@/components/Codexion/CodexionAnalysis"
 import BorderGlow from "@/components/ui/Components/BorderGlow/BorderGlow"
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
+import { CodexionSimulationProvider } from "@/context/CodexionSimulationContext";
 
 export default function Visualizer() {
 	const navigate = useNavigate();
@@ -17,7 +18,7 @@ export default function Visualizer() {
 		navigate("/hub");
 	}
 	return (
-		<>
+		<CodexionSimulationProvider>
 			<div className="fixed inset-0 -z-10 pointer-events-none">
 				<Silk
 					speed={5}
@@ -125,6 +126,6 @@ export default function Visualizer() {
 					</div>
 				</GlassSurface>
 			</footer>
-		</>
+		</CodexionSimulationProvider>
 	);
 }

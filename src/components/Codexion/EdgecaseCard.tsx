@@ -26,21 +26,29 @@ export function EdgecaseCard({
   const [optimisticVotes, setOptimisticVotes] = useState(votes);
   const [optimisticUserVote, setOptimisticUserVote] = useState(userVote);
   const handleDownVote = () => {
-    if (optimisticUserVote === "down") return;
-    const delta = optimisticUserVote === "up" && optimisticVotes == 1 ? 2 : 1;
-    setOptimisticVotes((v) => v - delta);
-    setOptimisticUserVote("down");
-
-    onVote("down");
+    if (optimisticUserVote === "down") {
+      setOptimisticVotes((v) => v + 1);
+      setOptimisticUserVote(undefined);
+      onVote("down");
+    } else {
+      const delta = optimisticUserVote === "up" ? 2 : 1;
+      setOptimisticVotes((v) => v - delta);
+      setOptimisticUserVote("down");
+      onVote("down");
+    }
   };
 
   const handleUpVote = () => {
-    if (optimisticUserVote === "up") return;
-    const delta = optimisticUserVote === "down" && optimisticVotes == -1 ? 2 : 1;
-    setOptimisticVotes((v) => v + delta);
-    setOptimisticUserVote("up");
-
-    onVote("up");
+    if (optimisticUserVote === "up") {
+      setOptimisticVotes((v) => v - 1);
+      setOptimisticUserVote(undefined);
+      onVote("up");
+    } else {
+      const delta = optimisticUserVote === "down" ? 2 : 1;
+      setOptimisticVotes((v) => v + delta);
+      setOptimisticUserVote("up");
+      onVote("up");
+    }
   };
   return (
     <BorderGlow

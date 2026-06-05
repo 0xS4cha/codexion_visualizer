@@ -1,43 +1,13 @@
-import { useMemo } from "react";
-import { useAppSelector } from '@/store/hooks';
 import { useCodexionSimulation } from "@/hooks/useCodexionSimulation";
 import ShinyText from "@/components/ui/TextAnimations/ShinyText/ShinyText";
 import { AlertTriangle, AlertCircle, Activity, CircleAlert } from "lucide-react";
-import GlassSurface from "@/components/ui/Components/GlassSurface/GlassSurface";
 
 
 export default function CodexionAnalysis() {
-    const padding = useAppSelector((state) => state.settings.instantActionPadding);
-    const rawLog = useAppSelector((state) => state.user_input.output);
-    const command = useAppSelector((state) => state.user_input.command);
-    const dongleCooldown = useAppSelector((state) => state.settings.dongleCooldown);
-
-    const { timeToBurnout, timeToRefactor, cmdDongleCooldown } = useMemo(() => {
-        const parts = command.split(' ').filter(p => p.length > 0);
-        return {
-            timeToBurnout: parts.length > 2 ? parseInt(parts[2], 10) : 0,
-            timeToRefactor: parts.length > 5 ? parseInt(parts[5], 10) : undefined,
-            cmdDongleCooldown: parts.length > 7 ? parseInt(parts[7], 10) : undefined
-        };
-    }, [command]);
-
-    const finalDongleCooldown = cmdDongleCooldown !== undefined ? cmdDongleCooldown : dongleCooldown;
-
-    const { data, isLoading } = useCodexionSimulation(
-        rawLog,
-        padding,
-        timeToRefactor,
-        finalDongleCooldown,
-        timeToBurnout,
-        command
-    );
+    const { data, isLoading } = useCodexionSimulation();
 
     if (isLoading || !data) {
-        return (
-        <GlassSurface width="100%" height={56} borderRadius={16} className="rounded-xl border border-white/10 bg-white/5 p-8 text-center text-white/40">
-            Paste the Codexion logs above to view them.
-        </GlassSurface>
-        );
+        return (<></>);
     }
 
     const { issues, coderStats, coderIds } = data;

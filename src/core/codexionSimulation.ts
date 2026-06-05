@@ -68,7 +68,7 @@ function interpolate(v: number, vKeys: number[], rValues: number[]): number {
     return Math.round(r0 + t * (r1 - r0));
 }
 
-const yieldToMain = () => new Promise(r => setTimeout(r, 0));
+
 
 export async function buildSegments(
     entries: LogEntry[],
@@ -85,6 +85,15 @@ export async function buildSegments(
     coderStats: any;
     issues: SimulationIssue[];
 } > {
+    let lastYieldTime = performance.now();
+    const yieldIfNeeded = async () => {
+        const now = performance.now();
+        if (now - lastYieldTime > 16) {
+            await new Promise(r => setTimeout(r, 0));
+            lastYieldTime = performance.now();
+        }
+    };
+
     const [coderIds, create] = getCoderIds(entries, command);
     coderIds.sort((a, b) => a - b);
     const n = coderIds.length;
@@ -130,7 +139,7 @@ export async function buildSegments(
     }
 
     for (let i = 0; i < sortedTimestamps.length - 1; i++) {
-        if (i % 500 === 0) await yieldToMain();
+        await yieldIfNeeded();
         const tCurr = sortedTimestamps[i];
         const tNext = sortedTimestamps[i + 1];
         const realDelta = tNext - tCurr;
@@ -219,7 +228,7 @@ export async function buildSegments(
 
     for (let index = 0; index < sortedEntries.length; index++) {
         const entry = sortedEntries[index];
-        if (index % 500 === 0) await yieldToMain();
+        await yieldIfNeeded();
         const coderId = entry.coderId;
         const realT = entry.timestamp;
         const visualT = visualMap.get(realT)!;
@@ -425,7 +434,7 @@ export function getDongleStatusAtTime(
 
 export async function prepareCodexionSimulation(rawLog: string, padding: number, timeToRefactor?: number, dongleCooldown = 0, timeToBurnout = 0, command?: string) {
     const entries = parseCodexionLog(rawLog);
-    const [coderIds, create] = getCoderIds(entries, command);
+    const [coderIds] = getCoderIds(entries, command);
 
     const minTime = 0;
 

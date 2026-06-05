@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { DashboardUser, StatCardProps, ActionChipProps}  from "@/types/user"
+import { DashboardUser, ActionChipProps}  from "@/types/user"
 import Silk from "@/components/ui/Backgrounds/Silk/Silk";
 import GlassSurface from "@/components/ui/Components/GlassSurface/GlassSurface";
 import ShinyText from "@/components/ui/TextAnimations/ShinyText/ShinyText";
@@ -124,28 +124,7 @@ export default function Dashboard() {
   );
 }
 
-function StatCard({ label, value }: StatCardProps) {
-  return (
-    <GlassSurface
-      width="100%"
-      height="auto"
-      borderRadius={18}
-      className="p-5 sm:p-6"
-    >
-      <div className="flex items-center justify-between">
-        <div>
-          <div className="text-xs uppercase tracking-widest text-white/40">
-            {label}
-          </div>
-          <div className="mt-2 text-2xl font-semibold text-white/90 tabular-nums">
-            {value}
-          </div>
-        </div>
-        <div className="h-10 w-10 rounded-full bg-white/5 border border-white/10" />
-      </div>
-    </GlassSurface>
-  );
-}
+
 
 function ActionChip({ label }: ActionChipProps) {
   return (

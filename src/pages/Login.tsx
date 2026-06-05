@@ -1,5 +1,4 @@
-import { useState, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+
 import Squares from '@/components/ui/Backgrounds/Squares/Squares';
 import ShinyText from '@/components/ui/TextAnimations/ShinyText/ShinyText';
 import SplitText from '@/components/ui/TextAnimations/SplitText/SplitText';

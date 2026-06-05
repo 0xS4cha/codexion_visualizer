@@ -1,45 +1,17 @@
-import { useMemo, useState, useRef } from "react";
+import { useState, useRef } from "react";
 import {
   getStatusAtTime,
   getDongleStatusAtTime,
   ACTION_COLORS
 } from "@/core/codexionSimulation";
 import { useCodexionSimulation } from "@/hooks/useCodexionSimulation";
-import GlassSurface from "@/components/ui/Components/GlassSurface/GlassSurface";
+import { useCodexionSimulationContext } from "@/context/CodexionSimulationContext";
 import html2canvas from "html2canvas";
-import { useAppSelector } from '@/store/hooks';
 
-export default function CodexionTable({ }) {
+export default function CodexionTable() {
   const [currentTime, setCurrentTime] = useState(0);
-  const padding = useAppSelector((state) => state.settings.instantActionPadding);
-  const dongleCooldown = useAppSelector((state) => state.settings.dongleCooldown);
-  const rawLog = useAppSelector((state) => state.user_input.output);
-  const command = useAppSelector((state) => state.user_input.command);
-
-  const { timeToRefactor, cmdDongleCooldown, timeToBurnout } = useMemo(() => {
-    const commandParts = command.split(' ').filter(p => p.length > 0);
-    return {
-      timeToRefactor: commandParts.length > 5 ? parseInt(commandParts[5], 10) : undefined,
-      cmdDongleCooldown: commandParts.length > 7 ? parseInt(commandParts[7], 10) : undefined,
-      timeToBurnout: commandParts.length > 2 ? parseInt(commandParts[2], 10) : 0
-    };
-  }, [command]);
-
-  const finalDongleCooldown = cmdDongleCooldown !== undefined ? cmdDongleCooldown : dongleCooldown;
-
-  const { data, isLoading } = useCodexionSimulation(
-    rawLog,
-    padding,
-    timeToRefactor,
-    finalDongleCooldown,
-    timeToBurnout,
-    command
-  );
-
-  const timeToBurnoutParam = useMemo(() => {
-    const parts = command.split(' ').filter(p => p.length > 0);
-    return parts.length > 2 ? parseInt(parts[2], 10) : 0;
-  }, [command]);
+  const { data, isLoading } = useCodexionSimulation();
+  const { timeToBurnout: timeToBurnoutParam } = useCodexionSimulationContext();
   const tableRef = useRef<HTMLDivElement>(null);
   const radius = 200;
   const dongleRadius = 140;
@@ -67,29 +39,11 @@ export default function CodexionTable({ }) {
   };
 
   if (isLoading || !data) {
-    return (
-      <GlassSurface
-        width="100%"
-        height={56}
-        borderRadius={16}
-        className="rounded-xl border border-white/10 bg-white/5 p-8 text-center text-white/40"
-      >
-        Paste the Codexion logs above to view them.
-      </GlassSurface>
-    );
+    return (<></>);
   }
   const { coderIds, dongleSegments, minTime, maxTime, segments, visualToReal } = data;
   if (coderIds && coderIds.length === 0) {
-    return (
-      <GlassSurface
-        width="100%"
-        height={56}
-        borderRadius={16}
-        className="rounded-xl border border-white/10 bg-white/5 p-8 text-center text-white/40"
-      >
-        Paste logs to view circular table.
-      </GlassSurface>
-    );
+    return (<></>);
   }
 
   const realTime = visualToReal(currentTime);

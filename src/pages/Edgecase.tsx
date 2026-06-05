@@ -7,7 +7,7 @@ import ShinyText from "@/components/ui/TextAnimations/ShinyText/ShinyText";
 import { signInWithCustomToken } from "firebase/auth";
 import { useAppSelector, useAppDispatch } from "@/store/hooks";
 import { auth, getedgecases, edgecaseData } from "@/config/firebase";
-import { setCommand, setOutput } from "@/store/features/inputSlice";
+import { setCommand } from "@/store/features/inputSlice";
 import { setInstantAction, setDongleCooldown } from "@/store/features/settingsSlice";
 import { useSecureApi } from "@/hooks/useSecureApi";
 import { EdgecaseCard } from "@/components/Codexion/EdgecaseCard"
@@ -25,7 +25,7 @@ const AVAILABLE_TAGS = [
   "Other"
 ];
 
-export default function edgecase() {
+export default function Edgecase() {
   const [user, setUser] = useState<DashboardUser | null>(null);
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
