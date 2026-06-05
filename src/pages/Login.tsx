@@ -1,5 +1,4 @@
-
-import Squares from '@/components/ui/Backgrounds/Squares/Squares';
+import ShapeGrid from "@/components/ui/Backgrounds/ShapeGrid/ShapeGrid";
 import ShinyText from '@/components/ui/TextAnimations/ShinyText/ShinyText';
 import SplitText from '@/components/ui/TextAnimations/SplitText/SplitText';
 import logo42 from '../assets/42_Logo.svg';
@@ -11,13 +10,15 @@ export default function Login() {
 
   return (
     <div className="relative h-screen w-full overflow-x-hidden">
-      <div className="absolute inset-0 z-0">
-        <Squares
-          speed={0.2}
+      <div className="fixed inset-0 -z-10 bg-[#0a0a0d]">
+        <ShapeGrid
+          speed={0.5}
           squareSize={40}
           direction='diagonal'
-          borderColor='#363d46'
-          hoverFillColor='#ffffff'
+          borderColor="#2F293A"
+          hoverFillColor='#222'
+          shape='square'
+          hoverTrailAmount={0}
         />
       </div>
 
@@ -55,9 +56,9 @@ export default function Login() {
                   disabled={false}
                   speed={3}
                 />
-                <img 
-                  src={logo42} 
-                  alt="42 Logo" 
+                <img
+                  src={logo42}
+                  alt="42 Logo"
                   className="w-6 h-6 md:w-7 md:h-7"
                 />
               </div>
