@@ -16,7 +16,6 @@
   --muted: oklch(0.97 0 0);
   --muted-foreground: oklch(0.556 0 0);
 
-  /* Added missing light theme variables */
   --border: oklch(0.922 0 0);
   --accent: oklch(0.97 0 0);
 
@@ -126,4 +125,5 @@
       margin: 2px;
     }
   }
+
 }

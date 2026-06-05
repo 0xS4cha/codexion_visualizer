@@ -49,7 +49,7 @@ export default function CodexionTable() {
   const realTime = visualToReal(currentTime);
 
   return (
-    <div className="flex flex-col rounded-xl border border-white/10 bg-black/20 p-4">
+    <div className="flex flex-col rounded-xl border border-white/10 bg-white/5 backdrop-blur-md p-4">
       <div className="mb-4 flex items-center justify-between">
         <div className="flex items-center gap-4">
           <button

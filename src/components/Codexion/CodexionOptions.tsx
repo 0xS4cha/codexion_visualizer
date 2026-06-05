@@ -11,7 +11,7 @@ export default function CodexionOptions() {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
-    <div className="flex flex-col rounded-xl border border-white/10 bg-black/20 p-4 sm:p-6">
+    <div className="flex flex-col rounded-xl border border-white/10 bg-white/5 backdrop-blur-md  p-4 sm:p-6">
       <button
         onClick={() => setIsOpen(!isOpen)}
         className="flex w-full cursor-pointer items-center justify-between border-b border-white/10 pb-4 outline-none"
@@ -40,7 +40,7 @@ export default function CodexionOptions() {
             transition={{ duration: 0.3, ease: "easeInOut" }}
             className="overflow-hidden"
           >
-            <div className="grid grid-cols-1 gap-6 pt-6 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="grid grid-cols-1 gap-4 pt-4">
 
               <div className="flex flex-col gap-3 rounded-lg border border-white/5 bg-white/5 p-4 transition-colors hover:bg-white/10">
                 <div className="flex items-center justify-between">

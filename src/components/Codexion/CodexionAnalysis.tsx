@@ -19,7 +19,7 @@ export default function CodexionAnalysis() {
 
     return (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div className="flex flex-col rounded-xl border border-white/10 bg-black/20 p-6">
+            <div className="flex flex-col rounded-xl border border-white/10 bg-white/5 backdrop-blur-md p-6">
                 <div className="mb-6 flex items-center justify-between">
                     <h2 className="text-sm font-semibold uppercase tracking-widest text-white/80">
                         <ShinyText text="Simulation Analysis (Doubtful)" disabled={false} speed={3} className="" />
@@ -40,7 +40,7 @@ export default function CodexionAnalysis() {
                     {issues.length === 0 ? (
                         <div className="flex flex-col items-center justify-center py-10 text-white/30 italic">
                             <CircleAlert className="w-8 h-8 mb-2 text-emerald-500/50" />
-                            
+
                             <p className="text-sm">No issues detected in the simulation run. Currently being reworked</p>
                         </div>
                     ) : (
@@ -73,7 +73,7 @@ export default function CodexionAnalysis() {
                 </div>
             </div>
 
-            <div className="flex flex-col rounded-xl border border-white/10 bg-black/20 p-6">
+            <div className="flex flex-col rounded-xl border border-white/10 bg-white/5 backdrop-blur-md p-6">
                 <div className="mb-6 flex items-center justify-between">
                     <h2 className="text-sm font-semibold uppercase tracking-widest text-white/80">
                         <ShinyText text="Performance Metrics" disabled={false} speed={3} className="" />

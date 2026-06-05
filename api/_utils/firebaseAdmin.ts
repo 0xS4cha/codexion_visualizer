@@ -1,6 +1,5 @@
 import admin from 'firebase-admin';
 
-// Initialisation différée (Lazy Initialization)
 function getFirebaseAdmin() {
   if (!admin.apps?.length) {
     console.log("Firebase Env Check:", !!process.env.FIREBASE_PROJECT_ID, !!process.env.FIREBASE_PRIVATE_KEY);
