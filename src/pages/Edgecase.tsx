@@ -222,7 +222,6 @@ export default function Edgecase() {
         <div className="w-full space-y-6">
           <div className="grid gap-6 lg:grid-cols-[320px_1fr]">
             <aside className="space-y-4">
-              {/* Filter Section using Shadcn Card */}
               <Card className="border border-white/10 bg-white/5 backdrop-blur-md">
                 <CardHeader className="pb-3">
                   <CardDescription className="text-xs uppercase tracking-widest text-white/40">Filters</CardDescription>
@@ -250,7 +249,6 @@ export default function Edgecase() {
                 </CardContent>
               </Card>
 
-              {/* Actions Section using Shadcn Card */}
               <Card className="border border-white/10 bg-white/5 backdrop-blur-md">
                 <CardHeader className="pb-3">
                   <CardDescription className="text-xs uppercase tracking-widest text-white/40">Actions</CardDescription>
@@ -382,11 +380,10 @@ export default function Edgecase() {
                   >
                     <Badge
                       variant={selectedTags.includes(tag) ? "default" : "outline"}
-                      className={`px-3 py-1.5 text-xs transition-all ${
-                        selectedTags.includes(tag)
-                          ? "bg-white text-black hover:bg-white/90"
-                          : "border-white/10 bg-white/5 text-white/60 hover:text-white hover:bg-white/10"
-                      }`}
+                      className={`px-3 py-1.5 text-xs transition-all ${selectedTags.includes(tag)
+                        ? "bg-white text-black hover:bg-white/90"
+                        : "border-white/10 bg-white/5 text-white/60 hover:text-white hover:bg-white/10"
+                        }`}
                     >
                       {tag}
                     </Badge>
@@ -451,11 +448,10 @@ function FilterChip({ label, active, onClick }: FilterChipProps) {
     <button type="button" onClick={onClick} className="cursor-pointer">
       <Badge
         variant={active ? "default" : "outline"}
-        className={`px-3 py-1.5 text-xs transition-all ${
-          active
-            ? "bg-white text-black hover:bg-white/90"
-            : "border-white/15 bg-white/5 text-white/60 hover:text-white hover:bg-white/10"
-        }`}
+        className={`px-3 py-1.5 text-xs transition-all ${active
+          ? "bg-white text-black hover:bg-white/90"
+          : "border-white/15 bg-white/5 text-white/60 hover:text-white hover:bg-white/10"
+          }`}
       >
         {label}
       </Badge>
