@@ -1,5 +1,6 @@
 import { useState } from "react";
-import BorderGlow from "@/components/ui/Components/BorderGlow/BorderGlow"
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 
 type edgecaseCardProps = {
   id: string;
@@ -25,6 +26,7 @@ export function EdgecaseCard({
 }: edgecaseCardProps) {
   const [optimisticVotes, setOptimisticVotes] = useState(votes);
   const [optimisticUserVote, setOptimisticUserVote] = useState(userVote);
+
   const handleDownVote = () => {
     if (optimisticUserVote === "down") {
       setOptimisticVotes((v) => v + 1);
@@ -50,23 +52,18 @@ export function EdgecaseCard({
       onVote("up");
     }
   };
+
   return (
-    <BorderGlow
-      edgeSensitivity={30}
-      glowColor="40 0 80"
-      backgroundColor="bg-black/20"
-      borderRadius={28}
-      glowRadius={40}
-      glowIntensity={1}
-      coneSpread={25}
-      animated={true}
-      colors={['#dddddd', '#525252', '#ffffff']}
+    <div
       className="flex gap-4 rounded-xl border border-white/10 bg-black/20 p-4"
     >
       <div className="flex flex-col items-center justify-start gap-1">
         <button
           onClick={handleUpVote}
-          className={`p-1 rounded transition ${optimisticUserVote === "up" ? "text-green-500" : "text-white/40 hover:text-green-400 hover:bg-white/5"}`}
+          className={`p-1 rounded transition cursor-pointer ${optimisticUserVote === "up"
+            ? "text-green-500"
+            : "text-white/40 hover:text-green-400 hover:bg-white/5"
+            }`}
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -83,13 +80,21 @@ export function EdgecaseCard({
           </svg>
         </button>
         <span
-          className={`text-sm font-medium ${optimisticUserVote === "up" ? "text-green-500" : optimisticUserVote === "down" ? "text-red-500" : "text-white/80"}`}
+          className={`text-sm font-semibold tabular-nums ${optimisticUserVote === "up"
+            ? "text-green-500"
+            : optimisticUserVote === "down"
+              ? "text-red-500"
+              : "text-white/80"
+            }`}
         >
           {optimisticVotes}
         </span>
         <button
           onClick={handleDownVote}
-          className={`p-1 rounded transition ${optimisticUserVote === "down" ? "text-red-500" : "text-white/40 hover:text-red-400 hover:bg-white/5"}`}
+          className={`p-1 rounded transition cursor-pointer ${optimisticUserVote === "down"
+            ? "text-red-500"
+            : "text-white/40 hover:text-red-400 hover:bg-white/5"
+            }`}
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -114,25 +119,27 @@ export function EdgecaseCard({
             </h4>
             <span className="text-xs text-white/40">By @{author}</span>
           </div>
-          <p className="text-sm text-white/45 max-w-2xl">{description}</p>
+          <p className="text-sm text-white/45 max-w-2xl leading-relaxed">{description}</p>
           <div className="flex flex-wrap gap-2">
             {tags.map((tag) => (
-              <span
+              <Badge
                 key={tag}
-                className="rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-[11px] text-white/60"
+                variant="outline"
+                className="border-white/10 bg-white/5 text-[10px] text-white/60 px-2.5 py-0.5"
               >
                 {tag}
-              </span>
+              </Badge>
             ))}
           </div>
         </div>
-        <button
+        <Button
           onClick={onOpen}
-          className="self-start sm:self-center text-white/60 text-xs font-medium px-4 py-2 rounded-full bg-white/10 hover:bg-white/20 border border-white/10 transition"
+          variant="outline"
+          className="self-start sm:self-center text-white/70 text-xs font-semibold px-4.5 py-1.5 rounded-full border border-white/10 hover:bg-white/10 hover:text-white transition cursor-pointer h-9"
         >
           Open
-        </button>
+        </Button>
       </div>
-    </BorderGlow>
+    </div>
   );
 }

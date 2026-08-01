@@ -6,8 +6,7 @@ export default function handler(req: VercelRequest, res: VercelResponse) {
     response_type: "code",
     scope: "public",
   } as Record<string, string>);
-  console.log("CLIENT_ID:", process.env.FORTY_TWO_CLIENT_ID);
-  console.log("REDIRECT_URI:", process.env.FORTY_TWO_REDIRECT_URI);
+
   const authUrl = `https://api.intra.42.fr/oauth/authorize?${params}`;
   res.redirect(authUrl);
 }

@@ -1,16 +1,20 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { DashboardUser } from "@/types/user";
-import Silk from "@/components/ui/Backgrounds/Silk/Silk";
-import GlassSurface from "@/components/ui/Components/GlassSurface/GlassSurface";
-import ShinyText from "@/components/ui/TextAnimations/ShinyText/ShinyText";
+import ShapeGrid from "@/components/ui/Backgrounds/ShapeGrid/ShapeGrid";
+import Header from "@/components/Codexion/Header";
 import { signInWithCustomToken } from "firebase/auth";
 import { useAppSelector, useAppDispatch } from "@/store/hooks";
 import { auth, getedgecases, edgecaseData } from "@/config/firebase";
 import { setCommand } from "@/store/features/inputSlice";
 import { setInstantAction, setDongleCooldown } from "@/store/features/settingsSlice";
 import { useSecureApi } from "@/hooks/useSecureApi";
-import { EdgecaseCard } from "@/components/Codexion/EdgecaseCard"
+import { EdgecaseCard } from "@/components/Codexion/EdgecaseCard";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 
 const AVAILABLE_TAGS = [
   "Burnout",
@@ -31,7 +35,7 @@ export default function Edgecase() {
   const dispatch = useAppDispatch();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const { fetchSecure } = useSecureApi();
-  
+
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
@@ -75,17 +79,19 @@ export default function Edgecase() {
         const decoded = JSON.parse(atob(encoded));
         setUser(decoded);
         sessionStorage.setItem("42_user", JSON.stringify(decoded));
-        
+
         if (token) {
           signInWithCustomToken(auth, token)
             .then(() => {
               window.history.replaceState({}, "", "/hub");
+              window.dispatchEvent(new Event("storage"));
             })
             .catch((err) => {
               console.error("Firebase Auth Error:", err);
             });
         } else {
           window.history.replaceState({}, "", "/hub");
+          window.dispatchEvent(new Event("storage"));
         }
       } catch {
         navigate("/?error=invalid_data");
@@ -100,19 +106,12 @@ export default function Edgecase() {
     }
   }, [navigate]);
 
-  const handleLogout = () => {
-    sessionStorage.removeItem("42_user");
-    auth.signOut().then(() => {
-      navigate("/");
-    });
-  };
-
   const handlePublish = async () => {
     if (!title.trim() || !description.trim()) return;
     setIsSubmitting(true);
     try {
-      await fetchSecure('/api/cases/save', {
-        method: 'POST',
+      await fetchSecure("/api/cases/save", {
+        method: "POST",
         body: JSON.stringify({
           title,
           description,
@@ -127,10 +126,9 @@ export default function Edgecase() {
       setTitle("");
       setDescription("");
       setSelectedTags([]);
-      
+
       setIsLoadingList(true);
       const data = await getedgecases();
-      console.log("data", data)
       setedgecases(data);
       setIsLoadingList(false);
     } catch (e) {
@@ -141,19 +139,21 @@ export default function Edgecase() {
     }
   };
 
-  const handleVote = async (id: string, voteType: 'up' | 'down') => {
+  const handleVote = async (id: string, voteType: "up" | "down") => {
     if (!user) return;
     try {
-      const { newVotes, newVotedBy } = await fetchSecure('/api/cases/vote', {
-        method: 'POST',
+      const { newVotes, newVotedBy } = await fetchSecure("/api/cases/vote", {
+        method: "POST",
         body: JSON.stringify({ id, voteType })
       });
-      setedgecases(prev => prev.map(ec => {
-        if (ec.id === id) {
-          return { ...ec, votes: newVotes, votedBy: newVotedBy };
-        }
-        return ec;
-      }));
+      setedgecases((prev) =>
+        prev.map((ec) => {
+          if (ec.id === id) {
+            return { ...ec, votes: newVotes, votedBy: newVotedBy };
+          }
+          return ec;
+        })
+      );
     } catch (e) {
       console.error("Failed to vote", e);
     }
@@ -165,23 +165,25 @@ export default function Edgecase() {
   };
 
   const handleTagToggle = (tag: string) => {
-    setActiveTags(prev => 
-      prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag]
+    setActiveTags((prev) =>
+      prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]
     );
     setCurrentPage(1);
   };
 
-  const filterededgecases = edgecases.filter(ec => {
+  const filterededgecases = edgecases.filter((ec) => {
     const searchLower = searchQuery.toLowerCase();
-    const matchesSearch = !searchQuery || 
+    const matchesSearch =
+      !searchQuery ||
       (ec.title && ec.title.toLowerCase().includes(searchLower)) ||
       (ec.description && ec.description.toLowerCase().includes(searchLower)) ||
       (ec.author && ec.author.toLowerCase().includes(searchLower)) ||
-      (ec.tags && ec.tags.some(t => t.toLowerCase().includes(searchLower)));
-      
-    const matchesTags = activeTags.length === 0 || 
-      activeTags.every(tag => ec.tags && ec.tags.includes(tag));
-      
+      (ec.tags && ec.tags.some((t) => t.toLowerCase().includes(searchLower)));
+
+    const matchesTags =
+      activeTags.length === 0 ||
+      activeTags.every((tag) => ec.tags && ec.tags.includes(tag));
+
     return matchesSearch && matchesTags;
   });
 
@@ -201,126 +203,83 @@ export default function Edgecase() {
 
   return (
     <>
-      <div className="fixed inset-0 -z-10 pointer-events-none">
-        <Silk speed={5} scale={1} color="#2d2d2d" noiseIntensity={1.5} rotation={0} />
+      <div className="fixed inset-0 -z-10 bg-[#0a0a0d]">
+        <ShapeGrid
+          speed={0.5}
+          squareSize={40}
+          direction="diagonal"
+          borderColor="#2F293A"
+          hoverFillColor="#222"
+          shape="square"
+          hoverTrailAmount={0}
+        />
       </div>
+      <div className="fixed inset-0 -z-10 bg-radial-[circle_at_center,transparent_0%,#0a0a0d_95%] pointer-events-none" />
 
-      <header className="sticky top-0 z-40 px-4 py-4 sm:px-6">
-        <GlassSurface
-          width="100%"
-          height={72}
-          borderRadius={18}
-          className="mx-auto w-full flex items-center justify-between px-6"
-        >
-          <div className="flex items-center gap-3">
-            <span className="text-2xl font-bold tabular-nums text-white/90">42</span>
-            <span className="text-white/40">|</span>
-            <ShinyText
-              text="Edgecase Hub"
-              className="text-xl font-bold tracking-tight"
-              color="#a0a0a0"
-              shineColor="#e8e8e8"
-              speed={3}
-              spread={90}
-            />
-          </div>
-        </GlassSurface>
-      </header>
+      <Header />
 
-      <main className="px-4 pb-20 pt-6 sm:px-6">
+      <main className="px-4 pb-20 pt-24 max-w-7xl mx-auto">
         <div className="w-full space-y-6">
           <div className="grid gap-6 lg:grid-cols-[320px_1fr]">
             <aside className="space-y-4">
-              <GlassSurface
-                width="100%"
-                height="auto"
-                borderRadius={20}
-                className="p-5 sm:p-6"
-              >
-                <div className="space-y-5">
-                  <div>
-                    <div className="text-xs uppercase tracking-widest text-white/40">Filters</div>
-                    <h3 className="mt-2 text-lg font-semibold text-white/85">Quick search</h3>
-                  </div>
+              {/* Filter Section using Shadcn Card */}
+              <Card className="border border-white/10 bg-white/5 backdrop-blur-md">
+                <CardHeader className="pb-3">
+                  <CardDescription className="text-xs uppercase tracking-widest text-white/40">Filters</CardDescription>
+                  <CardTitle className="text-lg font-semibold text-white/85">Quick search</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
                   <div className="space-y-3">
-                    <input
+                    <Input
                       value={searchQuery}
                       onChange={handleSearchChange}
                       placeholder="Search an edgecase, a tag, or an author..."
-                      className="w-full rounded-lg border border-white/10 bg-black/30 px-4 py-3 text-sm text-white/90 placeholder:text-white/30 focus:border-white/30 focus:outline-none focus:ring-1 focus:ring-white/20"
+                      className="h-11 bg-black/30 border-white/10 text-white/90 placeholder:text-white/30 focus-visible:border-white/30 focus-visible:ring-white/20"
                     />
                     <div className="flex flex-wrap gap-2">
-                      {AVAILABLE_TAGS.map(tag => (
-                        <FilterChip 
-                          key={tag} 
-                          label={tag} 
-                          active={activeTags.includes(tag)} 
-                          onClick={() => handleTagToggle(tag)} 
+                      {AVAILABLE_TAGS.map((tag) => (
+                        <FilterChip
+                          key={tag}
+                          label={tag}
+                          active={activeTags.includes(tag)}
+                          onClick={() => handleTagToggle(tag)}
                         />
                       ))}
                     </div>
                   </div>
-                </div>
-              </GlassSurface>
+                </CardContent>
+              </Card>
 
-              <GlassSurface
-                width="100%"
-                height="auto"
-                borderRadius={20}
-                className="p-5 sm:p-6"
-              >
-                <div className="space-y-4">
-                <div className="space-y-2 text-sm text-white/50">
-                    <p>Signed in as</p>
-                    <div className="flex items-center gap-3">
-                      
-                      {user.image ? (
-                        <img
-                          src={user.image}
-                          alt={user.login}
-                          className="h-10 w-10 rounded-full object-cover bg-white/5 border border-white/10"
-                        />
-                      ) : (
-                        <div className="h-10 w-10 rounded-full bg-white/5 border border-white/10" />
-                      )}
-                      <div>
-                        <div className="text-white/80 font-medium">{user.displayName}</div>
-                        <div className="text-xs text-white/40">@{user.login}</div>
-                      </div>
-                    </div>
-                  </div>
-                  <div>
-                    <div className="text-xs uppercase tracking-widest text-white/40">Share</div>
-                    <h3 className="mt-2 text-lg font-semibold text-white/85">Share an edgecase</h3>
-                  </div>
-                  <button 
-                    onClick={() => {
-                      navigate("/");
-                    }}
-                    className="w-full rounded-full border border-white/10 bg-white/10 px-4 py-3 text-sm font-medium text-white/80 hover:bg-white/20 transition">
-                    Visualizer
-                  </button>
-                  <button 
+              {/* Actions Section using Shadcn Card */}
+              <Card className="border border-white/10 bg-white/5 backdrop-blur-md">
+                <CardHeader className="pb-3">
+                  <CardDescription className="text-xs uppercase tracking-widest text-white/40">Actions</CardDescription>
+                  <CardTitle className="text-lg font-semibold text-white/85">Options</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <Button
+                    onClick={() => navigate("/")}
+                    variant="outline"
+                    className="w-full rounded-full border border-white/10 bg-white/5 text-sm font-semibold text-white/80 hover:bg-white/10 transition h-11 cursor-pointer"
+                  >
+                    Go to Visualizer
+                  </Button>
+                  <Button
                     onClick={() => {
                       setLocalCommand(reduxCommand);
                       setLocalPadding(reduxPadding);
                       setLocalCooldown(reduxCooldown);
                       setIsModalOpen(true);
                     }}
-                    className="w-full rounded-full border border-white/10 bg-white/10 px-4 py-3 text-sm font-medium text-white/80 hover:bg-white/20 transition">
-                    Create a post
-                  </button>
-                  <button 
-                    onClick={handleLogout}
-                    className="w-full rounded-full border border-white/10 bg-red-400/10 px-4 py-3 text-sm font-medium text-white/80 hover:bg-red-950/20 transition">
-                    Log out
-                  </button>
-                </div>
-              </GlassSurface>
+                    className="w-full rounded-full bg-white text-black hover:bg-white/90 text-sm font-bold transition h-11 cursor-pointer"
+                  >
+                    Share an Edgecase
+                  </Button>
+                </CardContent>
+              </Card>
             </aside>
 
             <section className="space-y-4">
-
               <div className="grid gap-4">
                 {isLoadingList ? (
                   <div className="text-white/50 text-center py-8">Loading edgecases...</div>
@@ -347,26 +306,28 @@ export default function Edgecase() {
                         }}
                       />
                     ))}
-                    
+
                     {totalPages > 1 && (
                       <div className="flex items-center justify-center gap-4 mt-6">
-                        <button
-                          onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                        <Button
+                          onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                           disabled={currentPage === 1}
-                          className="px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-white/70 hover:bg-white/10 disabled:opacity-50 transition"
+                          variant="outline"
+                          className="px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-white/70 hover:bg-white/10 disabled:opacity-50 transition cursor-pointer"
                         >
                           Previous
-                        </button>
+                        </Button>
                         <span className="text-sm text-white/50">
                           Page {currentPage} of {totalPages}
                         </span>
-                        <button
-                          onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                        <Button
+                          onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
                           disabled={currentPage === totalPages}
-                          className="px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-white/70 hover:bg-white/10 disabled:opacity-50 transition"
+                          variant="outline"
+                          className="px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-white/70 hover:bg-white/10 disabled:opacity-50 transition cursor-pointer"
                         >
                           Next
-                        </button>
+                        </Button>
                       </div>
                     )}
                   </>
@@ -377,69 +338,104 @@ export default function Edgecase() {
         </div>
       </main>
 
-      {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-          <div className="w-full max-w-2xl">
-          <div className="flex flex-col rounded-xl border border-white/10 bg-black/20 p-4">
-              <div className="flex items-center justify-between">
-                <h2 className="text-xl font-bold text-white/90">Share your edgecase</h2>
-                <button onClick={() => setIsModalOpen(false)} className="text-white/50 hover:text-white transition">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
-                </button>
+      <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+        <DialogContent className="sm:max-w-2xl bg-[#121215] border border-white/10 text-white/90">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold text-white/90">Share your edgecase</DialogTitle>
+            <DialogDescription className="text-white/40">
+              Publish an edgecase scenario for others to simulate and analyze.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-2">
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-white/70">Title</label>
+              <Input
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                placeholder="A descriptive title"
+                className="h-11 bg-black/30 border-white/10 text-white/90 placeholder:text-white/30 focus-visible:border-white/30 focus-visible:ring-white/20"
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-white/70">Description</label>
+              <Input
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder="What happened in this edgecase?"
+                className="h-11 bg-black/30 border-white/10 text-white/90 placeholder:text-white/30 focus-visible:border-white/30 focus-visible:ring-white/20"
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-white/70">Tags</label>
+              <div className="flex flex-wrap gap-2">
+                {AVAILABLE_TAGS.map((tag) => (
+                  <button
+                    key={tag}
+                    type="button"
+                    onClick={() =>
+                      setSelectedTags((prev) =>
+                        prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]
+                      )
+                    }
+                    className="cursor-pointer font-sans"
+                  >
+                    <Badge
+                      variant={selectedTags.includes(tag) ? "default" : "outline"}
+                      className={`px-3 py-1.5 text-xs transition-all ${
+                        selectedTags.includes(tag)
+                          ? "bg-white text-black hover:bg-white/90"
+                          : "border-white/10 bg-white/5 text-white/60 hover:text-white hover:bg-white/10"
+                      }`}
+                    >
+                      {tag}
+                    </Badge>
+                  </button>
+                ))}
               </div>
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-white/70">Command</label>
+              <Input
+                value={localCommand}
+                onChange={(e) => setLocalCommand(e.target.value)}
+                className="h-11 font-mono bg-black/30 border-white/10 text-white/90 placeholder:text-white/30 focus-visible:border-white/30 focus-visible:ring-white/20"
+              />
+            </div>
 
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-white/70">Title</label>
-                  <input value={title} onChange={e => setTitle(e.target.value)} placeholder="A descriptive title" className="w-full rounded-lg border border-white/10 bg-black/30 px-4 py-3 text-sm text-white/90 focus:outline-none" />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-white/70">Description</label>
-                  <input value={description} onChange={e => setDescription(e.target.value)} placeholder="What happened in this edgecase?" className="w-full rounded-lg border border-white/10 bg-black/30 px-4 py-3 text-sm text-white/90 focus:outline-none" />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-white/70">Tags</label>
-                  <div className="flex flex-wrap gap-2">
-                    {AVAILABLE_TAGS.map(tag => (
-                      <button
-                        key={tag}
-                        type="button"
-                        onClick={() => setSelectedTags(prev => prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag])}
-                        className={`rounded-full border px-3 py-2 text-xs transition ${
-                          selectedTags.includes(tag)
-                            ? "border-white/30 bg-white/15 text-white"
-                            : "border-white/10 bg-white/5 text-white/60 hover:text-white"
-                        }`}
-                      >
-                        {tag}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-white/70">Command</label>
-                  <input value={localCommand} onChange={e => setLocalCommand(e.target.value)} className="w-full rounded-lg border border-white/10 bg-black/30 px-4 py-3 font-mono text-sm text-white/90 focus:outline-none focus:border-white/30" />
-                </div>
-                
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-white/70">Instant Action Padding</label>
-                    <input type="number" value={localPadding} onChange={e => setLocalPadding(Number(e.target.value))} className="w-full rounded-lg border border-white/10 bg-black/30 px-4 py-3 font-mono text-sm text-white/90 focus:outline-none focus:border-white/30" />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-white/70">Dongle Cooldown</label>
-                    <input type="number" value={localCooldown} onChange={e => setLocalCooldown(Number(e.target.value))} className="w-full rounded-lg border border-white/10 bg-black/30 px-4 py-3 font-mono text-sm text-white/90 focus:outline-none focus:border-white/30" />
-                  </div>
-                </div>
-
-                <button onClick={handlePublish} disabled={isSubmitting} className="w-full rounded-full bg-white text-black px-4 py-3 font-semibold hover:bg-white/90 transition disabled:opacity-50">
-                  {isSubmitting ? "Publishing..." : "Publish edgecase"}
-                </button>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-white/70">Instant Action Padding</label>
+                <Input
+                  type="number"
+                  value={localPadding}
+                  onChange={(e) => setLocalPadding(Number(e.target.value))}
+                  className="h-11 font-mono bg-black/30 border-white/10 text-white/90 placeholder:text-white/30 focus-visible:border-white/30 focus-visible:ring-white/20"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-white/70">Dongle Cooldown</label>
+                <Input
+                  type="number"
+                  value={localCooldown}
+                  onChange={(e) => setLocalCooldown(Number(e.target.value))}
+                  className="h-11 font-mono bg-black/30 border-white/10 text-white/90 placeholder:text-white/30 focus-visible:border-white/30 focus-visible:ring-white/20"
+                />
               </div>
             </div>
           </div>
-        </div>
-      )}
+
+          <DialogFooter className="mt-4">
+            <Button
+              onClick={handlePublish}
+              disabled={isSubmitting}
+              className="w-full rounded-full bg-white text-black font-semibold hover:bg-white/90 transition disabled:opacity-50 h-11 cursor-pointer"
+            >
+              {isSubmitting ? "Publishing..." : "Publish edgecase"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }
@@ -452,16 +448,17 @@ type FilterChipProps = {
 
 function FilterChip({ label, active, onClick }: FilterChipProps) {
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={`rounded-full border px-3 py-2 text-xs transition ${
-        active
-          ? "border-white/30 bg-white/15 text-white"
-          : "border-white/10 bg-white/5 text-white/60 hover:text-white"
-      }`}
-    >
-      {label}
+    <button type="button" onClick={onClick} className="cursor-pointer">
+      <Badge
+        variant={active ? "default" : "outline"}
+        className={`px-3 py-1.5 text-xs transition-all ${
+          active
+            ? "bg-white text-black hover:bg-white/90"
+            : "border-white/15 bg-white/5 text-white/60 hover:text-white hover:bg-white/10"
+        }`}
+      >
+        {label}
+      </Badge>
     </button>
   );
 }
