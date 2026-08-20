@@ -144,7 +144,7 @@ export default function GitHubCTA() {
               href="https://github.com/0xS4cha/codexion_visualizer/issues"
               target="_blank"
               rel="noopener noreferrer"
-              aria-label="Ouvrir une issue sur GitHub"
+              aria-label="Open an issue on github"
             >
               <MessageSquare className="w-3.5 h-3.5" />
               Open an Issue
@@ -160,7 +160,7 @@ export default function GitHubCTA() {
               href="https://github.com/0xS4cha/codexion_visualizer/pulls"
               target="_blank"
               rel="noopener noreferrer"
-              aria-label="Contribuer via une pull request"
+              aria-label="Contribute with a pull request"
             >
               <GitPullRequest className="w-3.5 h-3.5" />
               Contribute

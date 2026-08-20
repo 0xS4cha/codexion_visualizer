@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import GlassSurface from "@/components/ui/Components/GlassSurface/GlassSurface";
 import ShapeGrid from "@/components/ui/Backgrounds/ShapeGrid/ShapeGrid";
 import CodexionTimeline from "@/components/Codexion/CodexionTimeline";
@@ -16,6 +16,8 @@ import { motion, AnimatePresence } from "motion/react";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Github, Star } from "lucide-react";
+import { doc, increment, setDoc } from "firebase/firestore";
+import { db } from "@/config/firebase";
 
 function EmptyState() {
   return (
@@ -65,6 +67,24 @@ function EmptyState() {
 }
 
 export default function Visualizer() {
+  useEffect(() => {
+    async function trackVisit() {
+      try {
+        const response = await fetch("/api/visit", {
+          method: "POST",
+        });
+
+        const data = await response.json();
+
+        console.log(data);
+      } catch (error) {
+        console.error("Erreur lors du tracking :", error);
+      }
+    }
+
+    trackVisit();
+  }, []);
+
   const [activeTab, setActiveTab] = useState<'timeline' | 'table' | 'analysis'>('timeline');
   const hasOutput = useAppSelector((state) => state.user_input.output.trim().length > 0);
 
