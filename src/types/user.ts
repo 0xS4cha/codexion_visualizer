@@ -16,3 +16,8 @@ export type StatCardProps = {
 export type ActionChipProps = {
   label: string;
 };
+export type UserReadme = {
+  avatar_url: string;
+  username: string;
+  url: string;
+}

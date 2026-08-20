@@ -115,9 +115,6 @@ export default function Dashboard() {
               </div>
             </div>
           </GlassSurface>
-
-
-
         </div>
       </main>
     </div>

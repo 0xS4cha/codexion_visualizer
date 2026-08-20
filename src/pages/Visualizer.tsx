@@ -189,10 +189,6 @@ export default function Visualizer() {
             >
               <Github className="w-3.5 h-3.5" />
               <span>GitHub</span>
-              <Badge variant="outline" className="border-white/10 bg-white/5 text-[9px] text-white/40 h-4 px-1 py-0 flex items-center gap-0.5">
-                <Star className="w-2 h-2 fill-current text-amber-400" />
-                Star
-              </Badge>
             </a>
           </div>
         </GlassSurface>
