@@ -13,6 +13,11 @@
     "typecheck": "tsc --project tsconfig.json --noEmit",
     "dev:vercel": "vercel dev"
   },
+  "overrides": {
+    "jwks-rsa": {
+      "jose": "4.15.9"
+    }
+  },
   "dependencies": {
     "@gsap/react": "^2.1.1",
     "@reduxjs/toolkit": "^2.11.2",
