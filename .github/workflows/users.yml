@@ -1,0 +1,57 @@
+name: refresh stats
+
+on:
+  schedule:
+    - cron: "00 6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: refresh-stats
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+        with:
+          version: "latest"
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        working-directory: ./scripts
+        run: uv sync
+
+      - name: Execute scripts
+        working-directory: ./scripts
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: uv run scrapper.py
+
+      - name: Commit whatever changed
+        run: |
+          FILES="src/assets/users.json"
+
+          if [ -z "$(git status --porcelain -- $FILES)" ]; then
+            echo "no change"
+            exit 0
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git add -- $FILES
+          git commit -m "action: refresh users list"
+          git push
