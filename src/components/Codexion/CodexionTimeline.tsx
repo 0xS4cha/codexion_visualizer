@@ -5,6 +5,12 @@ import {
   ACTION_COLORS
 } from "@/core/codexionSimulation";
 import { useCodexionSimulation } from "@/hooks/useCodexionSimulation";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import html2canvas from "html2canvas";
 
 export default function CodexionTimeline() {
@@ -87,34 +93,49 @@ export default function CodexionTimeline() {
 
 
                 <div className="flex-1 relative h-8 mx-2 bg-white/5 rounded-md overflow-hidden">
+                <TooltipProvider delayDuration={200}>
                   {(segments.get(coderId) ?? []).map((seg, i) => {
                     const timeSpan = maxTime - minTime || 1;
                     const trueLeft = ((seg.startTime - minTime) / timeSpan) * 100;
                     const trueWidth = ((seg.endTime - seg.startTime) / timeSpan) * 100;
                     const isWideEnough = (trueWidth * zoom) > 3;
 
-                    return (
-                      <motion.div
-                        key={`${coderId}-${i}`}
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        transition={{ duration: 0.2, delay: i * 0.03 }}
-                        className="absolute top-0 bottom-0 rounded-md overflow-hidden border-r border-black/20"
-                        style={{
-                          left: `${trueLeft}%`,
-                          width: `${trueWidth}%`,
-                          backgroundColor: getActionColor(seg.action),
-                        }}
-                        title={`Coder ${coderId} ${seg.action}\nStart: ${seg.realStart}\nEnd: ${seg.realEnd}`}
+                   return (
+                    <Tooltip key={`${coderId}-${i}`}>
+                      <TooltipTrigger asChild>
+                        <motion.div
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          transition={{ duration: 0.2, delay: i * 0.03 }}
+                          className="absolute top-0 bottom-0 rounded-md overflow-hidden border-r border-black/20 cursor-default"
+                          style={{
+                            left: `${trueLeft}%`,
+                            width: `${trueWidth}%`,
+                            backgroundColor: getActionColor(seg.action),
+                          }}
+                        >
+                          {isWideEnough && (
+                            <span className="absolute inset-0 flex items-center justify-center truncate px-2 text-[11px] font-medium text-white/90 drop-shadow-md">
+                              {seg.action}
+                            </span>
+                          )}
+                        </motion.div>
+                      </TooltipTrigger>
+                      <TooltipContent
+                        side="top"
                       >
-                        {isWideEnough && (
-                          <span className="absolute inset-0 flex items-center justify-center truncate px-2 text-[11px] font-medium text-white/90 drop-shadow-md">
-                            {seg.action}
+                        <div className="flex flex-col gap-0.5 text-xs">
+                          <span className="font-semibold">
+                            Coder {coderId} — {seg.action}
                           </span>
-                        )}
-                      </motion.div>
-                    );
+                          <span>Start: {seg.realStart}</span>
+                          <span>End: {seg.realEnd}</span>
+                        </div>
+                      </TooltipContent>
+                    </Tooltip>
+                  );
                   })}
+                  </TooltipProvider>
                 </div>
               </div>
             ))}

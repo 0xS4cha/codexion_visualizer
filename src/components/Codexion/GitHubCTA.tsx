@@ -120,23 +120,18 @@ export default function GitHubCTA() {
           <TooltipProvider delayDuration={200}>
             <Tooltip>
               <TooltipTrigger asChild>
-                <Button
-                  asChild
-                  variant="default"
-                  className="rounded-full bg-white text-black hover:bg-white/90 px-5 py-2 text-xs font-semibold cursor-pointer flex items-center gap-2 focus-visible:ring-2 focus-visible:ring-white/50"
+                <a
+                  href="https://github.com/0xS4cha/codexion_visualizer"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="Add a star on github"
+                  className="rounded-full bg-white text-black hover:bg-white/90 px-5 py-2 text-xs font-semibold cursor-pointer inline-flex items-center gap-2 focus-visible:ring-2 focus-visible:ring-white/50"
                 >
-                  <a
-                    href="https://github.com/0xS4cha/codexion_visualizer"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    aria-label="Mettre une étoile au dépôt GitHub Codexion Visualizer"
-                  >
-                    <Star className="w-3.5 h-3.5 fill-current" />
-                    Star on GitHub
-                  </a>
-                </Button>
+                  <Star className="w-3.5 h-3.5 fill-current" />
+                  Star on GitHub
+                </a>
               </TooltipTrigger>
-              <TooltipContent>It takes 2 seconds and helps a lot 🙏</TooltipContent>
+              <TooltipContent  side={"bottom"}>It takes 2 seconds and helps a lot 🙏</TooltipContent>
             </Tooltip>
           </TooltipProvider>
 
