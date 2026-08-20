@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import os
+import sys
 import json
 import urllib.request
 import urllib.parse
@@ -50,7 +51,7 @@ def main():
             avatar_url=v["repository"]["owner"]["avatar_url"],
             url=f"https://github.com/{v['repository']['full_name']}" 
         ))    
-    with open("../src/assets/test.json", "wb") as f:
+    with open("../src/assets/users.json", "wb") as f:
         f.write(UsersListModel.dump_json(data))
     
 if __name__ == "__main__":
