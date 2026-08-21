@@ -23,7 +23,7 @@ export interface SplitTextProps {
 }
 
 const SplitText: React.FC<SplitTextProps> = ({
-  text,
+  text = "",
   className = '',
   delay = 50,
   duration = 1.25,

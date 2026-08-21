@@ -51,7 +51,7 @@ export default function GitHubCTA() {
             {userList.length > 0 && (
               <Badge variant="outline" className="border-white/15 bg-white/5 text-white/60 flex items-center gap-1">
                 <UsersIcon className="w-3 h-3" />
-                {userList.length} developer{userList.length > 1 ? "s" : ""} mention us in their project READMEs.
+                {userList.length} student{userList.length > 1 ? "s" : ""} mention us in their project READMEs.
               </Badge>
             )}
           </div>
@@ -82,7 +82,7 @@ export default function GitHubCTA() {
                   </Avatar>
                 ))}
                 {remainingCount > 0 && (
-                  <AvatarGroupCount className="h-6 w-6 border-2 border-[#121215]">
+                  <AvatarGroupCount className="h-6 w-6 border-2 border-[#121215] bg-[#121215]">
                     +{remainingCount}
                   </AvatarGroupCount>
                 )}
@@ -96,7 +96,7 @@ export default function GitHubCTA() {
             </HoverCardTrigger>
             <HoverCardContent className="w-72 border-white/10 bg-[#121215] text-white/80">
               <p className="text-xs text-white/50 mb-2">
-                These developers mentioned Codexion Visualizer in their project's README:<br/> (update all 24h)
+                These students mentioned Codexion Visualizer in their project's README:<br/> (update all 24h)
               </p>
               <ul className="flex flex-col gap-1 max-h-40 overflow-y-auto pr-1">
                 {userList.map((u) => (

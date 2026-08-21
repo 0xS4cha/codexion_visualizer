@@ -1,6 +1,9 @@
 @import url('https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap');
 @import "tailwindcss";
-@config "../tailwind.config.js";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@custom-variant dark (&:is(.dark *));
 
 :root {
   --background: rgb(255, 255, 255);
@@ -15,10 +18,8 @@
   --secondary-foreground: rgb(23, 23, 23);
   --muted: rgb(245, 245, 245);
   --muted-foreground: rgb(115, 115, 115);
-
   --border: rgb(229, 229, 229);
   --accent: rgb(245, 245, 245);
-
   --accent-foreground: rgb(23, 23, 23);
   --destructive: rgb(231, 0, 11);
   --input: rgb(229, 229, 229);
@@ -73,6 +74,13 @@
   --sidebar-ring: rgb(115, 115, 115);
 }
 
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-border: var(--border);
+  --color-ring: var(--ring);
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
@@ -92,8 +100,6 @@
     cursor: pointer;
   }
 }
-
-
 
 
 ::-webkit-scrollbar-track {

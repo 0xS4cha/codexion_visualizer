@@ -15,9 +15,7 @@ import { useAppSelector } from "@/store/hooks";
 import { motion, AnimatePresence } from "motion/react";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { Github, Star } from "lucide-react";
-import { doc, increment, setDoc } from "firebase/firestore";
-import { db } from "@/config/firebase";
+import { Github } from "lucide-react";
 
 function EmptyState() {
   return (

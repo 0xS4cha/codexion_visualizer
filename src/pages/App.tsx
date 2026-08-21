@@ -1,16 +1,6 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Visualizer from "./Visualizer";
-import Login from "./Login";
-import Edgecase from "./Edgecase";
+import { RouterProvider } from "react-router-dom";
+import { router } from "@/lib/router";
 
 export default function App() {
-  return (
-        <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<Visualizer />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/hub" element={<Edgecase />} />
-          </Routes>
-        </BrowserRouter>
-  );
+  return <RouterProvider router={router} />;
 }
