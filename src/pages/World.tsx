@@ -109,8 +109,6 @@ export default function World() {
       transition={{ duration: 0.8 }}
       className="relative w-full min-h-screen bg-[#0a0a0d] overflow-x-hidden pb-16"
     >
-      <div className="fixed inset-0 bg-radial-[circle_at_center,rgba(255,255,255,0.03)_0%,transparent_100%] pointer-events-none" />
-
       <div className="relative w-full h-[75vh] min-h-[600px] border-b border-white/5">
         <motion.div
           initial={{ opacity: 0, x: -20 }}
