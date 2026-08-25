@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect } from "react";
 import { motion } from "motion/react";
-import { Map, MapControls, MapGeoJSON, MapPopup, MapMarker, MarkerContent, MarkerTooltip } from "@/components/ui/map";
+import { Map, MapControls, MapGeoJSON, MapPopup } from "@/components/ui/map";
 import { useWorldData } from "@/lib/use-world-data";
 import { TrendingUp, Users, Loader2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -13,7 +13,7 @@ function buildFillColor(): unknown[] {
     ramp: ["#404040", "#737373", "#a3a3a3", "#d4d4d4"],
     hover: "#ffffff",
   };
-  const [s0, s1, s2, s3, s4] = [0, 25, 50, 75, 100];
+  const [s0, s1, s2, s3, s4] = [0, 1, 5, 15, 50];
   const ramped = [
     "interpolate",
     ["linear"],
@@ -72,8 +72,8 @@ export default function World() {
         ...f,
         properties: {
           NAME_LONG: f.properties.NAME_LONG,
-          ISO_A2: f.properties.ISO_A2,
-          visitors: stats.visitorsByCountry?.[f.properties.ISO_A2] ?? 0,
+          ISO_A2_EH: f.properties.ISO_A2_EH,
+          visitors: stats.visitorsByCountry?.[f.properties.ISO_A2_EH] ?? 0,
         },
       })),
     };
@@ -166,32 +166,7 @@ export default function World() {
 
             <MapControls className="bottom-8 right-8 z-20" />
 
-            {stats.locations?.map((location: any) => (
-              <MapMarker
-                key={location.city}
-                longitude={location.lng}
-                latitude={location.lat}
-              >
-                <MarkerContent className="group">
-                  <div
-                    className="bg-white/80 group-hover:bg-white rounded-full transition-all duration-300 group-hover:scale-125 shadow-[0_0_15px_rgba(255,255,255,0.5)]"
-                    style={{
-                      width: location.size * 3,
-                      height: location.size * 3,
-                    }}
-                  />
-                </MarkerContent>
-                <MarkerTooltip
-                  offset={15}
-                  className="bg-[#1a1a1f]/90 backdrop-blur-xl border-white/10 text-white rounded-lg p-2 shadow-2xl"
-                >
-                  <p className="font-semibold text-xs">{location.city}</p>
-                  <p className="text-white/60 text-[10px] mt-0.5 font-medium">
-                    {location.count} visits
-                  </p>
-                </MarkerTooltip>
-              </MapMarker>
-            ))}
+
 
             {hover && (
               <MapPopup
