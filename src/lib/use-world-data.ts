@@ -7,6 +7,7 @@ export const WORLD_GEOJSON =
 
 export interface WorldFeatureProperties {
   NAME_LONG: string;
+  ISO_A2: string;
 }
 
 export type WorldData = GeoJSON.FeatureCollection<

@@ -71,15 +71,31 @@ export default async function handler(
 
     await adminDb.collection('stats').doc('global').set({
       totalVisitors: FieldValue.increment(1),
-      [`browsers.${browser}`]: FieldValue.increment(1),
-      [`devices.${deviceCategory}`]: FieldValue.increment(1),
-      [`referers.${safeReferer}`]: FieldValue.increment(1),
-      [`paths.${safePath}`]: FieldValue.increment(1),
-      [`countries.${safeCountry}`]: FieldValue.increment(1),
-      [`daily.${today}`]: FieldValue.increment(1),
-      [`cities.${safeCity}.count`]: FieldValue.increment(1),
-      [`cities.${safeCity}.lat`]: latitude,
-      [`cities.${safeCity}.lng`]: longitude,
+      browsers: {
+        [browser]: FieldValue.increment(1)
+      },
+      devices: {
+        [deviceCategory]: FieldValue.increment(1)
+      },
+      referers: {
+        [safeReferer]: FieldValue.increment(1)
+      },
+      paths: {
+        [safePath]: FieldValue.increment(1)
+      },
+      countries: {
+        [safeCountry]: FieldValue.increment(1)
+      },
+      daily: {
+        [today]: FieldValue.increment(1)
+      },
+      cities: {
+        [safeCity]: {
+          count: FieldValue.increment(1),
+          lat: latitude,
+          lng: longitude
+        }
+      }
     }, { merge: true });
 
     await adminDb.collection('visits').add({

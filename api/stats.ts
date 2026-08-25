@@ -66,8 +66,22 @@ export default async function handler(
 
     const countriesData = data.countries || {};
     const formattedCountries: Record<string, number> = {};
+    const regionNames = new Intl.DisplayNames(['en'], { type: 'region' });
+
     for (const [k, v] of Object.entries(countriesData)) {
-      formattedCountries[unescapeKey(k)] = v as number;
+      const code = unescapeKey(k);
+      formattedCountries[code] = v as number;
+    }
+
+    const countriesRowsObj: Record<string, number> = {};
+    for (const [k, v] of Object.entries(countriesData)) {
+      const code = unescapeKey(k);
+      try {
+        const fullName = regionNames.of(code);
+        countriesRowsObj[fullName || code] = v as number;
+      } catch (e) {
+        countriesRowsObj[code] = v as number;
+      }
     }
 
     return res.status(200).json({
@@ -76,7 +90,7 @@ export default async function handler(
       visitorsByCountry: formattedCountries,
       visitedPagesRows: formatBreakdown(data.paths),
       referrersRows: formatBreakdown(data.referers),
-      countriesRows: formatBreakdown(data.countries),
+      countriesRows: formatBreakdown(countriesRowsObj),
       browsersRows: formatBreakdown(data.browsers),
       deviceCategoryData,
       usersPerDay,

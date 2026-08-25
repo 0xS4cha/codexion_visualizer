@@ -72,7 +72,8 @@ export default function World() {
         ...f,
         properties: {
           NAME_LONG: f.properties.NAME_LONG,
-          visitors: stats.visitorsByCountry?.[f.properties.NAME_LONG] ?? 0,
+          ISO_A2: f.properties.ISO_A2,
+          visitors: stats.visitorsByCountry?.[f.properties.ISO_A2] ?? 0,
         },
       })),
     };
