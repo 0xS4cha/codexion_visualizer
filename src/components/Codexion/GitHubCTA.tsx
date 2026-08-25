@@ -1,5 +1,6 @@
 import { motion } from "motion/react";
-import { Github, Star, GitPullRequest, MessageSquare, Heart, Users as UsersIcon, Eye } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { Github, Star, GitPullRequest, MessageSquare, Heart, Users as UsersIcon, Eye, Earth } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarImage, AvatarFallback, AvatarGroupCount, AvatarGroup } from "@/components/ui/avatar";
@@ -20,6 +21,7 @@ import { UserReadme } from "@/types/user";
 const MAX_AVATARS_PREVIEW = 5;
 
 export default function GitHubCTA() {
+  const navigate = useNavigate();
   const userList = Users as UserReadme[];
   const previewUsers = userList.slice(0, MAX_AVATARS_PREVIEW);
   const remainingCount = Math.max(userList.length - MAX_AVATARS_PREVIEW, 0);
@@ -64,58 +66,69 @@ export default function GitHubCTA() {
             This visualizer is <strong>100% free and open-source</strong>. It was built to help 42 students debug and optimize their scheduler algorithms. If this helper saved you time, please support us with a star or contribute an issue!
           </p>
         </div>
-        {previewUsers.length > 0 && (
-          <HoverCard openDelay={100}>
-            <HoverCardTrigger asChild>
-            <button
-              type="button"
-              className="group flex items-center gap-2 w-fit rounded-full pr-3 py-1 pl-1 border border-white/10 bg-white/5 hover:bg-white/10 transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40"
-              aria-label="See the developers who have added this link to their codexion README."
-            >
-              <AvatarGroup>
-                {previewUsers.map((u) => (
-                  <Avatar key={u.username} className="h-6 w-6 border-2 border-[#121215]">
-                    <AvatarImage src={u.avatar_url} alt={u.username} />
-                    <AvatarFallback className="text-[10px]">
-                      {u.username?.slice(0, 2).toUpperCase()}
-                    </AvatarFallback>
-                  </Avatar>
-                ))}
-                {remainingCount > 0 && (
-                  <AvatarGroupCount className="h-6 w-6 border-2 border-[#121215] bg-[#121215]">
-                    +{remainingCount}
-                  </AvatarGroupCount>
-                )}
-              </AvatarGroup>
+        <div className="flex flex-wrap items-center gap-3">
+          {previewUsers.length > 0 && (
+            <HoverCard openDelay={100}>
+              <HoverCardTrigger asChild>
+              <button
+                type="button"
+                className="group flex items-center gap-2 w-fit rounded-full pr-3 py-1 pl-1 border border-white/10 bg-white/5 hover:bg-white/10 transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40"
+                aria-label="See the developers who have added this link to their codexion README."
+              >
+                <AvatarGroup>
+                  {previewUsers.map((u) => (
+                    <Avatar key={u.username} className="h-6 w-6 border-2 border-[#121215]">
+                      <AvatarImage src={u.avatar_url} alt={u.username} />
+                      <AvatarFallback className="text-[10px]">
+                        {u.username?.slice(0, 2).toUpperCase()}
+                      </AvatarFallback>
+                    </Avatar>
+                  ))}
+                  {remainingCount > 0 && (
+                    <AvatarGroupCount className="h-6 w-6 border-2 border-[#121215] bg-[#121215]">
+                      +{remainingCount}
+                    </AvatarGroupCount>
+                  )}
+                </AvatarGroup>
 
-              <Eye
-                aria-hidden="true"
-                className="h-3.5 w-3.5 text-white/40 transition-all duration-200 group-hover:text-white/80 group-hover:translate-x-0.5"
-              />
+                <Eye
+                  aria-hidden="true"
+                  className="h-3.5 w-3.5 text-white/40 transition-all duration-200 group-hover:text-white/80 group-hover:translate-x-0.5"
+                />
+              </button>
+              </HoverCardTrigger>
+              <HoverCardContent className="w-72 border-white/10 bg-[#121215] text-white/80">
+                <p className="text-xs text-white/50 mb-2">
+                  These students mentioned Codexion Visualizer in their project's README:<br/> (update all 24h)
+                </p>
+                <ul className="flex flex-col gap-1 max-h-40 overflow-y-auto pr-1">
+                  {userList.map((u) => (
+                    <li key={u.username}>
+                      <a
+                        href={`https://github.com/${u.username}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-xs text-white/70 hover:text-white hover:underline focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-white/40 rounded"
+                      >
+                        @{u.username}
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </HoverCardContent>
+            </HoverCard>
+          )}
+          <Button
+            asChild
+            variant="outline"
+            onClick={() => navigate("/world")}
+            className="rounded-full border border-white/10 bg-white/5 w-[34px] h-[34px] p-0 text-xs font-medium text-white/70 hover:bg-white/10 hover:text-white cursor-pointer flex items-center justify-center focus-visible:ring-2 focus-visible:ring-white/40"
+          >
+            <button aria-label="View Global Simulation Reach">
+              <Earth className="w-4 h-4" />
             </button>
-            </HoverCardTrigger>
-            <HoverCardContent className="w-72 border-white/10 bg-[#121215] text-white/80">
-              <p className="text-xs text-white/50 mb-2">
-                These students mentioned Codexion Visualizer in their project's README:<br/> (update all 24h)
-              </p>
-              <ul className="flex flex-col gap-1 max-h-40 overflow-y-auto pr-1">
-                {userList.map((u) => (
-                  <li key={u.username}>
-                    <a
-                      href={`https://github.com/${u.username}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-xs text-white/70 hover:text-white hover:underline focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-white/40 rounded"
-                    >
-                      @{u.username}
-                    </a>
-                  </li>
-                ))}
-              </ul>
-            </HoverCardContent>
-          </HoverCard>
-        )}
-
+          </Button>
+        </div>
         <div className="flex flex-wrap gap-3">
           <TooltipProvider delayDuration={200}>
             <Tooltip>
