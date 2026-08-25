@@ -27,6 +27,13 @@ export const router = createBrowserRouter([
             return { Component };
             },
         },
+        {
+            path: "world",
+            lazy: async () => {
+            const { default: Component } = await import("@/pages/World");
+            return { Component };
+            },
+        },
 
     //   {
     //     path: "*",

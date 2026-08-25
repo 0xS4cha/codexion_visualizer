@@ -17,6 +17,8 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Github } from "lucide-react";
 
+
+
 function EmptyState() {
   return (
     <motion.div
@@ -70,6 +72,10 @@ export default function Visualizer() {
       try {
         const response = await fetch("/api/visit", {
           method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ path: window.location.pathname }),
         });
 
         const data = await response.json();
