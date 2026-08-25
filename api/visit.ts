@@ -59,11 +59,6 @@ export default async function handler(
 
     const adminDb = getAdminDb();
 
-    await adminDb
-      .collection('countries')
-      .doc(country)
-      .set({ count: FieldValue.increment(1) }, { merge: true });
-
     const safeReferer = refererUrl.replace(/\./g, '_');
     const safePath = path.replace(/\./g, '_').replace(/\//g, '_slash_');
     const safeCity = city.replace(/\./g, '_');
