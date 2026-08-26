@@ -34,6 +34,13 @@ export const router = createBrowserRouter([
             return { Component };
             },
         },
+        {
+            path: "community",
+            lazy: async () => {
+            const { default: Component } = await import("@/pages/Community");
+            return { Component };
+            },
+        },
 
     //   {
     //     path: "*",

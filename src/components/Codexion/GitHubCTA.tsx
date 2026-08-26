@@ -10,11 +10,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import {
-  HoverCard,
-  HoverCardContent,
-  HoverCardTrigger,
-} from "@/components/ui/hover-card";
+
 import Users from "@/assets/users.json";
 import { UserReadme } from "@/types/user";
 
@@ -68,12 +64,11 @@ export default function GitHubCTA() {
         </div>
         <div className="flex flex-wrap items-center gap-3">
           {previewUsers.length > 0 && (
-            <HoverCard openDelay={100}>
-              <HoverCardTrigger asChild>
               <button
                 type="button"
+                onClick={() => navigate("/community")}
                 className="group flex items-center gap-2 w-fit rounded-full pr-3 py-1 pl-1 border border-white/10 bg-white/5 hover:bg-white/10 transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40"
-                aria-label="See the developers who have added this link to their codexion README."
+                aria-label="See all the developers who have added this link to their codexion README"
               >
                 <AvatarGroup>
                   {previewUsers.map((u) => (
@@ -96,27 +91,6 @@ export default function GitHubCTA() {
                   className="h-3.5 w-3.5 text-white/40 transition-all duration-200 group-hover:text-white/80 group-hover:translate-x-0.5"
                 />
               </button>
-              </HoverCardTrigger>
-              <HoverCardContent className="w-72 border-white/10 bg-[#121215] text-white/80">
-                <p className="text-xs text-white/50 mb-2">
-                  These students mentioned Codexion Visualizer in their project's README:<br/> (update all 24h)
-                </p>
-                <ul className="flex flex-col gap-1 max-h-40 overflow-y-auto pr-1">
-                  {userList.map((u) => (
-                    <li key={u.username}>
-                      <a
-                        href={`https://github.com/${u.username}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-xs text-white/70 hover:text-white hover:underline focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-white/40 rounded"
-                      >
-                        @{u.username}
-                      </a>
-                    </li>
-                  ))}
-                </ul>
-              </HoverCardContent>
-            </HoverCard>
           )}
           <Button
             asChild

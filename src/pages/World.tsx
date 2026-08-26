@@ -6,6 +6,7 @@ import { TrendingUp, Users, Loader2, Globe } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { OverviewCard } from "@/components/Codexion/OverviewCard";
 import { BreakdownCard } from "@/components/Codexion/BreakdownCard";
+import { BackButton } from "@/components/Codexion/BackButton";
 
 function buildFillColor(): unknown[] {
   const { base, ramp, hover } = {
@@ -110,12 +111,15 @@ export default function World() {
       transition={{ duration: 0.8 }}
       className="relative w-full min-h-screen bg-[#0a0a0d] overflow-x-hidden pb-16"
     >
+      <div className="absolute top-6 left-6 z-30">
+        <BackButton />
+      </div>
       <div className="relative w-full h-[75vh] min-h-[600px] border-b border-white/5">
         <motion.div
           initial={{ opacity: 0, y: -20, scale: 0.95 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           transition={{ delay: 0.3, duration: 0.5, type: "spring", stiffness: 200, damping: 20 }}
-          className="absolute top-8 left-8 z-20 p-6 rounded-2xl border border-white/10 bg-[#121215]/60 backdrop-blur-xl shadow-[0_8px_32px_rgba(0,0,0,0.4)] min-w-[300px] overflow-hidden group"
+          className="absolute top-20 left-8 z-20 p-6 rounded-2xl border border-white/10 bg-[#121215]/60 backdrop-blur-xl shadow-[0_8px_32px_rgba(0,0,0,0.4)] min-w-[300px] overflow-hidden group"
         >
           <div className="absolute inset-0 bg-linear-to-tr from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
           <h3 className="text-white/60 text-xs font-semibold uppercase tracking-wider mb-4 flex items-center gap-2">
