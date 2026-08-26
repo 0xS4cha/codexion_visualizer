@@ -1,8 +1,8 @@
 import { useState, useMemo, useEffect } from "react";
-import { motion } from "motion/react";
+import { motion, AnimatePresence } from "motion/react";
 import { Map, MapControls, MapGeoJSON, MapPopup } from "@/components/ui/map";
 import { useWorldData } from "@/lib/use-world-data";
-import { TrendingUp, Users, Loader2 } from "lucide-react";
+import { TrendingUp, Users, Loader2, Globe } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { OverviewCard } from "@/components/Codexion/OverviewCard";
 import { BreakdownCard } from "@/components/Codexion/BreakdownCard";
@@ -112,18 +112,22 @@ export default function World() {
     >
       <div className="relative w-full h-[75vh] min-h-[600px] border-b border-white/5">
         <motion.div
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.3, duration: 0.5 }}
-          className="absolute top-8 left-8 z-20 p-5 rounded-2xl border border-white/10 bg-[#121215]/80 backdrop-blur-md shadow-2xl min-w-[280px]"
+          initial={{ opacity: 0, y: -20, scale: 0.95 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          transition={{ delay: 0.3, duration: 0.5, type: "spring", stiffness: 200, damping: 20 }}
+          className="absolute top-8 left-8 z-20 p-6 rounded-2xl border border-white/10 bg-[#121215]/60 backdrop-blur-xl shadow-[0_8px_32px_rgba(0,0,0,0.4)] min-w-[300px] overflow-hidden group"
         >
-          <h3 className="text-white/60 text-xs font-semibold uppercase tracking-wider mb-3">Global Simulation Reach</h3>
-          <div className="flex items-end gap-4">
-            <span className="text-4xl font-bold text-white tracking-tight tabular-nums leading-none">
+          <div className="absolute inset-0 bg-linear-to-tr from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+          <h3 className="text-white/60 text-xs font-semibold uppercase tracking-wider mb-4 flex items-center gap-2">
+            <Globe className="w-4 h-4 text-white/40" />
+            Global Simulation Reach
+          </h3>
+          <div className="flex items-end justify-between">
+            <span className="text-5xl font-extrabold text-white tracking-tighter tabular-nums leading-none">
               {stats.totalVisitors.toLocaleString()}
             </span>
-            <Badge variant="outline" className="bg-white/10 text-white border-white/20 px-2 py-0.5 mb-1">
-              <TrendingUp className="w-3.5 h-3.5 mr-1" />
+            <Badge variant="outline" className="bg-white/10 text-white border-white/20 px-2.5 py-1 mb-1 backdrop-blur-md">
+              <TrendingUp className="w-3.5 h-3.5 mr-1.5" />
               {stats.visitorGrowth}
             </Badge>
           </div>
@@ -176,22 +180,26 @@ export default function World() {
                 closeOnClick={false}
                 className="pointer-events-none z-50 p-0 bg-transparent border-none shadow-none"
               >
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  className="bg-[#1a1a1f]/90 backdrop-blur-xl border border-white/10 rounded-xl p-3 shadow-2xl min-w-[140px]"
-                >
-                  <p className="text-xs font-semibold text-white/90 mb-2">{hover.name}</p>
-                  <div className="flex items-center justify-between gap-4">
-                    <span className="text-white/50 flex items-center gap-1.5 text-[11px]">
-                      <Users className="w-3 h-3" />
-                      Visitors
-                    </span>
-                    <span className="text-white text-xs font-medium tabular-nums bg-white/10 px-1.5 py-0.5 rounded">
-                      {hover.visitors.toLocaleString()}
-                    </span>
-                  </div>
-                </motion.div>
+                <AnimatePresence>
+                  <motion.div
+                    initial={{ opacity: 0, y: 5, scale: 0.95 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: 5, scale: 0.95 }}
+                    transition={{ duration: 0.2 }}
+                    className="bg-[#121215]/80 backdrop-blur-2xl border border-white/20 rounded-xl p-3.5 shadow-[0_8px_32px_rgba(0,0,0,0.5)] min-w-[160px]"
+                  >
+                    <p className="text-sm font-bold text-white mb-2.5">{hover.name}</p>
+                    <div className="flex items-center justify-between gap-4">
+                      <span className="text-white/60 flex items-center gap-1.5 text-xs font-medium">
+                        <Users className="w-3.5 h-3.5" />
+                        Visitors
+                      </span>
+                      <span className="text-white text-xs font-bold tabular-nums bg-white/10 px-2 py-1 rounded-md">
+                        {hover.visitors.toLocaleString()}
+                      </span>
+                    </div>
+                  </motion.div>
+                </AnimatePresence>
               </MapPopup>
             )}
           </Map>
@@ -204,7 +212,12 @@ export default function World() {
       </div>
 
       <div className="relative max-w-7xl mx-auto px-6 pt-12 pb-12 z-10">
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 items-stretch">
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.4 }}
+          className="grid grid-cols-1 lg:grid-cols-4 gap-6 items-stretch"
+        >
           <div className="lg:col-span-1 h-full">
             <OverviewCard
               totalVisitors={stats.totalVisitors}
@@ -215,12 +228,20 @@ export default function World() {
           </div>
 
           <div className="lg:col-span-3 grid grid-cols-1 md:grid-cols-2 gap-6">
-            <BreakdownCard title="Visited pages" rows={stats.visitedPagesRows} />
-            <BreakdownCard title="Referrers" rows={stats.referrersRows} />
-            <BreakdownCard title="Countries" rows={stats.countriesRows} />
-            <BreakdownCard title="Browsers" rows={stats.browsersRows} />
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5, duration: 0.5 }}>
+              <BreakdownCard title="Visited pages" rows={stats.visitedPagesRows} />
+            </motion.div>
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.6, duration: 0.5 }}>
+              <BreakdownCard title="Referrers" rows={stats.referrersRows} />
+            </motion.div>
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.7, duration: 0.5 }}>
+              <BreakdownCard title="Countries" rows={stats.countriesRows} />
+            </motion.div>
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.8, duration: 0.5 }}>
+              <BreakdownCard title="Browsers" rows={stats.browsersRows} />
+            </motion.div>
           </div>
-        </div>
+        </motion.div>
       </div>
     </motion.div>
   );
