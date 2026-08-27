@@ -124,7 +124,7 @@ export default function World() {
             initial={{ opacity: 0, y: -20, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             transition={{ delay: 0.3, duration: 0.5, type: "spring", stiffness: 200, damping: 20 }}
-            className="absolute top-25 left-8 z-20 p-6 rounded-2xl border border-white/10 bg-[#121215]/60 backdrop-blur-xl  min-w-[300px] overflow-hidden group"
+            className="absolute top-50 left-8 z-20 p-6 rounded-2xl border border-white/10 bg-[#121215]/60 backdrop-blur-xl  min-w-[300px] overflow-hidden group"
           >
             <div className="absolute inset-0 bg-linear-to-tr from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
             <h3 className="text-white/60 text-xs font-semibold uppercase tracking-wider mb-4 flex items-center gap-2">
