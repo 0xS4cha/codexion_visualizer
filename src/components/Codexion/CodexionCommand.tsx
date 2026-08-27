@@ -101,7 +101,7 @@ export default function CodexionCommand() {
                                         New: Live Mode!
                                     </h4>
                                     <p className="text-xs text-white/60 mb-5 leading-relaxed">
-                                        Visualize your philosophers in real-time. Stop waiting for the simulation to finish to spot deadlocks.
+                                        Visualize your codexion in real-time. Stop waiting for the simulation to finish to spot deadlocks.
                                     </p>
                                     <ol className="text-xs space-y-4 list-none">
                                         <li className="flex gap-3">
