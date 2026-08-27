@@ -244,7 +244,6 @@ export default function Visualizer() {
               rel="noopener noreferrer"
               className="flex items-center gap-1.5 text-white/50 hover:text-white transition font-medium"
             >
-              <Github className="w-3.5 h-3.5" />
               <span>GitHub</span>
             </a>
           </div>
