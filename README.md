@@ -2,11 +2,6 @@
 
 Codexion data visualization tool (TypeScript)
 
-## Authors
-
-- [@0xS4cha](https://github.com/0xS4cha)
-- [@69Nesta](https://github.com/69Nesta)
-
 ## Result
 ![Result](result.png)
 https://codexion-visualizer.sacha-dev.me/

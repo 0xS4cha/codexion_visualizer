@@ -35,7 +35,7 @@ export default function Terms() {
               <h2 className="text-2xl font-semibold text-white">1. Nature of the Project</h2>
             </div>
             <p className="text-lg leading-relaxed text-white/60">
-              Codexion Visualizer is an educational project created by students (@0xS4cha and @69Nesta) as part of the 42 curriculum. It is designed to help visualize and debug datasets and program logs. By using this tool, you acknowledge that it is provided "as is" without any guarantees of continuous operation or support.
+              Codexion Visualizer is an educational project created by students as part of the 42 curriculum. It is designed to help visualize and debug datasets and program logs. By using this tool, you acknowledge that it is provided "as is" without any guarantees of continuous operation or support.
             </p>
           </section>
 
