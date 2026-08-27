@@ -1,14 +1,18 @@
 import { useAppSelector, useAppDispatch } from '@/store/hooks';
 import { setCommand, setOutput } from "@/store/features/inputSlice";
 import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
+import { Share } from "lucide-react";
 import ShinyText from "@/components/ui/TextAnimations/ShinyText/ShinyText"; // Utilisé pour le titre
 import { runCodexionSimulation } from "@/core/codexionLocalSimulation";
 
 export default function CodexionCommand() {
     const command = useAppSelector((state) => state.user_input.command);
+    const output = useAppSelector((state) => state.user_input.output);
     const dispatch = useAppDispatch();
     const navigate = useNavigate();
     const hasCommand = command.trim().length > 0;
+    const hasOutput = output.trim().length > 0;
 
     const handleAction = () => {
         navigate("/hub");
@@ -21,6 +25,19 @@ export default function CodexionCommand() {
         }
         const generatedLog = runCodexionSimulation(cmdToRun);
         dispatch(setOutput(generatedLog));
+    };
+
+    const handleShare = () => {
+        if (!hasOutput) return;
+        try {
+            const data = btoa(unescape(encodeURIComponent(JSON.stringify({ command, output }))));
+            const url = `${window.location.origin}${window.location.pathname}?share=${data}`;
+            navigator.clipboard.writeText(url);
+            toast.success("Shareable link copied to clipboard!");
+        } catch (error) {
+            toast.error("Failed to generate share link (log might be too large).");
+            console.error("Share error:", error);
+        }
     };
 
     return (
@@ -61,6 +78,16 @@ export default function CodexionCommand() {
                     >
                         {hasCommand ? "Share an edge case" : "Test an edge case"}
                     </button>
+                    {hasOutput && (
+                        <button
+                            type="button"
+                            onClick={handleShare}
+                            className="flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs font-medium tracking-wide text-white/70 transition hover:bg-white/10 hover:text-white active:scale-95 cursor-pointer"
+                        >
+                            <Share className="h-3.5 w-3.5" />
+                            Share
+                        </button>
+                    )}
                 </div>
             </div>
         </div>

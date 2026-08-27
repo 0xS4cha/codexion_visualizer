@@ -11,7 +11,8 @@ import CodexionAnalysis from "@/components/Codexion/CodexionAnalysis";
 import Header from "@/components/Codexion/Header";
 import GitHubCTA from "@/components/Codexion/GitHubCTA";
 import { CodexionSimulationProvider } from "@/context/CodexionSimulationContext";
-import { useAppSelector } from "@/store/hooks";
+import { useAppSelector, useAppDispatch } from "@/store/hooks";
+import { setCommand, setOutput } from "@/store/features/inputSlice";
 import { motion, AnimatePresence } from "motion/react";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
@@ -89,6 +90,23 @@ export default function Visualizer() {
 
     trackVisit();
   }, []);
+
+  const dispatch = useAppDispatch();
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const shareParam = params.get("share");
+    if (shareParam) {
+      try {
+        const decoded = JSON.parse(decodeURIComponent(escape(atob(shareParam))));
+        if (decoded.command) dispatch(setCommand(decoded.command));
+        if (decoded.output) dispatch(setOutput(decoded.output));
+        window.history.replaceState({}, document.title, window.location.pathname);
+      } catch (error) {
+        console.error("Failed to parse shared run:", error);
+      }
+    }
+  }, [dispatch]);
 
   const [activeTab, setActiveTab] = useState<'timeline' | 'table' | 'analysis'>('timeline');
   const hasOutput = useAppSelector((state) => state.user_input.output.trim().length > 0);
