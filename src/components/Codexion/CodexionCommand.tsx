@@ -2,7 +2,8 @@ import { useAppSelector, useAppDispatch } from '@/store/hooks';
 import { setCommand, setOutput } from "@/store/features/inputSlice";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { Share } from "lucide-react";
+import { Share, Activity } from "lucide-react";
+import { useLiveConnection } from "@/hooks/useLiveConnection";
 import ShinyText from "@/components/ui/TextAnimations/ShinyText/ShinyText"; // Utilisé pour le titre
 import { runCodexionSimulation } from "@/core/codexionLocalSimulation";
 
@@ -13,6 +14,8 @@ export default function CodexionCommand() {
     const navigate = useNavigate();
     const hasCommand = command.trim().length > 0;
     const hasOutput = output.trim().length > 0;
+
+    const { isConnected, isActive, startConnection, stopConnection } = useLiveConnection();
 
     const handleAction = () => {
         navigate("/hub");
@@ -63,31 +66,40 @@ export default function CodexionCommand() {
                     className="flex-1 min-h-[80px] resize-none rounded-lg border border-white/10 bg-black/30 px-4 py-3 font-mono text-sm text-white/90 placeholder:text-white/30 focus:border-white/30 focus:outline-none focus:ring-1 focus:ring-white/20"
                     spellCheck={false}
                 />
-                <div className="flex gap-3 pt-2">
+                <div className="grid grid-cols-2 gap-3 pt-3">
                     <button
                         type="button"
                         onClick={handleSimulate}
-                        className="rounded-full bg-white text-black hover:bg-white/90 px-5 py-2 text-xs font-semibold tracking-wide transition active:scale-95 cursor-pointer"
+                        className="flex justify-center items-center rounded-xl bg-white text-black hover:bg-white/90 px-4 py-2.5 text-xs font-semibold tracking-wide transition active:scale-95 cursor-pointer"
                     >
                         Run Local Simulation
                     </button>
                     <button
                         type="button"
-                        onClick={handleAction}
-                        className="rounded-full border border-white/10 bg-white/5 px-5 py-2 text-xs font-medium tracking-wide text-white/70 transition hover:bg-white/10 hover:text-white active:scale-95 cursor-pointer"
+                        onClick={isActive ? stopConnection : startConnection}
+                        className={`flex justify-center items-center gap-1.5 rounded-xl border px-4 py-2.5 text-xs font-semibold tracking-wide transition active:scale-95 cursor-pointer ${isActive ? 'border-white/20 bg-white/10 text-white hover:bg-white/15' : 'border-white/10 bg-white/5 text-white/70 hover:bg-white/10 hover:text-white'}`}
                     >
-                        {hasCommand ? "Share an edge case" : "Test an edge case"}
+                        <Activity className="h-3.5 w-3.5" />
+                        {isActive ? "Stop Live" : "Live Connect"}
+                        {isConnected && <span className="relative flex h-2 w-2 ml-1"><span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-60"></span><span className="relative inline-flex rounded-full h-2 w-2 bg-white"></span></span>}
                     </button>
-                    {hasOutput && (
+                    {hasOutput && !isActive && (
                         <button
                             type="button"
                             onClick={handleShare}
-                            className="flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs font-medium tracking-wide text-white/70 transition hover:bg-white/10 hover:text-white active:scale-95 cursor-pointer"
+                            className="flex justify-center items-center gap-1.5 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 px-4 py-2 text-xs font-medium text-white/80 transition active:scale-95 cursor-pointer"
                         >
                             <Share className="h-3.5 w-3.5" />
-                            Share
+                            Share Snapshot
                         </button>
                     )}
+                    <button
+                        type="button"
+                        onClick={handleAction}
+                        className={`flex justify-center items-center gap-1.5 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 px-4 py-2 text-xs font-medium text-white/80 transition active:scale-95 cursor-pointer ${!(hasOutput && !isActive) ? 'col-span-2' : ''}`}
+                    >
+                        {hasCommand ? "Share an edge case" : "Test an edge case"}
+                    </button>
                 </div>
             </div>
         </div>
