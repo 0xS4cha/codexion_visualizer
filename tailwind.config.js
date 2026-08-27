@@ -8,7 +8,7 @@ module.exports = {
   theme: {
     extend: {
       fontFamily: {
-        sans: ['Poppins', 'sans-serif'],
+        sans: ['Sunflower', 'sans-serif'],
       },
       colors: {
         border: "var(--border)",

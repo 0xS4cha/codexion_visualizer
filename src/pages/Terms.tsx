@@ -3,7 +3,7 @@ import { BackButton } from "@/components/Codexion/BackButton";
 
 export default function Terms() {
   return (
-    <div className="min-h-screen bg-[#0a0a0d] text-white/90 font-sans selection:bg-white/20 selection:text-white">
+    <div className="min-h-screen bg-[#0a0a0d] text-white/90  selection:bg-white/20 selection:text-white">
       <div className="relative max-w-4xl mx-auto px-6 py-12">
         <header className="mb-12 flex flex-col gap-6">
           <div className="-ml-4">

@@ -29,7 +29,7 @@ export default function Community() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0a0a0d] text-white/90 font-sans selection:bg-white/20 selection:text-white">
+    <div className="min-h-screen bg-[#0a0a0d] text-white/90 selection:bg-white/20 selection:text-white">
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
       </div>
 
