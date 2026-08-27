@@ -55,14 +55,13 @@ export const router = createBrowserRouter([
                 return { Component };
             },
         },
-
-    //   {
-    //     path: "*",
-    //     lazy: async () => {
-    //       const { default: Component } = await import("@/pages/NotFound");
-    //       return { Component };
-    //     },
-    //   },
+       {
+         path: "*",
+         lazy: async () => {
+           const { default: Component } = await import("@/pages/NotFound");
+           return { Component };
+         },
+       },
     ],
   },
 ]);
