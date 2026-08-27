@@ -124,7 +124,7 @@ export default function World() {
           <div className="absolute inset-0 bg-linear-to-tr from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
           <h3 className="text-white/60 text-xs font-semibold uppercase tracking-wider mb-4 flex items-center gap-2">
             <Globe className="w-4 h-4 text-white/40" />
-            Global Simulation Reach
+            Global users
           </h3>
           <div className="flex items-end justify-between">
             <span className="text-5xl font-extrabold text-white tracking-tighter tabular-nums leading-none">
