@@ -81,27 +81,22 @@ export default function CodexionCommand() {
                             onClick={isActive ? stopConnection : startConnection}
                             className={`w-full flex justify-center items-center gap-1.5 rounded-xl border py-2.5 text-xs font-semibold tracking-wide transition active:scale-95 cursor-pointer ${isActive ? 'px-4 border-white/20 bg-white/10 text-white hover:bg-white/15' : 'pl-4 pr-10 border-white/10 bg-white/5 text-white/70 hover:bg-white/10 hover:text-white'}`}
                         >
-                            <Activity className="h-3.5 w-3.5 shrink-0" />
                             {isActive ? "Stop Live" : "Live Connect"}
                             {isConnected && <span className="relative flex h-2 w-2 ml-1"><span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-60"></span><span className="relative inline-flex rounded-full h-2 w-2 bg-white"></span></span>}
                         </button>
-                        
+
                         {!isActive && (
                             <Popover>
                                 <PopoverTrigger asChild>
                                     <button className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded-md hover:bg-white/10 text-white/50 hover:text-white transition-colors">
                                         <Info className="w-3.5 h-3.5" />
-                                        <span className="absolute top-1 right-1 flex h-1.5 w-1.5">
-                                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                                            <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span>
-                                        </span>
                                     </button>
                                 </PopoverTrigger>
                                 <PopoverContent className="w-[22rem] border border-white/10 bg-black/60 backdrop-blur-xl text-white/80 p-5 shadow-2xl rounded-2xl" align="end" sideOffset={10}>
                                     <h4 className="font-semibold text-white flex items-center gap-2 mb-2">
                                         <span className="flex h-2 w-2 relative">
-                                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                                            <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white-400 opacity-75"></span>
+                                            <span className="relative inline-flex rounded-full h-2 w-2 bg-white-500"></span>
                                         </span>
                                         New: Live Mode!
                                     </h4>
@@ -114,14 +109,14 @@ export default function CodexionCommand() {
                                             <div>
                                                 <span className="text-white/90 block mb-1 font-medium">Download the local bridge</span>
                                                 <div className="flex flex-col gap-1 mt-1">
-                                                    <a 
-                                                        href="https://github.com/0xS4cha/codexion_live/releases/download/v1.0/codexion_live" 
+                                                    <a
+                                                        href="https://github.com/0xS4cha/codexion_live/releases/download/v1.0/codexion_live"
                                                         download
-                                                        className="inline-flex items-center gap-1 text-emerald-400 hover:text-emerald-300 hover:underline"
+                                                        className="inline-flex items-center gap-1 text-white hover:text-white-300 hover:underline"
                                                     >
                                                         Download codexion_live (v1.0)
                                                     </a>
-                                                    <a 
+                                                    <a
                                                         href="https://github.com/0xS4cha/codexion_live/"
                                                         target="_blank" rel="noreferrer"
                                                         className="inline-flex items-center gap-1 text-white/50 hover:text-white/80 hover:underline"
