@@ -1,6 +1,5 @@
-@import url('https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Sunflower:wght@300&display=swap');
+@import "./fonts.css";
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
@@ -132,7 +131,7 @@
   }
 
   html {
-    font-family: 'Sunflower', sans-serif;
+    font-family: 'futura-p', sans-serif;
   }
 
   button:not(:disabled),
@@ -143,27 +142,27 @@
   .maplibregl-popup-content {
     @apply !bg-transparent !shadow-none !p-0 !rounded-none;
   }
-  
+
   .maplibregl-popup-tip {
     @apply !hidden;
   }
-  
+
   .maplibregl-ctrl-attrib {
     @apply !bg-background !text-muted-foreground !border-border !rounded-md !border !shadow-sm;
   }
-  
+
   .maplibregl-ctrl-attrib a {
     @apply !text-muted-foreground;
   }
-  
+
   .maplibregl-ctrl-attrib a:hover {
     @apply !text-foreground;
   }
-  
+
   .maplibregl-ctrl-attrib-button {
     @apply !bg-transparent dark:invert;
   }
-  
+
 }
 
 ::-webkit-scrollbar-track {
