@@ -1,5 +1,5 @@
 import { motion, Variants } from "motion/react";
-import { ArrowLeft, Github, Users as UsersIcon, Heart, ExternalLink } from "lucide-react";
+import { Github, Users as UsersIcon, Heart, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
@@ -8,6 +8,8 @@ import { useNavigate } from "react-router-dom";
 import { BackButton } from "@/components/Codexion/BackButton";
 import Users from "@/assets/users.json";
 import { UserReadme } from "@/types/user";
+import Header from "@/components/Codexion/Header";
+import Footer from "@/components/Codexion/Footer";
 
 export default function Community() {
   const navigate = useNavigate();
@@ -30,10 +32,8 @@ export default function Community() {
 
   return (
     <div className="min-h-screen bg-[#0a0a0d] text-white/90 selection:bg-white/20 selection:text-white">
-      <div className="fixed inset-0 overflow-hidden pointer-events-none">
-      </div>
-
-      <div className="relative max-w-6xl mx-auto px-6 py-12">
+      <Header />
+      <div className="relative max-w-6xl mx-auto px-6 py-12 pt-24">
         <header className="mb-16 flex flex-col md:flex-row md:items-end justify-between gap-8">
           <div className="flex flex-col gap-6">
             <div className="-ml-4">
@@ -153,6 +153,7 @@ export default function Community() {
           </div>
         )}
       </div>
+      <Footer />
     </div>
   );
 }

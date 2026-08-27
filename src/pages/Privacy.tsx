@@ -1,11 +1,13 @@
 import { motion } from "motion/react";
 import { BackButton } from "@/components/Codexion/BackButton";
 import { privacies } from "@/config/privacy"
-
+import Footer from "@/components/Codexion/Footer";
+import Header from "@/components/Codexion/Header";
 export default function Privacy() {
   return (
     <div className="min-h-screen bg-[#0a0a0d] text-white/90 selection:bg-white/20 selection:text-white">
-      <div className="relative max-w-4xl mx-auto px-6 py-12">
+      <Header />
+      <div className="relative max-w-4xl mx-auto px-6 py-12 pt-24">
         <header className="mb-12 flex flex-col gap-6">
           <div className="-ml-4">
             <BackButton />
@@ -37,12 +39,13 @@ export default function Privacy() {
                 <h2 className="text-2xl font-semibold text-white">{u.id}. {u.title}</h2>
               </div>
               <p className="text-lg leading-relaxed text-white/60">
-              {u.content}
+                {u.content}
               </p>
             </section>
           ))}
         </motion.div>
       </div>
+      <Footer />
     </div>
   );
 }

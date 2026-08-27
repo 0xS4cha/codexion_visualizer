@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import Footer from "@/components/Codexion/Footer";
 
 const AVAILABLE_TAGS = [
   "Burnout",
@@ -335,6 +336,7 @@ export default function Edgecase() {
           </div>
         </div>
       </main>
+      <Footer />
 
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
         <DialogContent className="sm:max-w-2xl bg-[#121215] border border-white/10 text-white/90">

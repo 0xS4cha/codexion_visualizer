@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import GlassSurface from "@/components/ui/Components/GlassSurface/GlassSurface";
 import ShapeGrid from "@/components/ui/Backgrounds/ShapeGrid/ShapeGrid";
 import CodexionTimeline from "@/components/Codexion/CodexionTimeline";
 import CodexionTable from "@/components/Codexion/CodexionTable";
@@ -9,6 +8,7 @@ import CodexionOutput from "@/components/Codexion/CodexionOutput";
 import CodexionCommand from "@/components/Codexion/CodexionCommand";
 import CodexionAnalysis from "@/components/Codexion/CodexionAnalysis";
 import Header from "@/components/Codexion/Header";
+import Footer from "@/components/Codexion/Footer";
 import GitHubCTA from "@/components/Codexion/GitHubCTA";
 import { CodexionSimulationProvider } from "@/context/CodexionSimulationContext";
 import { useAppSelector, useAppDispatch } from "@/store/hooks";
@@ -16,8 +16,6 @@ import { setCommand, setOutput } from "@/store/features/inputSlice";
 import { motion, AnimatePresence } from "motion/react";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { Github } from "lucide-react";
-import { useNavigate } from "react-router-dom";
 
 
 function EmptyState() {
@@ -68,7 +66,6 @@ function EmptyState() {
 }
 
 export default function Visualizer() {
-  const navigate = useNavigate();
   useEffect(() => {
     async function trackVisit() {
       try {
@@ -206,49 +203,7 @@ export default function Visualizer() {
         </motion.div>
       </main>
 
-      <footer className="fixed bottom-0 left-0 right-0 z-40 px-4 py-3 sm:px-6">
-        <GlassSurface
-          width="100%"
-          height={56}
-          borderRadius={16}
-          className="mx-auto max-w-7xl flex items-center justify-between px-6 border border-white/5 bg-[#121215]/80 backdrop-blur-md"
-        >
-          <div className="flex items-center gap-4 text-xs text-white/40">
-            <span className="font-semibold text-white/70">Codexion</span>
-            <span>—</span>
-            <span>42 · Common core</span>
-          </div>
-          <span className="text-white/20 px-4">—</span>
-          <div className="flex items-center gap-4 text-xs">
-          <a
-              onClick={() => navigate("/privacy")}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="cursor-pointer flex items-center gap-1.5 text-white/50 hover:text-white transition font-medium"
-            >
-              <span>Privacy</span>
-            </a>
-            <span className="text-white/20">—</span>
-            <a
-              onClick={() => navigate("/terms")}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="cursor-pointer flex items-center gap-1.5 text-white/50 hover:text-white transition font-medium"
-            >
-              <span>Terms</span>
-            </a>
-            <span className="text-white/20">—</span>
-            <a
-              href="https://github.com/0xS4cha/codexion_visualizer"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-1.5 text-white/50 hover:text-white transition font-medium"
-            >
-              <span>GitHub</span>
-            </a>
-          </div>
-        </GlassSurface>
-      </footer>
+      <Footer />
     </CodexionSimulationProvider>
   );
 }
