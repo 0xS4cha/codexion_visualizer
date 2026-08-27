@@ -114,9 +114,9 @@ export default function World() {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.8 }}
-        className="relative w-full min-h-screen bg-[#0a0a0d] overflow-x-hidden pb-16 pt-24"
+        className="relative w-full min-h-screen bg-[#0a0a0d] overflow-x-hidden pb-16"
       >
-        <div className="absolute top-6 left-6 z-30">
+        <div className="absolute top-6 left-6 z-30 pt-16">
           <BackButton />
         </div>
         <div className="relative w-full h-[75vh] min-h-[600px] border-b border-white/5">
