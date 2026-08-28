@@ -110,7 +110,7 @@ export default function CodexionCommand() {
                                                 <span className="text-white/90 block mb-1 font-medium">Download the local bridge</span>
                                                 <div className="flex flex-col gap-1 mt-1">
                                                     <a
-                                                        href="https://github.com/0xS4cha/codexion_live/releases/download/v1.0/codexion_live"
+                                                        href="https://github.com/0xS4cha/codexion_live/releases/download/v1.1/codexion_live"
                                                         download
                                                         className="inline-flex items-center gap-1 text-white hover:text-white-300 hover:underline"
                                                     >
