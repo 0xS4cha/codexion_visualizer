@@ -70,6 +70,259 @@ function interpolate(v: number, vKeys: number[], rValues: number[]): number {
 
 
 
+class TimeMapper {
+    private visualMap = new Map<number, number>();
+    private visualKeys: number[] = [];
+    private realValues: number[] = [];
+    private currentVisual = 0;
+
+    constructor(
+        private sortedTimestamps: number[],
+        private countsPerTimeAndCoder: Map<number, Map<number, number>>,
+        private instantDuration: number
+    ) {}
+
+    public async build(yieldIfNeeded: () => Promise<void>) {
+        if (this.sortedTimestamps.length > 0) {
+            this.visualMap.set(this.sortedTimestamps[0], 0);
+            this.visualKeys.push(0);
+            this.realValues.push(this.sortedTimestamps[0]);
+        }
+
+        for (let i = 0; i < this.sortedTimestamps.length - 1; i++) {
+            await yieldIfNeeded();
+            const tCurr = this.sortedTimestamps[i];
+            const tNext = this.sortedTimestamps[i + 1];
+            const realDelta = tNext - tCurr;
+
+            let maxStack = 0;
+            const countsMap = this.countsPerTimeAndCoder.get(tCurr);
+            if (countsMap) {
+                for (const count of countsMap.values()) {
+                    maxStack = Math.max(maxStack, count * this.instantDuration);
+                }
+            }
+
+            const visualDelta = Math.max(realDelta, maxStack);
+            this.currentVisual += visualDelta;
+            this.visualMap.set(tNext, this.currentVisual);
+            this.visualKeys.push(this.currentVisual);
+            this.realValues.push(tNext);
+        }
+    }
+
+    public getVisualTime(realT: number): number {
+        return this.visualMap.get(realT)!;
+    }
+
+    public finalize(globalMaxTime: number) {
+        if (this.sortedTimestamps.length > 0) {
+            this.visualKeys.push(globalMaxTime);
+            const lastReal = this.sortedTimestamps[this.sortedTimestamps.length - 1];
+            const lastVisual = this.visualMap.get(lastReal)!;
+            this.realValues.push(lastReal + (globalMaxTime - lastVisual));
+        }
+    }
+
+    public getInterpolator() {
+        return (v: number) => interpolate(v, this.visualKeys, this.realValues);
+    }
+}
+
+class CoderSegmentBuilder {
+    public segments = new Map<number, Segment[]>();
+    public globalMaxTime = 0;
+
+    constructor(
+        private byCoder: Map<number, LogEntry[]>,
+        private timeMapper: TimeMapper,
+        private instantDuration: number,
+        private timeToRefactor?: number,
+        private lastSegmentDuration: number = 50
+    ) {}
+
+    public build() {
+        for (const [coderId, evts] of this.byCoder) {
+            const sorted = [...evts].sort((a, b) => a.timestamp - b.timestamp);
+            const segs: Segment[] = [];
+            let currentVisualEnd = 0;
+
+            for (let i = 0; i < sorted.length; i++) {
+                const entry = sorted[i];
+                const realT = entry.timestamp;
+                const visualStartBase = this.timeMapper.getVisualTime(realT);
+
+                let start = visualStartBase;
+                if (i > 0 && sorted[i - 1].timestamp === realT) {
+                    start = Math.max(start, currentVisualEnd);
+                }
+
+                let end;
+                let actualRealEnd;
+
+                if (entry.action === "is refactoring" && this.timeToRefactor) {
+                    actualRealEnd = realT + this.timeToRefactor;
+                    end = this.timeMapper.getVisualTime(actualRealEnd);
+                } else if (i + 1 < sorted.length) {
+                    const nextEntry = sorted[i + 1];
+                    actualRealEnd = nextEntry.timestamp;
+
+                    if (nextEntry.timestamp === realT) {
+                        end = start + this.instantDuration;
+                    } else {
+                        const nextVisualBase = this.timeMapper.getVisualTime(nextEntry.timestamp);
+                        end = Math.max(nextVisualBase, start + this.instantDuration);
+                    }
+                } else {
+                    end = start + Math.max(this.lastSegmentDuration, this.instantDuration);
+                    actualRealEnd = realT + this.lastSegmentDuration;
+                }
+
+                if (end > this.globalMaxTime) {
+                    this.globalMaxTime = end;
+                }
+
+                segs.push({ startTime: start, endTime: end, action: entry.action, realStart: realT, realEnd: actualRealEnd });
+                currentVisualEnd = end;
+            }
+            this.segments.set(coderId, segs);
+        }
+    }
+}
+
+class DongleSegmentBuilder {
+    public dongleSegments = new Map<number, DongleSegment[]>();
+    private dongleStatus: { owner: number | null, cooldownEnd: number }[];
+    private coderHeldCount = new Map<number, number>();
+    private lastCompileStart = new Map<number, number>();
+
+    constructor(
+        private numCoders: number,
+        private coderIndexById: Map<number, number>,
+        private timeMapper: TimeMapper,
+        private dongleCooldown: number,
+        private timeToBurnout: number,
+        private issues: SimulationIssue[]
+    ) {
+        for (let i = 1; i <= numCoders; i++) this.dongleSegments.set(i, []);
+        this.dongleStatus = new Array(numCoders + 1).fill(null).map(() => ({
+            owner: null,
+            cooldownEnd: 0,
+        }));
+    }
+
+    public async build(entries: LogEntry[], yieldIfNeeded: () => Promise<void>) {
+        const sortedEntries = [...entries].sort((a, b) => {
+            if (a.timestamp !== b.timestamp) return a.timestamp - b.timestamp;
+            if (a.action.includes("taken") && !b.action.includes("taken")) return -1;
+            if (!a.action.includes("taken") && b.action.includes("taken")) return 1;
+            return 0;
+        });
+
+        for (let index = 0; index < sortedEntries.length; index++) {
+            const entry = sortedEntries[index];
+            await yieldIfNeeded();
+            const coderId = entry.coderId;
+            const realT = entry.timestamp;
+            const visualT = this.timeMapper.getVisualTime(realT);
+
+            if (entry.action === "has taken a dongle") {
+                const coderIndex = this.coderIndexById.get(coderId) ?? 0;
+                
+                const rightDongleIdx = coderIndex + 1;
+                const leftDongleIdx = coderIndex === 0 ? this.numCoders : coderIndex ?? 0;
+
+                let targetDongle = 0;
+                const count = this.coderHeldCount.get(coderId) || 0;
+                if (count === 0) {
+                    const leftOwner = this.dongleStatus[leftDongleIdx].owner;
+                    const rightOwner = this.dongleStatus[rightDongleIdx].owner;
+
+                    if (leftOwner === null) {
+                        targetDongle = leftDongleIdx;
+                    } else if (rightOwner === null) {
+                        targetDongle = rightDongleIdx;
+                    }
+                } else if (count === 1) {
+                    if (this.dongleStatus[leftDongleIdx].owner === coderId) targetDongle = rightDongleIdx;
+                    else targetDongle = leftDongleIdx;
+                }
+
+                if (targetDongle > 0) {
+                    const dSegs = this.dongleSegments.get(targetDongle)!;
+                    if (dSegs.length > 0) {
+                        dSegs[dSegs.length - 1].endTime = visualT;
+                        dSegs[dSegs.length - 1].realEnd = realT;
+                    }
+                    dSegs.push({
+                        startTime: visualT,
+                        endTime: visualT + 1000000,
+                        ownerId: coderId,
+                        status: 'taken',
+                        realStart: realT,
+                        realEnd: realT + 1000000
+                    });
+                    this.dongleStatus[targetDongle].owner = coderId;
+                    this.coderHeldCount.set(coderId, count + 1);
+                }
+            } else if (entry.action === "is compiling") {
+                this.lastCompileStart.set(coderId, realT);
+            } else if (entry.action === "is debugging") {
+                for (let dIdx = 1; dIdx <= this.numCoders; dIdx++) {
+                    if (this.dongleStatus[dIdx].owner === coderId) {
+                        const dSegs = this.dongleSegments.get(dIdx)!;
+                        if (dSegs.length > 0) {
+                            dSegs[dSegs.length - 1].endTime = visualT;
+                            dSegs[dSegs.length - 1].realEnd = realT;
+                        }
+                        const cooldownRealEnd = realT + this.dongleCooldown;
+                        dSegs.push({
+                            startTime: visualT,
+                            endTime: visualT + 1000000,
+                            ownerId: null,
+                            status: 'cooldown',
+                            realStart: realT,
+                            realEnd: cooldownRealEnd
+                        });
+
+                        this.dongleStatus[dIdx].owner = null;
+                        this.dongleStatus[dIdx].cooldownEnd = cooldownRealEnd;
+                    }
+                }
+                this.coderHeldCount.set(coderId, 0);
+            } else if (entry.action === "burned out") {
+                if (this.timeToBurnout > 0) {
+                    const start = this.lastCompileStart.get(coderId);
+                    if (start !== undefined) {
+                        const deadline = start + this.timeToBurnout;
+                        const diff = realT - deadline;
+                        if (diff > 10) {
+                            this.issues.push({
+                                type: 'error',
+                                message: `Burnout precision violation: Logged at ${realT}ms, but deadline was ${deadline}ms (+${diff}ms). Subject requires < 10ms.`,
+                                timestamp: realT,
+                                coderId
+                            });
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    public finalize(globalMaxTime: number) {
+        this.dongleSegments.forEach((segs) => {
+            if (segs.length > 0) {
+                const last = segs[segs.length - 1];
+                if (last.endTime > 100000) {
+                    last.endTime = globalMaxTime;
+                    last.realEnd = last.realStart + (globalMaxTime - last.startTime);
+                }
+            }
+        });
+    }
+}
+
 export async function buildSegments(
     entries: LogEntry[],
     instantDuration = 10,
@@ -84,7 +337,7 @@ export async function buildSegments(
     visualToReal: (v: number) => number;
     coderStats: any;
     issues: SimulationIssue[];
-} > {
+}> {
     let lastYieldTime = performance.now();
     const yieldIfNeeded = async () => {
         const now = performance.now();
@@ -102,8 +355,12 @@ export async function buildSegments(
         coderIndexById.set(id, index);
     });
     const issues: SimulationIssue[] = [];
+    
+    // Group entries
     const byCoder = new Map<number, LogEntry[]>();
     const countsPerTimeAndCoder = new Map<number, Map<number, number>>();
+    const timestamps = new Set<number>();
+    
     for (const e of entries) {
         if (!byCoder.has(e.coderId)) byCoder.set(e.coderId, []);
         byCoder.get(e.coderId)!.push(e);
@@ -111,12 +368,9 @@ export async function buildSegments(
         if (!countsPerTimeAndCoder.has(e.timestamp)) countsPerTimeAndCoder.set(e.timestamp, new Map());
         const timeMap = countsPerTimeAndCoder.get(e.timestamp)!;
         timeMap.set(e.coderId, (timeMap.get(e.coderId) || 0) + 1);
+        
+        timestamps.add(e.timestamp);
     }
-
-    const lastCompileStart = new Map<number, number>();
-
-    const timestamps = new Set<number>();
-    for (const e of entries) timestamps.add(e.timestamp);
 
     if (timeToRefactor) {
         entries.forEach(e => {
@@ -127,252 +381,23 @@ export async function buildSegments(
     }
 
     const sortedTimestamps = Array.from(timestamps).sort((a, b) => a - b);
-    const visualMap = new Map<number, number>();
-    const visualKeys: number[] = [];
-    const realValues: number[] = [];
+    
+    const timeMapper = new TimeMapper(sortedTimestamps, countsPerTimeAndCoder, instantDuration);
+    await timeMapper.build(yieldIfNeeded);
+    
+    const coderSegmentBuilder = new CoderSegmentBuilder(byCoder, timeMapper, instantDuration, timeToRefactor);
+    coderSegmentBuilder.build();
+    
+    const dongleSegmentBuilder = new DongleSegmentBuilder(n, coderIndexById, timeMapper, dongleCooldown, timeToBurnout, issues);
+    await dongleSegmentBuilder.build(entries, yieldIfNeeded);
+    
+    const globalMaxTime = coderSegmentBuilder.globalMaxTime;
+    dongleSegmentBuilder.finalize(globalMaxTime);
+    timeMapper.finalize(globalMaxTime);
 
-    let currentVisual = 0;
-    if (sortedTimestamps.length > 0) {
-        visualMap.set(sortedTimestamps[0], 0);
-        visualKeys.push(0);
-        realValues.push(sortedTimestamps[0]);
-    }
-
-    for (let i = 0; i < sortedTimestamps.length - 1; i++) {
-        await yieldIfNeeded();
-        const tCurr = sortedTimestamps[i];
-        const tNext = sortedTimestamps[i + 1];
-        const realDelta = tNext - tCurr;
-
-        let maxStack = 0;
-        const countsMap = countsPerTimeAndCoder.get(tCurr);
-        if (countsMap) {
-            for (const count of countsMap.values()) {
-                maxStack = Math.max(maxStack, count * instantDuration);
-            }
-        }
-
-        const visualDelta = Math.max(realDelta, maxStack);
-        currentVisual += visualDelta;
-        visualMap.set(tNext, currentVisual);
-        visualKeys.push(currentVisual);
-        realValues.push(tNext);
-    }
-
-    const segments = new Map<number, Segment[]>();
-    let globalMaxTime = 0;
-    const lastSegmentDuration = 50;
-
-    for (const [coderId, evts] of byCoder) {
-        const sorted = [...evts].sort((a, b) => a.timestamp - b.timestamp);
-        const segs: Segment[] = [];
-        let currentVisualEnd = 0;
-
-        for (let i = 0; i < sorted.length; i++) {
-            const entry = sorted[i];
-            const realT = entry.timestamp;
-            const visualStartBase = visualMap.get(realT)!;
-
-            let start = visualStartBase;
-            if (i > 0 && sorted[i - 1].timestamp === realT) {
-                start = Math.max(start, currentVisualEnd);
-            }
-
-            let end;
-            let actualRealEnd;
-
-            if (entry.action === "is refactoring" && timeToRefactor) {
-                actualRealEnd = realT + timeToRefactor;
-                end = visualMap.get(actualRealEnd)!;
-            } else if (i + 1 < sorted.length) {
-                const nextEntry = sorted[i + 1];
-                actualRealEnd = nextEntry.timestamp;
-
-                if (nextEntry.timestamp === realT) {
-                    end = start + instantDuration;
-                } else {
-                    const nextVisualBase = visualMap.get(nextEntry.timestamp)!;
-                    end = Math.max(nextVisualBase, start + instantDuration);
-                }
-            } else {
-                end = start + Math.max(lastSegmentDuration, instantDuration);
-                actualRealEnd = realT + lastSegmentDuration;
-            }
-
-            if (end > globalMaxTime) {
-                globalMaxTime = end;
-            };
-
-            segs.push({ startTime: start, endTime: end, action: entry.action, realStart: realT, realEnd: actualRealEnd });
-
-            currentVisualEnd = end;
-        };
-        segments.set(coderId, segs);
-    }
-
-    const dongleSegments = new Map<number, DongleSegment[]>();
-    for (let i = 1; i <= n; i++) dongleSegments.set(i, []);
-
-    const dongleStatus = new Array(n + 1).fill(null).map(() => ({
-        owner: null as number | null,
-        cooldownEnd: 0,
-    }));
-
-    const coderHeldCount = new Map<number, number>();
-    const sortedEntries = [...entries].sort((a, b) => {
-        if (a.timestamp !== b.timestamp) return a.timestamp - b.timestamp;
-        if (a.action.includes("taken") && !b.action.includes("taken")) return -1;
-        if (!a.action.includes("taken") && b.action.includes("taken")) return 1;
-        return 0;
-    });
-
-    for (let index = 0; index < sortedEntries.length; index++) {
-        const entry = sortedEntries[index];
-        await yieldIfNeeded();
-        const coderId = entry.coderId;
-        const realT = entry.timestamp;
-        const visualT = visualMap.get(realT)!;
-
-        if (entry.action === "has taken a dongle") {
-            const coderIndex = coderIndexById.get(coderId) ?? 0;
-            if (coderIndex === undefined) {
-                // issues.push({
-                //     type: 'warning',
-                //     message: `Unknown coderId ${coderId} encountered while taking a dongle.`,
-                //     timestamp: realT,
-                //     coderId
-                // });
-                // return;
-            }
-
-            const rightDongleIdx = coderIndex + 1;
-            const leftDongleIdx = coderIndex === 0 ? n : coderIndex ?? 0;
-
-            let targetDongle = 0;
-            const count = coderHeldCount.get(coderId) || 0;
-            if (count === 0) {
-                const leftOwner = dongleStatus[leftDongleIdx].owner;
-                const rightOwner = dongleStatus[rightDongleIdx].owner;
-
-                if (leftOwner === null) {
-                    targetDongle = leftDongleIdx;
-                } else if (rightOwner === null) {
-                    targetDongle = rightDongleIdx;
-                } else {
-                    const leftIsNeighbor = Math.abs(leftOwner - coderId) === 1;
-                    const rightIsNeighbor = Math.abs(rightOwner - coderId) === 1;
-
-                    if (leftIsNeighbor && rightIsNeighbor) {
-
-                        // issues.push({ 
-                        //     type: 'warning', 
-                        //     message: `Coder ${coderId} is waiting. Both dongles are legitimately held by neighbors ${leftOwner} and ${rightOwner}.`, 
-                        //     timestamp: realT, 
-                        //     coderId 
-                        // });
-                    }
-                }
-            } else if (count === 1) {
-                if (dongleStatus[leftDongleIdx].owner === coderId) targetDongle = rightDongleIdx;
-                else targetDongle = leftDongleIdx;
-            }
-
-            if (targetDongle > 0) {
-                // const leftIsNeighbor = Math.abs(dongleStatus[targetDongle].owner - coderId) === 1;
-                // if (dongleStatus[targetDongle].cooldownEnd > realT) {
-                //     issues.push({
-                //         type: 'warning',
-                //         message: `Cooldown violation: Dongle ${targetDongle} taken ${dongleStatus[targetDongle].cooldownEnd - realT}ms too early.`,
-                //         timestamp: realT,
-                //         coderId,
-                //         dongleId: targetDongle
-                //     });
-                // }
-
-                // if (dongleStatus[targetDongle].owner !== null && dongleStatus[targetDongle].owner !== coderId && leftIsNeighbor)  {
-                //     issues.push({ type: 'error', message: `Conflict: Dongle ${targetDongle} taken by ${coderId} while held by Coder ${dongleStatus[targetDongle].owner}`, timestamp: realT, coderId, dongleId: targetDongle });
-                // }
-                const dSegs = dongleSegments.get(targetDongle)!;
-                if (dSegs.length > 0) {
-                    dSegs[dSegs.length - 1].endTime = visualT;
-                    dSegs[dSegs.length - 1].realEnd = realT;
-                }
-                dSegs.push({
-                    startTime: visualT,
-                    endTime: visualT + 1000000,
-                    ownerId: coderId,
-                    status: 'taken',
-                    realStart: realT,
-                    realEnd: realT + 1000000
-                });
-                dongleStatus[targetDongle].owner = coderId;
-                coderHeldCount.set(coderId, count + 1);
-            }
-        } else if (entry.action === "is compiling") {
-            lastCompileStart.set(coderId, realT);
-        } else if (entry.action === "is debugging") {
-            for (let dIdx = 1; dIdx <= n; dIdx++) {
-                if (dongleStatus[dIdx].owner === coderId) {
-                    const dSegs = dongleSegments.get(dIdx)!;
-                    if (dSegs.length > 0) {
-                        dSegs[dSegs.length - 1].endTime = visualT;
-                        dSegs[dSegs.length - 1].realEnd = realT;
-                    }
-                    const cooldownRealEnd = realT + dongleCooldown;
-                    dSegs.push({
-                        startTime: visualT,
-                        endTime: visualT + 1000000,
-                        ownerId: null,
-                        status: 'cooldown',
-                        realStart: realT,
-                        realEnd: cooldownRealEnd
-                    });
-
-                    dongleStatus[dIdx].owner = null;
-                    dongleStatus[dIdx].cooldownEnd = cooldownRealEnd;
-                }
-            }
-            coderHeldCount.set(coderId, 0);
-        } else if (entry.action === "burned out") {
-            if (timeToBurnout > 0) {
-                const start = lastCompileStart.get(coderId);
-                if (start !== undefined) {
-                    const deadline = start + timeToBurnout;
-                    const diff = realT - deadline;
-                    if (diff > 10) {
-                        issues.push({
-                            type: 'error',
-                            message: `Burnout precision violation: Logged at ${realT}ms, but deadline was ${deadline}ms (+${diff}ms). Subject requires < 10ms.`,
-                            timestamp: realT,
-                            coderId
-                        });
-                    }
-                }
-            }
-        }
-    }
-
-    dongleSegments.forEach((segs) => {
-        if (segs.length > 0) {
-            const last = segs[segs.length - 1];
-            if (last.endTime > 100000) {
-                last.endTime = globalMaxTime;
-                last.realEnd = last.realStart + (globalMaxTime - last.startTime);
-            }
-        }
-    });
-
-    if (sortedTimestamps.length > 0) {
-        visualKeys.push(globalMaxTime);
-        const lastReal = sortedTimestamps[sortedTimestamps.length - 1];
-        const lastVisual = visualMap.get(lastReal)!;
-        realValues.push(lastReal + (globalMaxTime - lastVisual));
-    }
-
-    const visualToReal = (v: number) => interpolate(v, visualKeys, realValues);
+    const visualToReal = timeMapper.getInterpolator();
 
     const coderStats: any = {};
-
     entries.forEach((action) => {
         if (!coderStats[action.coderId]) {
             coderStats[action.coderId] = {};
@@ -393,11 +418,17 @@ export async function buildSegments(
                 message: `The coder thread did no action.`,
                 coderId: id,
             });
-            }
-        )
+        });
     }
 
-    return { segments, dongleSegments, maxTime: globalMaxTime, visualToReal, coderStats, issues };
+    return { 
+        segments: coderSegmentBuilder.segments, 
+        dongleSegments: dongleSegmentBuilder.dongleSegments, 
+        maxTime: globalMaxTime, 
+        visualToReal, 
+        coderStats, 
+        issues 
+    };
 }
 
 
