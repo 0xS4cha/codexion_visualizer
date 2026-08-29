@@ -81,7 +81,7 @@ export default function Visualizer() {
 
         console.log(data);
       } catch (error) {
-        console.error("Erreur lors du tracking :", error);
+        console.error("Error on tracking :", error);
       }
     }
 
@@ -106,7 +106,7 @@ export default function Visualizer() {
   }, [dispatch]);
 
   const [activeTab, setActiveTab] = useState<'timeline' | 'table' | 'analysis'>('timeline');
-  const hasOutput = useAppSelector((state) => state.user_input.output.length > 0);
+  const hasOutput = useAppSelector((state) => state.user_input.output.some(line => line.trim() !== ''));
 
   return (
     <CodexionSimulationProvider>

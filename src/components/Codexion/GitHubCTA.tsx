@@ -26,6 +26,7 @@ export default function GitHubCTA() {
     <motion.div
       initial={{ opacity: 0, y: 15 }}
       animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -15 }}
       transition={{ duration: 0.4, ease: "easeOut" }}
       className="relative overflow-hidden rounded-2xl border border-white/10 bg-[#121215]/80 backdrop-blur-md p-6 sm:p-8"
     >

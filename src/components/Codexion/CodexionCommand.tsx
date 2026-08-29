@@ -14,7 +14,7 @@ export default function CodexionCommand() {
     const dispatch = useAppDispatch();
     const navigate = useNavigate();
     const hasCommand = command.trim().length > 0;
-    const hasOutput = output.length > 0;
+    const hasOutput = output.some(line => line.trim() !== '');
 
     const { isConnected, isActive, startConnection, stopConnection } = useLiveConnection();
 
@@ -114,7 +114,7 @@ export default function CodexionCommand() {
                                                         download
                                                         className="inline-flex items-center gap-1 text-white hover:text-white-300 hover:underline"
                                                     >
-                                                        Download codexion_live (v1.0)
+                                                        Download codexion_live (v1.2.0)
                                                     </a>
                                                     <a
                                                         href="https://github.com/0xS4cha/codexion_live/"
