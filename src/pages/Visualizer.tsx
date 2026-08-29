@@ -106,7 +106,7 @@ export default function Visualizer() {
   }, [dispatch]);
 
   const [activeTab, setActiveTab] = useState<'timeline' | 'table' | 'analysis'>('timeline');
-  const hasOutput = useAppSelector((state) => state.user_input.output.trim().length > 0);
+  const hasOutput = useAppSelector((state) => state.user_input.output.length > 0);
 
   return (
     <CodexionSimulationProvider>

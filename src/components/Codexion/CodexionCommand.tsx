@@ -14,7 +14,7 @@ export default function CodexionCommand() {
     const dispatch = useAppDispatch();
     const navigate = useNavigate();
     const hasCommand = command.trim().length > 0;
-    const hasOutput = output.trim().length > 0;
+    const hasOutput = output.length > 0;
 
     const { isConnected, isActive, startConnection, stopConnection } = useLiveConnection();
 
@@ -28,7 +28,7 @@ export default function CodexionCommand() {
             dispatch(setCommand(cmdToRun));
         }
         const generatedLog = runCodexionSimulation(cmdToRun);
-        dispatch(setOutput(generatedLog));
+        dispatch(setOutput(generatedLog.split('\n')));
     };
 
     const handleShare = () => {

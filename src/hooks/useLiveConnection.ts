@@ -1,57 +1,79 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { useAppDispatch } from '@/store/hooks';
-import { setOutput, setCommand } from '@/store/features/inputSlice';
+import { setOutput, appendOutput, setCommand } from '@/store/features/inputSlice';
 import { toast } from 'sonner';
 
 export function useLiveConnection(url: string = 'ws://127.0.0.1:8080') {
   const [isConnected, setIsConnected] = useState(false);
   const [isActive, setIsActive] = useState(false);
   const dispatch = useAppDispatch();
+  const reconnectAttempt = useRef(0);
+  const reconnectTimeoutId = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const startConnection = useCallback(() => {
     setIsActive(true);
+    reconnectAttempt.current = 0;
   }, []);
 
   const stopConnection = useCallback(() => {
     setIsActive(false);
     setIsConnected(false);
+    if (reconnectTimeoutId.current) {
+      clearTimeout(reconnectTimeoutId.current);
+    }
   }, []);
 
   useEffect(() => {
     if (!isActive) return;
 
-    const ws = new WebSocket(url);
-    let currentLogs = '';
+    let ws: WebSocket;
+    let messageBuffer: string[] = [];
+    let flushIntervalId: ReturnType<typeof setInterval>;
 
-    ws.onopen = () => {
-      setIsConnected(true);
-      currentLogs = '';
-      dispatch(setCommand("LIVE MODE - READING FROM WEBSOCKET"));
-      dispatch(setOutput(''));
-      toast.success("Connected to Live Bridge!");
+    const connect = () => {
+      ws = new WebSocket(url);
+
+      ws.onopen = () => {
+        setIsConnected(true);
+        reconnectAttempt.current = 0;
+        dispatch(setCommand("LIVE MODE - READING FROM WEBSOCKET"));
+        dispatch(setOutput([]));
+      };
+
+      ws.onmessage = (event) => {
+        messageBuffer.push(event.data);
+      };
+
+      ws.onerror = () => {
+        ws.close();
+      };
+
+      ws.onclose = () => {
+        setIsConnected(false);
+        if (isActive) {
+          const delay = Math.min(1000 * Math.pow(2, reconnectAttempt.current), 30000);
+          reconnectAttempt.current += 1;
+          reconnectTimeoutId.current = setTimeout(connect, delay);
+        }
+      };
     };
 
-    ws.onmessage = (event) => {
-      const newLine = event.data;
-      currentLogs = currentLogs ? currentLogs + '\n' + newLine : newLine;
-      dispatch(setOutput(currentLogs));
-    };
+    connect();
 
-    ws.onerror = (e) => {
-      console.error('WebSocket error:', e);
-      setIsConnected(false);
-      setIsActive(false);
-      toast.error("Connection failed. Ensure codexion-live is running on 127.0.0.1:8080.");
-    };
-
-    ws.onclose = () => {
-      setIsConnected(false);
-      setIsActive(false);
-      toast.info("Disconnected from Live Bridge.");
-    };
+    flushIntervalId = setInterval(() => {
+      if (messageBuffer.length > 0) {
+        dispatch(appendOutput([...messageBuffer]));
+        messageBuffer = [];
+      }
+    }, 100);
 
     return () => {
-      ws.close();
+      if (reconnectTimeoutId.current) clearTimeout(reconnectTimeoutId.current);
+      clearInterval(flushIntervalId);
+      if (ws) {
+        ws.onclose = null;
+        ws.close();
+      }
     };
   }, [isActive, url, dispatch]);
 

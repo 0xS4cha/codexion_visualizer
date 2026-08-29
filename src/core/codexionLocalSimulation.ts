@@ -4,218 +4,217 @@ export function parseCommandString(command: string) {
   if (parts[0] && (parts[0].includes('codexion') || parts[0].includes('/') || parts[0].includes('.'))) {
     startIndex = 1;
   }
-
-  const numCoders = parseInt(parts[startIndex], 10) || 4;
-  const timeToBurnout = parseInt(parts[startIndex + 1], 10) || 1000;
-  const timeToCompile = parseInt(parts[startIndex + 2], 10) || 200;
-  const timeToDebug = parseInt(parts[startIndex + 3], 10) || 100;
-  const timeToRefactor = parseInt(parts[startIndex + 4], 10) || 150;
-  const numCompilesRequired = parseInt(parts[startIndex + 5], 10) || 5;
-  const dongleCooldown = parseInt(parts[startIndex + 6], 10) || 50;
-  const scheduler = ((parts[startIndex + 7] || 'edf').toLowerCase() === 'fifo' ? 'fifo' : 'edf') as 'fifo' | 'edf';
-
   return {
-    numCoders,
-    timeToBurnout,
-    timeToCompile,
-    timeToDebug,
-    timeToRefactor,
-    numCompilesRequired,
-    dongleCooldown,
-    scheduler
+    numCoders: parseInt(parts[startIndex], 10) || 4,
+    timeToBurnout: parseInt(parts[startIndex + 1], 10) || 1000,
+    timeToCompile: parseInt(parts[startIndex + 2], 10) || 200,
+    timeToDebug: parseInt(parts[startIndex + 3], 10) || 100,
+    timeToRefactor: parseInt(parts[startIndex + 4], 10) || 150,
+    numCompilesRequired: parseInt(parts[startIndex + 5], 10) || 5,
+    dongleCooldown: parseInt(parts[startIndex + 6], 10) || 50,
+    scheduler: ((parts[startIndex + 7] || 'edf').toLowerCase() === 'fifo' ? 'fifo' : 'edf') as 'fifo' | 'edf'
   };
 }
 
-export function runCodexionSimulation(command: string): string {
-  const {
-    numCoders,
-    timeToBurnout,
-    timeToCompile,
-    timeToDebug,
-    timeToRefactor,
-    numCompilesRequired,
-    dongleCooldown,
-    scheduler
-  } = parseCommandString(command);
+type CoderState = 'idle' | 'waiting_first' | 'waiting_second' | 'compiling' | 'debugging' | 'refactoring' | 'burned_out';
 
-  const coders = Array.from({ length: numCoders }, (_, idx) => ({
-    id: idx + 1,
-    state: 'idle' as 'idle' | 'waiting_first' | 'waiting_second' | 'compiling' | 'debugging' | 'refactoring' | 'burned_out',
-    lastCompileStart: 0,
-    compilesCount: 0,
-    heldDongles: [] as number[],
-    firstDongle: 0,
-    secondDongle: 0
-  }));
+interface SimEvent {
+  time: number;
+  type: 'action_finished' | 'cooldown_finished' | 'burnout_check';
+  coderId?: number;
+  dongleId?: number;
+}
 
-  for (let i = 0; i < numCoders; i++) {
-    const coder = coders[i];
-    const dongleA = coder.id;
-    const dongleB = coder.id === 1 ? numCoders : coder.id - 1;
-    coder.firstDongle = Math.min(dongleA, dongleB);
-    coder.secondDongle = Math.max(dongleA, dongleB);
+class Coder {
+  public state: CoderState = 'idle';
+  public lastCompileStart: number = 0;
+  public compilesCount: number = 0;
+  public heldDongles: number[] = [];
+  public firstDongle: number;
+  public secondDongle: number;
+
+  constructor(public id: number, numCoders: number) {
+    const dongleA = this.id;
+    const dongleB = this.id === 1 ? numCoders : this.id - 1;
+    this.firstDongle = Math.min(dongleA, dongleB);
+    this.secondDongle = Math.max(dongleA, dongleB);
+  }
+}
+
+class Dongle {
+  public owner: number | null = null;
+  public cooldownUntil: number = 0;
+  public queue: { coderId: number; time: number; deadline: number }[] = [];
+  constructor(public id: number) {}
+}
+
+class Simulation {
+  private coders: Coder[];
+  private dongles: Dongle[];
+  private events: SimEvent[] = [];
+  private logs: string[] = [];
+  private simulationRunning: boolean = true;
+  private currentTime: number = 0;
+  private maxDuration: number = 100000;
+
+  constructor(
+    public numCoders: number,
+    public timeToBurnout: number,
+    public timeToCompile: number,
+    public timeToDebug: number,
+    public timeToRefactor: number,
+    public numCompilesRequired: number,
+    public dongleCooldown: number,
+    public scheduler: 'fifo' | 'edf'
+  ) {
+    this.coders = Array.from({ length: numCoders }, (_, i) => new Coder(i + 1, numCoders));
+    this.dongles = Array.from({ length: numCoders }, (_, i) => new Dongle(i + 1));
   }
 
-  const dongles = Array.from({ length: numCoders }, (_, idx) => ({
-    id: idx + 1,
-    owner: null as number | null,
-    cooldownUntil: 0,
-    queue: [] as { coderId: number; time: number; deadline: number }[]
-  }));
-
-  const logs: string[] = [];
-  const addLog = (time: number, coderId: number, action: string) => {
-    logs.push(`${time} ${coderId} ${action}`);
-  };
-
-  interface SimEvent {
-    time: number;
-    type: 'action_finished' | 'cooldown_finished' | 'burnout_check';
-    coderId?: number;
-    dongleId?: number;
+  private addLog(time: number, coderId: number, action: string) {
+    this.logs.push(`${time} ${coderId} ${action}`);
   }
-  let events: SimEvent[] = [];
-  const scheduleEvent = (time: number, type: SimEvent['type'], extra: Partial<SimEvent> = {}) => {
-    events.push({ time, type, ...extra });
-    events.sort((a, b) => {
+
+  private scheduleEvent(time: number, type: SimEvent['type'], extra: Partial<SimEvent> = {}) {
+    this.events.push({ time, type, ...extra });
+    this.events.sort((a, b) => {
       if (a.time !== b.time) return a.time - b.time;
       const priority = { cooldown_finished: 1, action_finished: 2, burnout_check: 3 };
       return priority[a.type] - priority[b.type];
     });
-  };
+  }
 
-  const processQueues = (t: number) => {
+  private processQueues(t: number) {
     let changed = true;
     while (changed) {
       changed = false;
-      for (const dongle of dongles) {
+      for (const dongle of this.dongles) {
         if (dongle.owner === null && t >= dongle.cooldownUntil && dongle.queue.length > 0) {
-          if (scheduler === 'edf') {
-            dongle.queue.sort((a, b) => {
-              if (a.deadline !== b.deadline) return a.deadline - b.deadline;
-              return a.coderId - b.coderId;
-            });
+          if (this.scheduler === 'edf') {
+            dongle.queue.sort((a, b) => a.deadline !== b.deadline ? a.deadline - b.deadline : a.coderId - b.coderId);
           } else {
-            dongle.queue.sort((a, b) => {
-              if (a.time !== b.time) return a.time - b.time;
-              return a.coderId - b.coderId;
-            });
+            dongle.queue.sort((a, b) => a.time !== b.time ? a.time - b.time : a.coderId - b.coderId);
           }
 
           const req = dongle.queue.shift()!;
-          const coder = coders[req.coderId - 1];
+          const coder = this.coders[req.coderId - 1];
 
-          if (coder.state !== 'waiting_first' && coder.state !== 'waiting_second') {
-            continue;
-          }
+          if (coder.state !== 'waiting_first' && coder.state !== 'waiting_second') continue;
 
           dongle.owner = coder.id;
           coder.heldDongles.push(dongle.id);
-          addLog(t, coder.id, "has taken a dongle");
+          this.addLog(t, coder.id, "has taken a dongle");
 
           if (coder.heldDongles.length === 2) {
             coder.state = 'compiling';
             coder.lastCompileStart = t;
-            addLog(t, coder.id, "is compiling");
-            scheduleEvent(t + timeToCompile, 'action_finished', { coderId: coder.id });
+            this.addLog(t, coder.id, "is compiling");
+            this.scheduleEvent(t + this.timeToCompile, 'action_finished', { coderId: coder.id });
           } else {
             coder.state = 'waiting_second';
-            const targetDongle = dongles[coder.secondDongle - 1];
+            const targetDongle = this.dongles[coder.secondDongle - 1];
             targetDongle.queue.push({
               coderId: coder.id,
               time: t,
-              deadline: coder.lastCompileStart + timeToBurnout
+              deadline: coder.lastCompileStart + this.timeToBurnout
             });
           }
           changed = true;
         }
       }
     }
-  };
-
-  for (const coder of coders) {
-    coder.state = 'waiting_first';
-    const firstD = dongles[coder.firstDongle - 1];
-    firstD.queue.push({
-      coderId: coder.id,
-      time: 0,
-      deadline: 0 + timeToBurnout
-    });
-    scheduleEvent(timeToBurnout, 'burnout_check', { coderId: coder.id });
   }
 
-  processQueues(0);
+  public run(): string {
+    for (const coder of this.coders) {
+      coder.state = 'waiting_first';
+      this.dongles[coder.firstDongle - 1].queue.push({
+        coderId: coder.id,
+        time: 0,
+        deadline: this.timeToBurnout
+      });
+      this.scheduleEvent(this.timeToBurnout, 'burnout_check', { coderId: coder.id });
+    }
 
-  let simulationRunning = true;
-  const maxDuration = 100000;
-  let currentTime = 0;
+    this.processQueues(0);
 
-  while (events.length > 0 && simulationRunning && currentTime < maxDuration) {
-    const event = events.shift()!;
-    currentTime = event.time;
+    while (this.events.length > 0 && this.simulationRunning && this.currentTime < this.maxDuration) {
+      const event = this.events.shift()!;
+      this.currentTime = event.time;
 
-    if (event.type === 'action_finished') {
-      const coder = coders[event.coderId! - 1];
-      if (coder.state === 'compiling') {
-        coder.state = 'debugging';
-        coder.compilesCount++;
-        addLog(currentTime, coder.id, "is debugging");
+      if (event.type === 'action_finished') {
+        const coder = this.coders[event.coderId! - 1];
+        if (coder.state === 'compiling') {
+          coder.state = 'debugging';
+          coder.compilesCount++;
+          this.addLog(this.currentTime, coder.id, "is debugging");
 
-        const released = [...coder.heldDongles];
-        coder.heldDongles = [];
+          const released = [...coder.heldDongles];
+          coder.heldDongles = [];
 
-        for (const dId of released) {
-          const d = dongles[dId - 1];
-          d.owner = null;
-          d.cooldownUntil = currentTime + dongleCooldown;
-          scheduleEvent(currentTime + dongleCooldown, 'cooldown_finished', { dongleId: dId });
+          for (const dId of released) {
+            const d = this.dongles[dId - 1];
+            d.owner = null;
+            d.cooldownUntil = this.currentTime + this.dongleCooldown;
+            this.scheduleEvent(this.currentTime + this.dongleCooldown, 'cooldown_finished', { dongleId: dId });
+          }
+
+          this.scheduleEvent(this.currentTime + this.timeToDebug, 'action_finished', { coderId: coder.id });
+          this.processQueues(this.currentTime);
+        } else if (coder.state === 'debugging') {
+          coder.state = 'refactoring';
+          this.addLog(this.currentTime, coder.id, "is refactoring");
+          this.scheduleEvent(this.currentTime + this.timeToRefactor, 'action_finished', { coderId: coder.id });
+        } else if (coder.state === 'refactoring') {
+          if (this.numCompilesRequired > 0) {
+            const allDone = this.coders.every(c => c.compilesCount >= this.numCompilesRequired);
+            if (allDone) {
+              this.simulationRunning = false;
+              break;
+            }
+          }
+
+          coder.state = 'waiting_first';
+          this.dongles[coder.firstDongle - 1].queue.push({
+            coderId: coder.id,
+            time: this.currentTime,
+            deadline: coder.lastCompileStart + this.timeToBurnout
+          });
+
+          this.scheduleEvent(coder.lastCompileStart + this.timeToBurnout, 'burnout_check', { coderId: coder.id });
+          this.processQueues(this.currentTime);
         }
-
-        scheduleEvent(currentTime + timeToDebug, 'action_finished', { coderId: coder.id });
-        processQueues(currentTime);
-      }
-      else if (coder.state === 'debugging') {
-        coder.state = 'refactoring';
-        addLog(currentTime, coder.id, "is refactoring");
-        scheduleEvent(currentTime + timeToRefactor, 'action_finished', { coderId: coder.id });
-      }
-      else if (coder.state === 'refactoring') {
-        if (numCompilesRequired > 0) {
-          const allDone = coders.every(c => c.compilesCount >= numCompilesRequired);
-          if (allDone) {
-            simulationRunning = false;
+      } else if (event.type === 'cooldown_finished') {
+        this.processQueues(this.currentTime);
+      } else if (event.type === 'burnout_check') {
+        const coder = this.coders[event.coderId! - 1];
+        if (coder.state !== 'compiling' && coder.state !== 'debugging' && coder.state !== 'refactoring') {
+          const deadline = coder.lastCompileStart + this.timeToBurnout;
+          if (this.currentTime >= deadline) {
+            coder.state = 'burned_out';
+            this.addLog(this.currentTime, coder.id, "burned out");
+            this.simulationRunning = false;
             break;
           }
         }
-
-        coder.state = 'waiting_first';
-        const firstD = dongles[coder.firstDongle - 1];
-        firstD.queue.push({
-          coderId: coder.id,
-          time: currentTime,
-          deadline: coder.lastCompileStart + timeToBurnout
-        });
-
-        scheduleEvent(coder.lastCompileStart + timeToBurnout, 'burnout_check', { coderId: coder.id });
-        processQueues(currentTime);
       }
     }
-    else if (event.type === 'cooldown_finished') {
-      processQueues(currentTime);
-    }
-    else if (event.type === 'burnout_check') {
-      const coder = coders[event.coderId! - 1];
-      if (coder.state !== 'compiling' && coder.state !== 'debugging' && coder.state !== 'refactoring') {
-        const deadline = coder.lastCompileStart + timeToBurnout;
-        if (currentTime >= deadline) {
-          coder.state = 'burned_out';
-          addLog(currentTime, coder.id, "burned out");
-          simulationRunning = false;
-          break;
-        }
-      }
-    }
+
+    return this.logs.join('\n');
   }
+}
 
-  return logs.join('\n');
+export function runCodexionSimulation(command: string): string {
+  const config = parseCommandString(command);
+  const sim = new Simulation(
+    config.numCoders,
+    config.timeToBurnout,
+    config.timeToCompile,
+    config.timeToDebug,
+    config.timeToRefactor,
+    config.numCompilesRequired,
+    config.dongleCooldown,
+    config.scheduler
+  );
+  return sim.run();
 }

@@ -38,7 +38,7 @@ export function CodexionSimulationProvider({ children }: { children: React.React
   const [error, setError] = useState<Error | null>(null);
 
   useEffect(() => {
-    if (!rawLog) {
+    if (!rawLog || rawLog.length === 0) {
       setData(null);
       setIsLoading(false);
       setError(null);
@@ -50,7 +50,7 @@ export function CodexionSimulationProvider({ children }: { children: React.React
     setError(null);
 
     prepareCodexionSimulation(
-      rawLog,
+      rawLog.join('\n'),
       instantActionPadding,
       timeToRefactor,
       finalDongleCooldown,

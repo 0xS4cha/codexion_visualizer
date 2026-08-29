@@ -22,8 +22,8 @@ export default function CodexionOptions() {
                     </span>
                 </label>
                 <textarea
-                    value={output}
-                    onChange={(e) => dispatch(setOutput(e.target.value))}
+                    value={output.join('\n')}
+                    onChange={(e) => dispatch(setOutput(e.target.value.split('\n')))}
                     placeholder={`0 2 has taken a dongle
 0 2 is compiling
 4 2 is debugging
