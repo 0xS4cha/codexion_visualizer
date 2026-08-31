@@ -6,7 +6,7 @@ import {
 } from "@/core/codexionSimulation";
 import { useCodexionSimulation } from "@/hooks/useCodexionSimulation";
 import { useCodexionSimulationContext } from "@/context/CodexionSimulationContext";
-import html2canvas from "html2canvas";
+import html2canvas from 'html2canvas-pro';
 
 export default function CodexionTable() {
   const [currentTime, setCurrentTime] = useState(0);
@@ -23,7 +23,7 @@ export default function CodexionTable() {
     try {
       const canvas = await html2canvas(tableRef.current, {
         backgroundColor: '#121212',
-        scale: 2,
+        scale: 1,
         useCORS: true,
       });
 
@@ -80,9 +80,8 @@ export default function CodexionTable() {
         </div>
       </div>
 
-      <div className="overflow-x-auto overflow-y-hidden rounded-lg border border-white/5 bg-black/10 flex justify-center">
+      <div className="overflow-x-auto overflow-y-hidden rounded-lg border border-white/5 bg-black/10 flex justify-center" ref={tableRef}>
         <div
-          ref={tableRef}
           className="relative"
           style={{ width: 500, height: 500 }}
         >

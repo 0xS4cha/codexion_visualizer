@@ -40,7 +40,7 @@
     "firebase-admin": "^14.3.0",
     "framer-motion": "^13.0.0",
     "gsap": "^3.15.0",
-    "html2canvas": "^1.4.1",
+    "html2canvas-pro": "^2.4.0",
     "input-otp": "^1.5.0",
     "lucide-react": "^0.469.0",
     "maplibre-gl": "^6.6.0",

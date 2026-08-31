@@ -11,7 +11,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import html2canvas from "html2canvas";
+import html2canvas from 'html2canvas-pro';
 
 export default function CodexionTimeline() {
   const [zoom, setZoom] = useState<number>(1);
@@ -80,10 +80,10 @@ export default function CodexionTimeline() {
         </div>
       </div>
 
-      <div className="overflow-x-auto overflow-y-hidden rounded-lg border border-white/5 bg-black/10 relative">
+      <div className="overflow-x-auto overflow-y-hidden rounded-lg border border-white/5 bg-black/10 relative" ref={timelineRef}>
 
         <div style={{ width: `${zoom * 100}%`, minWidth: '100%' }} className="flex flex-col py-2">
-          <div ref={timelineRef} className="relative flex flex-col gap-2">
+          <div className="relative flex flex-col gap-2">
             {coderIds.map((coderId) => (
               <div key={coderId} className="flex items-center h-10 group">
 
