@@ -114,7 +114,14 @@ export default function CodexionCommand() {
                                                         download
                                                         className="inline-flex items-center gap-1 text-white hover:text-white-300 hover:underline"
                                                     >
-                                                        Download codexion_live (v1.2.0)
+                                                        Download codexion_live (v1.2.0) (linux)
+                                                    </a>
+                                                    <a
+                                                        href="https://github.com/0xS4cha/codexion_live/releases/download/v1.2.0/codexion_live_mac"
+                                                        download
+                                                        className="inline-flex items-center gap-1 text-white hover:text-white-300 hover:underline"
+                                                    >
+                                                        Download codexion_live (v1.2.0) (mac)
                                                     </a>
                                                     <a
                                                         href="https://github.com/0xS4cha/codexion_live/"
