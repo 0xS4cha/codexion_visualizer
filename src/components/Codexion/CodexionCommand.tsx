@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import { Share, Activity, Info, Terminal } from "lucide-react";
 import { useLiveConnection } from "@/hooks/useLiveConnection";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import ShinyText from "@/components/ui/TextAnimations/ShinyText/ShinyText"; // Utilisé pour le titre
+import ShinyText from "@/components/ui/TextAnimations/ShinyText/ShinyText";
 import { runCodexionSimulation } from "@/core/codexionLocalSimulation";
 
 export default function CodexionCommand() {

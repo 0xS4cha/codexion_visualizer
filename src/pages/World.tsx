@@ -120,28 +120,6 @@ export default function World() {
           <BackButton />
         </div>
         <div className="relative w-full h-[75vh] min-h-[600px] border-b border-white/5">
-          <motion.div
-            initial={{ opacity: 0, y: -20, scale: 0.95 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            transition={{ delay: 0.3, duration: 0.5, type: "spring", stiffness: 200, damping: 20 }}
-            className="absolute top-50 left-8 z-20 p-6 rounded-2xl border border-white/10 bg-[#121215]/60 backdrop-blur-xl  min-w-[300px] overflow-hidden group"
-          >
-            <div className="absolute inset-0 bg-linear-to-tr from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-            <h3 className="text-white/60 text-xs font-semibold uppercase tracking-wider mb-4 flex items-center gap-2">
-              <Globe className="w-4 h-4 text-white/40" />
-              Global users
-            </h3>
-            <div className="flex items-end justify-between">
-              <span className="text-5xl font-extrabold text-white tracking-tighter tabular-nums leading-none">
-                {stats.totalVisitors.toLocaleString()}
-              </span>
-              <Badge variant="outline" className="bg-white/10 text-white border-white/20 px-2.5 py-1 mb-1 backdrop-blur-md">
-                <TrendingUp className="w-3.5 h-3.5 mr-1.5" />
-                {stats.visitorGrowth}
-              </Badge>
-            </div>
-          </motion.div>
-
           <div className="absolute inset-0 w-full h-full">
             <Map
               blank
@@ -176,11 +154,7 @@ export default function World() {
                 />
               )}
 
-
               <MapControls className="bottom-8 right-8 z-20" />
-
-
-
               {hover && (
                 <MapPopup
                   longitude={hover.lng}
