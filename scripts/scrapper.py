@@ -23,32 +23,47 @@ def github_request(url, token):
 
 def search_repositories(token):
     repositories = []
-    page = 1
+    seen_urls = set()
 
-    while True:
-        params = urllib.parse.urlencode({
-            "q": f'"codexion-visualizer.sacha-dev.me" in:readme',
-            "per_page": 100,
-            "page": page,
-        })
+    queries = [
+        ('"codexion-visualizer.sacha-dev.me" in:readme', False),
+        ('"codexion-visualizer.sacha-dev.me/" in:readme', False),
+        ('codexion-visualizer sacha-dev in:readme', False),
+        ('"codexion-visualizer.sacha-dev.me" filename:README', True),
+    ]
 
-        url = f"https://api.github.com/search/repositories?{params}"
-        response = github_request(url, token)
+    for query, search_code in queries:
+        page = 1
+        while True:
+            params = urllib.parse.urlencode({
+                "q": query,
+                "per_page": 100,
+                "page": page,
+            })
 
-        items = response.get("items", [])
+            endpoint = "code" if search_code else "repositories"
+            url = f"https://api.github.com/search/{endpoint}?{params}"
+            response = github_request(url, token)
+            items = response.get("items", [])
 
-        print(
-            f"GitHub search: page={page}, "
-            f"total_count={response.get('total_count')}, "
-            f"items={len(items)}"
-        )
+            print(
+                f"Query [{query}]: page={page}, "
+                f"total_count={response.get('total_count')}, "
+                f"items={len(items)}"
+            )
 
-        repositories.extend(items)
+            for item in items:
+                repo = item["repository"] if search_code else item
 
-        if len(items) < 100:
-            break
+                if repo["html_url"] not in seen_urls:
+                    seen_urls.add(repo["html_url"])
+                    repositories.append(repo)
+                    print(repo["html_url"])
 
-        page += 1
+            if len(items) < 100:
+                break
+
+            page += 1
 
     return repositories
 
