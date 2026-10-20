@@ -5,8 +5,11 @@ import ShapeGrid from "@/components/ui/Backgrounds/ShapeGrid/ShapeGrid";
 import Header from "@/components/Codexion/Header";
 import { signInWithCustomToken } from "firebase/auth";
 import { useAppSelector, useAppDispatch } from "@/store/hooks";
-import { auth, getedgecases, edgecaseData } from "@/config/firebase";
-import { setCommand } from "@/store/features/inputSlice";
+import { auth, getedgecases, edgecaseData, edgecaseOutputLines, edgecaseCreatedAt } from "@/config/firebase";
+import { setCommand, setOutput } from "@/store/features/inputSlice";
+import { setActiveTab } from "@/store/features/viewSlice";
+import { AVAILABLE_TAGS, MAX_TAGS } from "@/config/tags";
+import { toast } from "sonner";
 import { setInstantAction, setDongleCooldown } from "@/store/features/settingsSlice";
 import { useSecureApi } from "@/hooks/useSecureApi";
 import { EdgecaseCard } from "@/components/Codexion/EdgecaseCard";
@@ -17,18 +20,14 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/com
 import { Input } from "@/components/ui/input";
 import Footer from "@/components/Codexion/Footer";
 
-const AVAILABLE_TAGS = [
-  "Burnout",
-  "Deadlock",
-  "Tricky",
-  "Stack",
-  "Memory",
-  "Infinite Loop",
-  "Segfault",
-  "Leaks",
-  "Parsing",
-  "Other"
-];
+type SortMode = "newest" | "top" | "discussed" | "oldest";
+
+const SORT_LABELS: Record<SortMode, string> = {
+  newest: "Newest",
+  top: "Top voted",
+  discussed: "Most discussed",
+  oldest: "Oldest",
+};
 
 export default function Edgecase() {
   const [user, setUser] = useState<DashboardUser | null>(null);
@@ -47,6 +46,7 @@ export default function Edgecase() {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTags, setActiveTags] = useState<string[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
+  const [sortMode, setSortMode] = useState<SortMode>("newest");
   const itemsPerPage = 4;
 
   const { command: reduxCommand, output } = useAppSelector((state) => state.user_input);
@@ -61,8 +61,8 @@ export default function Edgecase() {
       try {
         const data = await getedgecases();
         setedgecases(data);
-      } catch (error) {
-        console.error("Failed to fetch edgecases", error);
+      } catch {
+        toast.error("Failed to load edge cases.");
       } finally {
         setIsLoadingList(false);
       }
@@ -87,8 +87,8 @@ export default function Edgecase() {
               window.history.replaceState({}, "", "/hub");
               window.dispatchEvent(new Event("storage"));
             })
-            .catch((err) => {
-              console.error("Firebase Auth Error:", err);
+            .catch(() => {
+              toast.error("Could not open your session, please log in again.");
             });
         } else {
           window.history.replaceState({}, "", "/hub");
@@ -132,9 +132,9 @@ export default function Edgecase() {
       const data = await getedgecases();
       setedgecases(data);
       setIsLoadingList(false);
+      toast.success("Edge case published!");
     } catch (e) {
-      console.error(e);
-      alert("Failed to publish edgecase.");
+      toast.error(e instanceof Error ? `Failed to publish: ${e.message}` : "Failed to publish edgecase.");
     } finally {
       setIsSubmitting(false);
     }
@@ -155,8 +155,8 @@ export default function Edgecase() {
           return ec;
         })
       );
-    } catch (e) {
-      console.error("Failed to vote", e);
+    } catch {
+      toast.error("Failed to register your vote.");
     }
   };
 
@@ -188,8 +188,22 @@ export default function Edgecase() {
     return matchesSearch && matchesTags;
   });
 
-  const totalPages = Math.ceil(filterededgecases.length / itemsPerPage);
-  const paginatededgecases = filterededgecases.slice(
+  const sortededgecases = [...filterededgecases].sort((a, b) => {
+    switch (sortMode) {
+      case "top":
+        return (b.votes ?? 0) - (a.votes ?? 0) || edgecaseCreatedAt(b) - edgecaseCreatedAt(a);
+      case "discussed":
+        return (b.commentCount ?? 0) - (a.commentCount ?? 0) || edgecaseCreatedAt(b) - edgecaseCreatedAt(a);
+      case "oldest":
+        return edgecaseCreatedAt(a) - edgecaseCreatedAt(b);
+      default:
+        return edgecaseCreatedAt(b) - edgecaseCreatedAt(a);
+    }
+  });
+
+  const hasLocalOutput = output.some((l) => l.trim() !== "");
+  const totalPages = Math.ceil(sortededgecases.length / itemsPerPage);
+  const paginatededgecases = sortededgecases.slice(
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   );
@@ -230,6 +244,16 @@ export default function Edgecase() {
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="space-y-3">
+                    <select
+                      value={sortMode}
+                      onChange={(e) => { setSortMode(e.target.value as SortMode); setCurrentPage(1); }}
+                      className="h-11 w-full rounded-md border border-white/10 bg-black/30 px-3 text-sm text-white/80 focus:outline-none cursor-pointer"
+                      aria-label="Sort edge cases"
+                    >
+                      {(Object.keys(SORT_LABELS) as SortMode[]).map((m) => (
+                        <option key={m} value={m} className="bg-[#121215]">Sort: {SORT_LABELS[m]}</option>
+                      ))}
+                    </select>
                     <Input
                       value={searchQuery}
                       onChange={handleSearchChange}
@@ -264,6 +288,13 @@ export default function Edgecase() {
                     Go to Visualizer
                   </Button>
                   <Button
+                    onClick={() => navigate(`/u/${user.login}`)}
+                    variant="outline"
+                    className="w-full rounded-full border border-white/10 bg-white/5 text-sm font-semibold text-white/80 hover:bg-white/10 transition h-11 cursor-pointer"
+                  >
+                    My edge cases
+                  </Button>
+                  <Button
                     onClick={() => {
                       setLocalCommand(reduxCommand);
                       setLocalPadding(reduxPadding);
@@ -296,11 +327,31 @@ export default function Edgecase() {
                         description={ec.description}
                         votes={ec.votes || 0}
                         userVote={user ? ec.votedBy?.[user.login] : undefined}
+                        commentCount={ec.commentCount ?? 0}
+                        currentLogin={user.login}
+                        hasStoredLog={edgecaseOutputLines(ec).some((l) => l.trim() !== "")}
+                        canCheckLog={hasLocalOutput && !!ec.command}
+                        onAuthorClick={() => navigate(`/u/${ec.author}`)}
                         onVote={(voteType) => handleVote(ec.id, voteType)}
                         onOpen={() => {
                           dispatch(setCommand(ec.command));
                           dispatch(setInstantAction(ec.instantActionPadding));
                           dispatch(setDongleCooldown(ec.dongleCooldown));
+                          navigate("/");
+                        }}
+                        onReplay={() => {
+                          dispatch(setCommand(ec.command));
+                          dispatch(setOutput(edgecaseOutputLines(ec)));
+                          dispatch(setInstantAction(ec.instantActionPadding));
+                          dispatch(setDongleCooldown(ec.dongleCooldown));
+                          dispatch(setActiveTab("timeline"));
+                          navigate("/");
+                        }}
+                        onCheckLog={() => {
+                          dispatch(setCommand(ec.command));
+                          dispatch(setInstantAction(ec.instantActionPadding));
+                          dispatch(setDongleCooldown(ec.dongleCooldown));
+                          dispatch(setActiveTab("analysis"));
                           navigate("/");
                         }}
                       />
@@ -352,6 +403,7 @@ export default function Edgecase() {
               <label className="text-sm font-medium text-white/70">Title</label>
               <Input
                 value={title}
+                maxLength={120}
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder="A descriptive title"
                 className="h-11 bg-black/30 border-white/10 text-white/90 placeholder:text-white/30 focus-visible:border-white/30 focus-visible:ring-white/20"
@@ -361,13 +413,14 @@ export default function Edgecase() {
               <label className="text-sm font-medium text-white/70">Description</label>
               <Input
                 value={description}
+                maxLength={2000}
                 onChange={(e) => setDescription(e.target.value)}
                 placeholder="What happened in this edgecase?"
                 className="h-11 bg-black/30 border-white/10 text-white/90 placeholder:text-white/30 focus-visible:border-white/30 focus-visible:ring-white/20"
               />
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-medium text-white/70">Tags</label>
+              <label className="text-sm font-medium text-white/70">Tags <span className="text-white/30">({selectedTags.length}/{MAX_TAGS})</span></label>
               <div className="flex flex-wrap gap-2">
                 {AVAILABLE_TAGS.map((tag) => (
                   <button
@@ -375,7 +428,7 @@ export default function Edgecase() {
                     type="button"
                     onClick={() =>
                       setSelectedTags((prev) =>
-                        prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]
+                        prev.includes(tag) ? prev.filter((t) => t !== tag) : prev.length >= MAX_TAGS ? prev : [...prev, tag]
                       )
                     }
                     className="cursor-pointer font-sans"
@@ -427,7 +480,7 @@ export default function Edgecase() {
           <DialogFooter className="mt-4">
             <Button
               onClick={handlePublish}
-              disabled={isSubmitting}
+              disabled={isSubmitting || !title.trim() || !description.trim()}
               className="w-full rounded-full bg-white text-black font-semibold hover:bg-white/90 transition disabled:opacity-50 h-11 cursor-pointer"
             >
               {isSubmitting ? "Publishing..." : "Publish edgecase"}

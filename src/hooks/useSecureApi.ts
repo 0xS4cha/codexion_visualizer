@@ -14,8 +14,7 @@ export function useSecureApi() {
       await auth.authStateReady();
       
       const currentUser = auth.currentUser;
-      console.log('Firebase Auth User:', currentUser?.uid);
-      
+
       if (!currentUser) {
         throw new Error('User not connected (Firebase Session missing)');
       }
@@ -32,13 +31,19 @@ export function useSecureApi() {
       });
 
       if (!response.ok) {
-        throw new Error(`Error HTTP: ${response.status}`);
+        let message = `Error HTTP: ${response.status}`;
+        try {
+          const body = await response.json();
+          if (body?.error) message = body.error;
+        } catch {
+          message = `Error HTTP: ${response.status}`;
+        }
+        throw new Error(message);
       }
 
       const data = await response.json();
       return data;
     } catch (err: any) {
-      console.error('Error:', err);
       setError(err.message);
       throw err;
     } finally {

@@ -4,7 +4,6 @@ import { createBrowserRouter } from "react-router-dom";
 export const router = createBrowserRouter([
   {
     path: "/",
-    // element: <Layout />,
     children: [
         {
             index: true,
@@ -39,6 +38,20 @@ export const router = createBrowserRouter([
             lazy: async () => {
             const { default: Component } = await import("@/pages/Community");
             return { Component };
+            },
+        },
+        {
+            path: "r/:id",
+            lazy: async () => {
+                const { default: Component } = await import("@/pages/SharedRun");
+                return { Component };
+            },
+        },
+        {
+            path: "u/:login",
+            lazy: async () => {
+                const { default: Component } = await import("@/pages/Profile");
+                return { Component };
             },
         },
         {
