@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import ShapeGrid from "@/components/ui/Backgrounds/ShapeGrid/ShapeGrid";
 import CodexionTimeline from "@/components/Codexion/CodexionTimeline";
 import CodexionTable from "@/components/Codexion/CodexionTable";
@@ -7,12 +7,19 @@ import CodexionOptions from "@/components/Codexion/CodexionOptions";
 import CodexionOutput from "@/components/Codexion/CodexionOutput";
 import CodexionCommand from "@/components/Codexion/CodexionCommand";
 import CodexionAnalysis from "@/components/Codexion/CodexionAnalysis";
+import CodexionCompare from "@/components/Codexion/CodexionCompare";
 import Header from "@/components/Codexion/Header";
 import Footer from "@/components/Codexion/Footer";
 import GitHubCTA from "@/components/Codexion/GitHubCTA";
-import { CodexionSimulationProvider } from "@/context/CodexionSimulationContext";
+import { CodexionSimulationProvider, useCodexionSimulationContext } from "@/context/CodexionSimulationContext";
 import { useAppSelector, useAppDispatch } from "@/store/hooks";
 import { setCommand, setOutput } from "@/store/features/inputSlice";
+import { setInstantAction, setDongleCooldown } from "@/store/features/settingsSlice";
+import { setActiveTab } from "@/store/features/viewSlice";
+import type { VisualizerTab } from "@/store/features/viewSlice";
+import { usePlayback } from "@/hooks/usePlayback";
+import { decodeShare } from "@/lib/share";
+import { toast } from "sonner";
 import { motion, AnimatePresence } from "motion/react";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
@@ -65,51 +72,70 @@ function EmptyState() {
   );
 }
 
+const TABS: VisualizerTab[] = ['timeline', 'table', 'analysis', 'compare'];
+
+function PlaybackDriver() {
+  const { data } = useCodexionSimulationContext();
+  usePlayback(data ? data.visualToReal(data.maxTime) : null, data ? data.visualToReal(data.minTime) : 0);
+  return null;
+}
+
+function AnalysisStatus() {
+  const { data, isLoading, error } = useCodexionSimulationContext();
+  if (error) return <span className="text-[11px] text-red-300">Analysis failed: {error.message}</span>;
+  if (isLoading) return <span className="text-[11px] text-white/40 animate-pulse">Analyzing…</span>;
+  if (!data) return null;
+  const errors = data.issues.filter((i) => i.type === 'error').length;
+  return (
+    <span className={`text-[11px] ${errors ? 'text-red-300' : 'text-emerald-300/80'}`}>
+      {errors ? `${errors} error${errors > 1 ? 's' : ''} found` : 'No errors found'}
+    </span>
+  );
+}
+
 export default function Visualizer() {
   useEffect(() => {
-    async function trackVisit() {
-      try {
-        const response = await fetch("/api/visit", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ path: window.location.pathname }),
-        });
-
-        const data = await response.json();
-
-        console.log(data);
-      } catch (error) {
-        console.error("Error on tracking :", error);
-      }
-    }
-
-    trackVisit();
+    fetch("/api/visit", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ path: window.location.pathname }),
+    }).catch(() => undefined);
   }, []);
 
   const dispatch = useAppDispatch();
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
+    const tabParam = params.get("tab");
+    if (tabParam && (TABS as string[]).includes(tabParam)) {
+      dispatch(setActiveTab(tabParam as VisualizerTab));
+    }
     const shareParam = params.get("share");
     if (shareParam) {
-      try {
-        const decoded = JSON.parse(decodeURIComponent(escape(atob(shareParam))));
-        if (decoded.command) dispatch(setCommand(decoded.command));
-        if (decoded.output) dispatch(setOutput(decoded.output));
-        window.history.replaceState({}, document.title, window.location.pathname);
-      } catch (error) {
-        console.error("Failed to parse shared run:", error);
-      }
+      decodeShare(shareParam).then((run) => {
+        if (!run) {
+          toast.error("This share link is invalid or corrupted.");
+          return;
+        }
+        dispatch(setCommand(run.command));
+        dispatch(setOutput(run.output));
+        if (run.instantActionPadding !== undefined) dispatch(setInstantAction(run.instantActionPadding));
+        if (run.dongleCooldown !== undefined) dispatch(setDongleCooldown(run.dongleCooldown));
+      });
+    }
+    if (tabParam || shareParam) {
+      window.history.replaceState({}, document.title, window.location.pathname);
     }
   }, [dispatch]);
 
-  const [activeTab, setActiveTab] = useState<'timeline' | 'table' | 'analysis'>('timeline');
+  const activeTab = useAppSelector((state) => state.view.activeTab);
   const hasOutput = useAppSelector((state) => state.user_input.output.some(line => line.trim() !== ''));
 
   return (
     <CodexionSimulationProvider>
+      <PlaybackDriver />
       <div className="fixed inset-0 -z-10 bg-[#0a0a0d]">
         <ShapeGrid
           speed={0.5}
@@ -158,7 +184,7 @@ export default function Visualizer() {
                   exit={{ opacity: 0 }}
                   className="space-y-6"
                 >
-                  <Tabs value={activeTab} onValueChange={(val) => setActiveTab(val as any)} className="w-full">
+                  <Tabs value={activeTab} onValueChange={(val) => dispatch(setActiveTab(val as VisualizerTab))} className="w-full">
                     <TabsList className="w-full flex bg-[#121215]/80 border border-white/10 p-1 rounded-xl backdrop-blur-md">
                       <TabsTrigger value="timeline" className="flex-1 py-2 text-xs font-semibold rounded-lg transition duration-200 cursor-pointer">
                         Timeline & Stats
@@ -169,8 +195,14 @@ export default function Visualizer() {
                       <TabsTrigger value="analysis" className="flex-1 py-2 text-xs font-semibold rounded-lg transition duration-200 cursor-pointer">
                         Analysis & Metrics
                       </TabsTrigger>
+                      <TabsTrigger value="compare" className="flex-1 py-2 text-xs font-semibold rounded-lg transition duration-200 cursor-pointer">
+                        Compare
+                      </TabsTrigger>
                     </TabsList>
                   </Tabs>
+                  <div className="-mt-3 flex justify-end px-1">
+                    <AnalysisStatus />
+                  </div>
 
                   <AnimatePresence mode="wait">
                     <motion.div
@@ -189,6 +221,7 @@ export default function Visualizer() {
                       )}
                       {activeTab === "table" && <CodexionTable />}
                       {activeTab === "analysis" && <CodexionAnalysis />}
+                      {activeTab === "compare" && <CodexionCompare />}
                     </motion.div>
                   </AnimatePresence>
                 </motion.div>
