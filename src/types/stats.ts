@@ -62,3 +62,15 @@ export type StatsResponse = {
   recentVisits: RecentVisit[];
   product: ProductStats;
 };
+
+export type RepoInfo = {
+  stars: number;
+  pushedAt: string;
+  url: string;
+};
+
+export type PulseResponse = {
+  liveVisitors: number;
+  visitorsByCountry: Record<string, number>;
+  repo: RepoInfo | null;
+};

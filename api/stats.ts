@@ -3,6 +3,7 @@ import { AggregateField, FieldPath, Timestamp } from 'firebase-admin/firestore';
 import type { Firestore } from 'firebase-admin/firestore';
 import { getAdminDb } from './_utils/firebaseAdmin.js';
 import { applyCors, sendError } from './_utils/security.js';
+import { liveVisitors } from './_utils/live.js';
 import type { ProductStats, RecentVisit, StatsResponse } from '../src/types/stats.js';
 import {
   type CityRecord,
@@ -23,7 +24,6 @@ import {
   toRows,
 } from './_utils/stats.js';
 
-const LIVE_WINDOW_MS = 5 * 60 * 1000;
 const RECENT_LIMIT = 30;
 
 type Breakdowns = {
@@ -70,12 +70,6 @@ async function productStats(db: Firestore): Promise<ProductStats> {
     ),
   ]);
   return { runsShared: runs, edgecases: edgecases.count, votes: edgecases.votes ?? 0 };
-}
-
-async function liveVisitors(db: Firestore): Promise<number> {
-  const since = Timestamp.fromMillis(Date.now() - LIVE_WINDOW_MS);
-  const snap = await db.collection('visits').where('timestamp', '>=', since).count().get();
-  return snap.data().count;
 }
 
 async function recentVisits(db: Firestore, allowedCities: Set<string>): Promise<RecentVisit[]> {

@@ -1,6 +1,8 @@
 import { motion } from "motion/react";
 import { useNavigate } from "react-router-dom";
-import { Github, Star, GitPullRequest, MessageSquare, Heart, Users as UsersIcon, Eye, Earth } from "lucide-react";
+import { useMemo } from "react";
+import { formatDistanceToNowStrict } from "date-fns";
+import { Github, Star, GitPullRequest, MessageSquare, Heart, Users as UsersIcon, Eye, Earth, GitCommitHorizontal } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarImage, AvatarFallback, AvatarGroupCount, AvatarGroup } from "@/components/ui/avatar";
@@ -11,16 +13,35 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 
+import { Progress } from "@/components/ui/progress";
+
 import Users from "@/assets/users.json";
 import { UserReadme } from "@/types/user";
+import { usePulse } from "@/hooks/usePulse";
+import { countryFlag } from "@/lib/worldStats";
 
 const MAX_AVATARS_PREVIEW = 5;
+const MAX_FLAGS_PREVIEW = 5;
+const STAR_GOALS = [10, 25, 50, 100, 150, 250, 500, 1000, 2500, 5000];
+
+function nextStarGoal(stars: number): number {
+  return STAR_GOALS.find((g) => g > stars) ?? Math.ceil((stars + 1) / 5000) * 5000;
+}
 
 export default function GitHubCTA() {
   const navigate = useNavigate();
   const userList = Users as UserReadme[];
   const previewUsers = userList.slice(0, MAX_AVATARS_PREVIEW);
   const remainingCount = Math.max(userList.length - MAX_AVATARS_PREVIEW, 0);
+  const pulse = usePulse();
+  const repo = pulse?.repo ?? null;
+  const starGoal = repo ? nextStarGoal(repo.stars) : 0;
+
+  const countries = useMemo(
+    () => Object.entries(pulse?.visitorsByCountry ?? {}).sort((a, b) => b[1] - a[1]).map(([code]) => code),
+    [pulse]
+  );
+  const regionNames = useMemo(() => new Intl.DisplayNames(["en"], { type: "region" }), []);
 
   return (
     <motion.div
@@ -46,6 +67,23 @@ export default function GitHubCTA() {
             <Badge variant="outline" className="border-white/15 bg-white/5 text-white/60">
               42 Common Core
             </Badge>
+
+            {repo?.pushedAt && (
+              <Badge variant="outline" className="border-white/15 bg-white/5 text-white/60 flex items-center gap-1" title={new Date(repo.pushedAt).toLocaleString()}>
+                <GitCommitHorizontal className="w-3 h-3" />
+                Updated {formatDistanceToNowStrict(new Date(repo.pushedAt), { addSuffix: true })}
+              </Badge>
+            )}
+
+            {pulse && pulse.liveVisitors > 0 && (
+              <Badge variant="outline" className="border-emerald-400/20 bg-emerald-400/5 text-emerald-300/80 flex items-center gap-1.5">
+                <span className="relative flex h-1.5 w-1.5">
+                  <span className="absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75 animate-ping" />
+                  <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-emerald-400" />
+                </span>
+                {pulse.liveVisitors} online now
+              </Badge>
+            )}
 
             {userList.length > 0 && (
               <Badge variant="outline" className="border-white/15 bg-white/5 text-white/60 flex items-center gap-1">
@@ -93,16 +131,31 @@ export default function GitHubCTA() {
                 />
               </button>
           )}
-          <Button
-            asChild
-            variant="outline"
+          <button
+            type="button"
             onClick={() => navigate("/world")}
-            className="rounded-full border border-white/10 bg-white/5 w-[34px] h-[34px] p-0 text-xs font-medium text-white/70 hover:bg-white/10 hover:text-white cursor-pointer flex items-center justify-center focus-visible:ring-2 focus-visible:ring-white/40"
+            className="group flex items-center gap-2 w-fit rounded-full px-3 py-1 border border-white/10 bg-white/5 hover:bg-white/10 transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40"
+            aria-label="View Global Simulation Reach"
           >
-            <button aria-label="View Global Simulation Reach">
-              <Earth className="w-4 h-4" />
-            </button>
-          </Button>
+            {countries.length > 0 ? (
+              <>
+                <span className="flex -space-x-1 text-sm leading-none" aria-hidden="true">
+                  {countries.slice(0, MAX_FLAGS_PREVIEW).map((code) => (
+                    <span key={code} title={regionNames.of(code)}>{countryFlag(code)}</span>
+                  ))}
+                </span>
+                <span className="text-xs text-white/60">
+                  Used in {countries.length} countr{countries.length > 1 ? "ies" : "y"}
+                </span>
+              </>
+            ) : (
+              <Earth className="w-4 h-4 text-white/70" />
+            )}
+            <Eye
+              aria-hidden="true"
+              className="h-3.5 w-3.5 text-white/40 transition-all duration-200 group-hover:text-white/80 group-hover:translate-x-0.5"
+            />
+          </button>
         </div>
         <div className="flex flex-wrap gap-3">
           <TooltipProvider delayDuration={200}>
@@ -117,6 +170,9 @@ export default function GitHubCTA() {
                 >
                   <Star className="w-3.5 h-3.5 fill-current" />
                   Star on GitHub
+                  {repo && (
+                    <span className="ml-1 border-l border-black/15 pl-2 tabular-nums">{repo.stars.toLocaleString()}</span>
+                  )}
                 </a>
               </TooltipTrigger>
               <TooltipContent  side={"bottom"}>It takes 2 seconds and helps a lot 🙏</TooltipContent>
@@ -155,6 +211,20 @@ export default function GitHubCTA() {
             </a>
           </Button>
         </div>
+
+        {repo && (
+          <div className="flex flex-col gap-1.5 max-w-sm">
+            <div className="flex justify-between text-[11px] text-white/40">
+              <span>Next goal: {starGoal.toLocaleString()} stars</span>
+              <span className="tabular-nums">{repo.stars} / {starGoal}</span>
+            </div>
+            <Progress
+              value={(repo.stars / starGoal) * 100}
+              className="h-1.5 bg-white/10 [&>[data-slot=progress-indicator]]:bg-gradient-to-r [&>[data-slot=progress-indicator]]:from-amber-300 [&>[data-slot=progress-indicator]]:to-yellow-500"
+              aria-label="Progress towards the next star goal"
+            />
+          </div>
+        )}
 
         <div className="flex items-center gap-4 border-t border-white/5 pt-4 text-xs text-white/30">
           <div className="flex items-center gap-1">
