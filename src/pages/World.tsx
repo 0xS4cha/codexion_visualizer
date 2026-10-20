@@ -61,7 +61,7 @@ const toggleItemClass =
 export default function World() {
   const [params, setParams] = useSearchParams();
   const rangeParam = params.get("range");
-  const range: StatsRange = isStatsRange(rangeParam) ? rangeParam : "30d";
+  const range: StatsRange = isStatsRange(rangeParam) ? rangeParam : "all";
   const metric: MapMetric = params.get("metric") === "runs" ? "runs" : "visitors";
   const countryParam = params.get("country")?.toUpperCase() ?? null;
   const selectedCode = countryParam && COUNTRY_CODE.test(countryParam) ? countryParam : null;
