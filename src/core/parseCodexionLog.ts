@@ -1,49 +1,64 @@
+import { parseCommand } from "@/core/commandParams";
+
 export interface LogEntry {
   timestamp: number;
   coderId: number;
   action: string;
+  line: number;
+}
+
+export interface InvalidLine {
+  line: number;
+  content: string;
+}
+
+export interface ParsedLog {
+  entries: LogEntry[];
+  invalidLines: InvalidLine[];
+}
+
+const LINE_RE = /^(-?\d+)\s+(-?\d+)\s+(.+)$/;
+
+export function parseCodexionLines(lines: string[]): ParsedLog {
+  const entries: LogEntry[] = [];
+  const invalidLines: InvalidLine[] = [];
+
+  lines.forEach((raw, index) => {
+    const trimmed = raw.trim();
+    if (!trimmed) return;
+    const match = LINE_RE.exec(trimmed);
+    if (!match) {
+      invalidLines.push({ line: index + 1, content: trimmed });
+      return;
+    }
+    entries.push({
+      timestamp: parseInt(match[1], 10),
+      coderId: parseInt(match[2], 10),
+      action: match[3].trim().replace(/\s+/g, " "),
+      line: index + 1,
+    });
+  });
+
+  return { entries, invalidLines };
 }
 
 export function parseCodexionLog(raw: string): LogEntry[] {
   if (!raw) return [];
-
-  const lines = raw.trim().split("\n");
-  const entries: LogEntry[] = [];
-
-  for (const line of lines) {
-    const trimmed = line.trim();
-    if (!trimmed) continue;
-
-    const parts = trimmed.split(/\s+/);
-    if (parts.length < 3) continue;
-
-    const timestamp = parseInt(parts[0], 10);
-    const coderId = parseInt(parts[1], 10);
-    const action = parts.slice(2).join(" ");
-
-    if (isNaN(timestamp) || isNaN(coderId)) continue;
-
-    entries.push({ timestamp, coderId, action });
-  }
-
-  return entries;
+  return parseCodexionLines(raw.split("\n")).entries;
 }
 
 export function getCoderIds(entries: LogEntry[], command?: string): [number[], number[]] {
-  const commandParts = (command ?? "").split(" ").filter((p) => p.length > 0);
+  const codersNum = parseCommand(command ?? "").numCoders;
 
-  const codersNum = commandParts.length > 1 ? parseInt(commandParts[1], 10) : undefined;
+  const sortedIds = Array.from(new Set(entries.map((e) => e.coderId))).sort((a, b) => a - b);
 
-  const ids = new Set(entries.map((e) => e.coderId));
-  const sortedIds = Array.from(ids).sort((a, b) => a - b);
-
-  if (codersNum !== undefined && !isNaN(codersNum)) {
+  if (codersNum !== undefined && codersNum > 0) {
     if (sortedIds.length >= codersNum) {
       return [sortedIds.slice(0, codersNum), []];
     }
 
     const filledIds = [...sortedIds];
-    const newIds = [];
+    const newIds: number[] = [];
     const knownIds = new Set(filledIds);
     let candidateId = 1;
 
@@ -63,6 +78,11 @@ export function getCoderIds(entries: LogEntry[], command?: string): [number[], n
 
 export function getTimeRange(entries: LogEntry[]): [number, number] {
   if (entries.length === 0) return [0, 0];
-  const times = entries.map((e) => e.timestamp);
-  return [Math.min(...times), Math.max(...times)];
+  let min = Infinity;
+  let max = -Infinity;
+  for (const e of entries) {
+    if (e.timestamp < min) min = e.timestamp;
+    if (e.timestamp > max) max = e.timestamp;
+  }
+  return [min, max];
 }

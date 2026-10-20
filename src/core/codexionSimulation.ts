@@ -1,8 +1,12 @@
-import type { LogEntry } from "@/core/parseCodexionLog";
-import {
-    parseCodexionLog,
-    getCoderIds,
-} from "@/core/parseCodexionLog";
+import type { LogEntry, InvalidLine } from "@/core/parseCodexionLog";
+import { parseCodexionLines, getCoderIds } from "@/core/parseCodexionLog";
+import type { CodexionParams } from "@/core/commandParams";
+import { validateCodexionLog, ACTIONS } from "@/core/validateCodexionLog";
+import type { SimulationIssue } from "@/core/validateCodexionLog";
+import { computeMetrics } from "@/core/metrics";
+import type { SimulationMetrics } from "@/core/metrics";
+
+export type { SimulationIssue } from "@/core/validateCodexionLog";
 
 export interface Segment {
     startTime: number;
@@ -10,6 +14,7 @@ export interface Segment {
     action: string;
     realStart: number;
     realEnd: number;
+    line: number;
 }
 
 export interface DongleSegment {
@@ -21,13 +26,7 @@ export interface DongleSegment {
     realEnd: number;
 }
 
-export interface SimulationIssue {
-    type: 'warning' | 'error';
-    message: string;
-    timestamp?: number;
-    coderId?: number;
-    dongleId?: number;
-}
+export type CoderStats = Record<number, Record<string, number>>;
 
 export const ACTION_COLORS: Record<string, string> = {
     "has taken a dongle": "rgba(251, 191, 36, 0.9)",
@@ -47,33 +46,31 @@ export function getActionColor(action: string): string {
     return ACTION_COLORS[getActionName(action)];
 }
 
-function interpolate(v: number, vKeys: number[], rValues: number[]): number {
-    if (vKeys.length === 0) return 0;
-    if (v <= vKeys[0]) return rValues[0];
-    if (v >= vKeys[vKeys.length - 1]) return rValues[rValues.length - 1];
+export function interpolate(v: number, keys: number[], values: number[]): number {
+    const n = keys.length;
+    if (n === 0) return 0;
+    if (n === 1) return values[0] + (v - keys[0]);
+    if (v <= keys[0]) return values[0] - (keys[0] - v);
+    if (v >= keys[n - 1]) return values[n - 1] + (v - keys[n - 1]);
 
-    let i = 0;
-    while (i < vKeys.length - 1 && vKeys[i + 1] <= v) {
-        i++;
+    let lo = 0;
+    let hi = n - 1;
+    while (hi - lo > 1) {
+        const mid = (lo + hi) >> 1;
+        if (keys[mid] <= v) lo = mid;
+        else hi = mid;
     }
 
-    const v0 = vKeys[i];
-    const v1 = vKeys[i + 1];
-    const r0 = rValues[i];
-    const r1 = rValues[i + 1];
-
-    if (v1 === v0) return r0;
-
-    const t = (v - v0) / (v1 - v0);
-    return Math.round(r0 + t * (r1 - r0));
+    const k0 = keys[lo];
+    const k1 = keys[hi];
+    if (k1 === k0) return values[lo];
+    return values[lo] + ((v - k0) / (k1 - k0)) * (values[hi] - values[lo]);
 }
-
-
 
 class TimeMapper {
     private visualMap = new Map<number, number>();
-    private visualKeys: number[] = [];
-    private realValues: number[] = [];
+    public visualKeys: number[] = [];
+    public realValues: number[] = [];
     private currentVisual = 0;
 
     constructor(
@@ -112,20 +109,20 @@ class TimeMapper {
     }
 
     public getVisualTime(realT: number): number {
-        return this.visualMap.get(realT)!;
+        const exact = this.visualMap.get(realT);
+        if (exact !== undefined) return exact;
+        return interpolate(realT, this.realValues, this.visualKeys);
     }
 
     public finalize(globalMaxTime: number) {
         if (this.sortedTimestamps.length > 0) {
-            this.visualKeys.push(globalMaxTime);
             const lastReal = this.sortedTimestamps[this.sortedTimestamps.length - 1];
             const lastVisual = this.visualMap.get(lastReal)!;
-            this.realValues.push(lastReal + (globalMaxTime - lastVisual));
+            if (globalMaxTime > lastVisual) {
+                this.visualKeys.push(globalMaxTime);
+                this.realValues.push(lastReal + (globalMaxTime - lastVisual));
+            }
         }
-    }
-
-    public getInterpolator() {
-        return (v: number) => interpolate(v, this.visualKeys, this.realValues);
     }
 }
 
@@ -143,7 +140,7 @@ class CoderSegmentBuilder {
 
     public build() {
         for (const [coderId, evts] of this.byCoder) {
-            const sorted = [...evts].sort((a, b) => a.timestamp - b.timestamp);
+            const sorted = [...evts].sort((a, b) => a.timestamp - b.timestamp || a.line - b.line);
             const segs: Segment[] = [];
             let currentVisualEnd = 0;
 
@@ -160,9 +157,9 @@ class CoderSegmentBuilder {
                 let end;
                 let actualRealEnd;
 
-                if (entry.action === "is refactoring" && this.timeToRefactor) {
+                if (entry.action === ACTIONS.REFACTOR && this.timeToRefactor) {
                     actualRealEnd = realT + this.timeToRefactor;
-                    end = this.timeMapper.getVisualTime(actualRealEnd);
+                    end = Math.max(this.timeMapper.getVisualTime(actualRealEnd), start + this.instantDuration);
                 } else if (i + 1 < sorted.length) {
                     const nextEntry = sorted[i + 1];
                     actualRealEnd = nextEntry.timestamp;
@@ -182,7 +179,7 @@ class CoderSegmentBuilder {
                     this.globalMaxTime = end;
                 }
 
-                segs.push({ startTime: start, endTime: end, action: entry.action, realStart: realT, realEnd: actualRealEnd });
+                segs.push({ startTime: start, endTime: end, action: entry.action, realStart: realT, realEnd: actualRealEnd, line: entry.line });
                 currentVisualEnd = end;
             }
             this.segments.set(coderId, segs);
@@ -190,19 +187,18 @@ class CoderSegmentBuilder {
     }
 }
 
+const OPEN_END = 1e12;
+
 class DongleSegmentBuilder {
     public dongleSegments = new Map<number, DongleSegment[]>();
     private dongleStatus: { owner: number | null, cooldownEnd: number }[];
     private coderHeldCount = new Map<number, number>();
-    private lastCompileStart = new Map<number, number>();
 
     constructor(
         private numCoders: number,
         private coderIndexById: Map<number, number>,
         private timeMapper: TimeMapper,
         private dongleCooldown: number,
-        private timeToBurnout: number,
-        private issues: SimulationIssue[]
     ) {
         for (let i = 1; i <= numCoders; i++) this.dongleSegments.set(i, []);
         this.dongleStatus = new Array(numCoders + 1).fill(null).map(() => ({
@@ -214,9 +210,11 @@ class DongleSegmentBuilder {
     public async build(entries: LogEntry[], yieldIfNeeded: () => Promise<void>) {
         const sortedEntries = [...entries].sort((a, b) => {
             if (a.timestamp !== b.timestamp) return a.timestamp - b.timestamp;
-            if (a.action.includes("taken") && !b.action.includes("taken")) return -1;
-            if (!a.action.includes("taken") && b.action.includes("taken")) return 1;
-            return 0;
+            const aTake = a.action === ACTIONS.TAKE;
+            const bTake = b.action === ACTIONS.TAKE;
+            if (aTake && !bTake) return -1;
+            if (!aTake && bTake) return 1;
+            return a.line - b.line;
         });
 
         for (let index = 0; index < sortedEntries.length; index++) {
@@ -225,12 +223,12 @@ class DongleSegmentBuilder {
             const coderId = entry.coderId;
             const realT = entry.timestamp;
             const visualT = this.timeMapper.getVisualTime(realT);
+            const coderIndex = this.coderIndexById.get(coderId);
+            if (coderIndex === undefined) continue;
 
-            if (entry.action === "has taken a dongle") {
-                const coderIndex = this.coderIndexById.get(coderId) ?? 0;
-                
+            if (entry.action === ACTIONS.TAKE) {
                 const rightDongleIdx = coderIndex + 1;
-                const leftDongleIdx = coderIndex === 0 ? this.numCoders : coderIndex ?? 0;
+                const leftDongleIdx = coderIndex === 0 ? this.numCoders : coderIndex;
 
                 let targetDongle = 0;
                 const count = this.coderHeldCount.get(coderId) || 0;
@@ -256,18 +254,16 @@ class DongleSegmentBuilder {
                     }
                     dSegs.push({
                         startTime: visualT,
-                        endTime: visualT + 1000000,
+                        endTime: OPEN_END,
                         ownerId: coderId,
                         status: 'taken',
                         realStart: realT,
-                        realEnd: realT + 1000000
+                        realEnd: OPEN_END
                     });
                     this.dongleStatus[targetDongle].owner = coderId;
                     this.coderHeldCount.set(coderId, count + 1);
                 }
-            } else if (entry.action === "is compiling") {
-                this.lastCompileStart.set(coderId, realT);
-            } else if (entry.action === "is debugging") {
+            } else if (entry.action === ACTIONS.DEBUG) {
                 for (let dIdx = 1; dIdx <= this.numCoders; dIdx++) {
                     if (this.dongleStatus[dIdx].owner === coderId) {
                         const dSegs = this.dongleSegments.get(dIdx)!;
@@ -278,7 +274,7 @@ class DongleSegmentBuilder {
                         const cooldownRealEnd = realT + this.dongleCooldown;
                         dSegs.push({
                             startTime: visualT,
-                            endTime: visualT + 1000000,
+                            endTime: OPEN_END,
                             ownerId: null,
                             status: 'cooldown',
                             realStart: realT,
@@ -290,22 +286,6 @@ class DongleSegmentBuilder {
                     }
                 }
                 this.coderHeldCount.set(coderId, 0);
-            } else if (entry.action === "burned out") {
-                if (this.timeToBurnout > 0) {
-                    const start = this.lastCompileStart.get(coderId);
-                    if (start !== undefined) {
-                        const deadline = start + this.timeToBurnout;
-                        const diff = realT - deadline;
-                        if (diff > 10) {
-                            this.issues.push({
-                                type: 'error',
-                                message: `Burnout precision violation: Logged at ${realT}ms, but deadline was ${deadline}ms (+${diff}ms). Subject requires < 10ms.`,
-                                timestamp: realT,
-                                coderId
-                            });
-                        }
-                    }
-                }
             }
         }
     }
@@ -314,53 +294,64 @@ class DongleSegmentBuilder {
         this.dongleSegments.forEach((segs) => {
             if (segs.length > 0) {
                 const last = segs[segs.length - 1];
-                if (last.endTime > 100000) {
+                if (last.endTime >= OPEN_END) {
                     last.endTime = globalMaxTime;
-                    last.realEnd = last.realStart + (globalMaxTime - last.startTime);
+                    if (last.realEnd >= OPEN_END) {
+                        last.realEnd = last.realStart + (globalMaxTime - last.startTime);
+                    }
                 }
             }
         });
     }
 }
 
-export async function buildSegments(
-    entries: LogEntry[],
-    instantDuration = 10,
-    timeToRefactor?: number,
-    dongleCooldown = 0,
-    timeToBurnout = 0,
-    command?: string,
-): Promise<{
+export interface SimulationResult {
+    entries: LogEntry[];
+    invalidLines: InvalidLine[];
+    coderIds: number[];
     segments: Map<number, Segment[]>;
     dongleSegments: Map<number, DongleSegment[]>;
+    minTime: number;
     maxTime: number;
-    visualToReal: (v: number) => number;
-    coderStats: any;
+    visualKeys: number[];
+    realValues: number[];
+    coderStats: CoderStats;
     issues: SimulationIssue[];
-}> {
+    metrics: SimulationMetrics;
+    params: CodexionParams;
+}
+
+export interface PrepareOptions {
+    lines: string[];
+    params: CodexionParams;
+    command: string;
+    padding: number;
+    known?: (keyof CodexionParams)[];
+}
+
+function createYielder() {
     let lastYieldTime = performance.now();
-    const yieldIfNeeded = async () => {
+    return async () => {
         const now = performance.now();
         if (now - lastYieldTime > 16) {
             await new Promise(r => setTimeout(r, 0));
             lastYieldTime = performance.now();
         }
     };
+}
 
-    const [coderIds, create] = getCoderIds(entries, command);
-    coderIds.sort((a, b) => a - b);
+export async function prepareSimulation({ lines, params, command, padding, known }: PrepareOptions): Promise<SimulationResult> {
+    const yieldIfNeeded = createYielder();
+    const { entries, invalidLines } = parseCodexionLines(lines);
+    const [coderIds, missingCoders] = getCoderIds(entries, command);
     const n = coderIds.length;
     const coderIndexById = new Map<number, number>();
-    coderIds.forEach((id, index) => {
-        coderIndexById.set(id, index);
-    });
-    const issues: SimulationIssue[] = [];
-    
-    // Group entries
+    coderIds.forEach((id, index) => coderIndexById.set(id, index));
+
     const byCoder = new Map<number, LogEntry[]>();
     const countsPerTimeAndCoder = new Map<number, Map<number, number>>();
     const timestamps = new Set<number>();
-    
+
     for (const e of entries) {
         if (!byCoder.has(e.coderId)) byCoder.set(e.coderId, []);
         byCoder.get(e.coderId)!.push(e);
@@ -368,81 +359,86 @@ export async function buildSegments(
         if (!countsPerTimeAndCoder.has(e.timestamp)) countsPerTimeAndCoder.set(e.timestamp, new Map());
         const timeMap = countsPerTimeAndCoder.get(e.timestamp)!;
         timeMap.set(e.coderId, (timeMap.get(e.coderId) || 0) + 1);
-        
+
         timestamps.add(e.timestamp);
     }
 
+    const timeToRefactor = params.timeToRefactor || undefined;
     if (timeToRefactor) {
-        entries.forEach(e => {
-            if (e.action === "is refactoring") {
-                timestamps.add(e.timestamp + timeToRefactor);
-            }
-        });
+        for (const e of entries) {
+            if (e.action === ACTIONS.REFACTOR) timestamps.add(e.timestamp + timeToRefactor);
+        }
     }
 
     const sortedTimestamps = Array.from(timestamps).sort((a, b) => a - b);
-    
-    const timeMapper = new TimeMapper(sortedTimestamps, countsPerTimeAndCoder, instantDuration);
+
+    const timeMapper = new TimeMapper(sortedTimestamps, countsPerTimeAndCoder, padding);
     await timeMapper.build(yieldIfNeeded);
-    
-    const coderSegmentBuilder = new CoderSegmentBuilder(byCoder, timeMapper, instantDuration, timeToRefactor);
+
+    const coderSegmentBuilder = new CoderSegmentBuilder(byCoder, timeMapper, padding, timeToRefactor);
     coderSegmentBuilder.build();
-    
-    const dongleSegmentBuilder = new DongleSegmentBuilder(n, coderIndexById, timeMapper, dongleCooldown, timeToBurnout, issues);
+
+    const dongleSegmentBuilder = new DongleSegmentBuilder(n, coderIndexById, timeMapper, params.dongleCooldown);
     await dongleSegmentBuilder.build(entries, yieldIfNeeded);
-    
+
     const globalMaxTime = coderSegmentBuilder.globalMaxTime;
     dongleSegmentBuilder.finalize(globalMaxTime);
     timeMapper.finalize(globalMaxTime);
 
-    const visualToReal = timeMapper.getInterpolator();
-
-    const coderStats: any = {};
-    entries.forEach((action) => {
-        if (!coderStats[action.coderId]) {
-            coderStats[action.coderId] = {};
-        }
-        const coder = coderStats[action.coderId];
-        const actionName = getActionName(action.action);
-        if (!coder[actionName]) {
-            coder[actionName] = 1;
-        } else {
-            coder[actionName] += 1;
-        }
-    });
-
-    if (create.length > 0) {
-        create.forEach((id) => {
-            issues.push({
-                type: 'warning',
-                message: `The coder thread did no action.`,
-                coderId: id,
-            });
-        });
+    const coderStats: CoderStats = {};
+    for (const entry of entries) {
+        const coder = (coderStats[entry.coderId] ??= {});
+        const actionName = getActionName(entry.action);
+        coder[actionName] = (coder[actionName] ?? 0) + 1;
     }
 
-    return { 
-        segments: coderSegmentBuilder.segments, 
-        dongleSegments: dongleSegmentBuilder.dongleSegments, 
-        maxTime: globalMaxTime, 
-        visualToReal, 
-        coderStats, 
-        issues 
+    await yieldIfNeeded();
+    const issues = validateCodexionLog(entries, invalidLines, params, coderIds, missingCoders, known);
+    const metrics = computeMetrics(entries, params, coderIds, !known || known.includes("timeToBurnout"));
+
+    return {
+        entries,
+        invalidLines,
+        coderIds,
+        segments: coderSegmentBuilder.segments,
+        dongleSegments: dongleSegmentBuilder.dongleSegments,
+        minTime: 0,
+        maxTime: globalMaxTime,
+        visualKeys: timeMapper.visualKeys,
+        realValues: timeMapper.realValues,
+        coderStats,
+        issues,
+        metrics,
+        params,
     };
 }
 
+export function findSegmentIndex<T extends { startTime: number; endTime: number }>(segments: T[], time: number): number {
+    let lo = 0;
+    let hi = segments.length - 1;
+    let found = -1;
+    while (lo <= hi) {
+        const mid = (lo + hi) >> 1;
+        if (segments[mid].startTime <= time) {
+            found = mid;
+            lo = mid + 1;
+        } else {
+            hi = mid - 1;
+        }
+    }
+    return found;
+}
 
-export function getStatusAtTime(
-    segments: Segment[] | undefined,
-    time: number
-): string {
-    if (!segments) return "Nothing";
+export function findSegmentAt<T extends { startTime: number; endTime: number }>(segments: T[] | undefined, time: number): T | undefined {
+    if (!segments || segments.length === 0) return undefined;
+    const idx = findSegmentIndex(segments, time);
+    if (idx === -1) return undefined;
+    const seg = segments[idx];
+    return time < seg.endTime ? seg : undefined;
+}
 
-    const seg = segments.find(
-        (s) => time >= s.startTime && time < s.endTime
-    );
-
-    return seg?.action ?? "Nothing";
+export function getStatusAtTime(segments: Segment[] | undefined, time: number): string {
+    return findSegmentAt(segments, time)?.action ?? "Nothing";
 }
 
 export function getDongleStatusAtTime(
@@ -450,36 +446,7 @@ export function getDongleStatusAtTime(
     time: number,
     realTime: number
 ): DongleSegment | undefined {
-    if (!segments) return undefined;
-
-    const seg = segments.find(
-        (s) => time >= s.startTime && time < s.endTime
-    );
-
-    if (seg?.status === 'cooldown') {
-        if (realTime >= seg.realEnd) return undefined;
-    }
-
+    const seg = findSegmentAt(segments, time);
+    if (seg?.status === 'cooldown' && realTime >= seg.realEnd) return undefined;
     return seg;
-}
-
-export async function prepareCodexionSimulation(rawLog: string, padding: number, timeToRefactor?: number, dongleCooldown = 0, timeToBurnout = 0, command?: string) {
-    const entries = parseCodexionLog(rawLog);
-    const [coderIds] = getCoderIds(entries, command);
-
-    const minTime = 0;
-
-    const { segments, dongleSegments, maxTime, visualToReal, coderStats, issues } = await buildSegments(entries, padding, timeToRefactor, dongleCooldown, timeToBurnout, command);
-
-    return {
-        entries,
-        coderIds,
-        segments,
-        dongleSegments,
-        minTime,
-        maxTime,
-        visualToReal,
-        coderStats,
-        issues
-    };
 }

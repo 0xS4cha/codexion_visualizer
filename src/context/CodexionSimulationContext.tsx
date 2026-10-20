@@ -1,12 +1,17 @@
-import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
+import React, { createContext, useContext, useState, useEffect, useMemo, useRef } from 'react';
 import { useAppSelector } from '@/store/hooks';
-import { prepareCodexionSimulation } from '@/core/codexionSimulation';
-import type { CodexionSimulationData } from '@/hooks/useCodexionSimulation';
+import { knownParams, resolveParams } from '@/core/commandParams';
+import type { CodexionParams } from '@/core/commandParams';
+import type { PrepareOptions } from '@/core/codexionSimulation';
+import { runSimulation, withTimeMapping } from '@/core/simulationClient';
+import type { CodexionSimulationData } from '@/core/simulationClient';
 
 export interface CodexionSimulationContextType {
   data: CodexionSimulationData | null;
   isLoading: boolean;
   error: Error | null;
+  params: CodexionParams;
+  known: (keyof CodexionParams)[];
   timeToBurnout: number;
   timeToRefactor: number | undefined;
   dongleCooldown: number;
@@ -15,77 +20,87 @@ export interface CodexionSimulationContextType {
 
 const CodexionSimulationContext = createContext<CodexionSimulationContextType | undefined>(undefined);
 
-export function CodexionSimulationProvider({ children }: { children: React.ReactNode }) {
-  const command = useAppSelector((state) => state.user_input.command);
-  const rawLog = useAppSelector((state) => state.user_input.output);
-  const instantActionPadding = useAppSelector((state) => state.settings.instantActionPadding);
-  const defaultDongleCooldown = useAppSelector((state) => state.settings.dongleCooldown);
-
-  const { timeToBurnout, timeToRefactor, cmdDongleCooldown, scheduler } = useMemo(() => {
-    const parts = command.split(' ').filter((p) => p.length > 0);
-    return {
-      timeToBurnout: parts.length > 2 ? parseInt(parts[2], 10) : 0,
-      timeToRefactor: parts.length > 5 ? parseInt(parts[5], 10) : undefined,
-      cmdDongleCooldown: parts.length > 7 ? parseInt(parts[7], 10) : undefined,
-      scheduler: parts.length > 8 ? parts[8] : undefined,
-    };
-  }, [command]);
-
-  const finalDongleCooldown = cmdDongleCooldown !== undefined ? cmdDongleCooldown : defaultDongleCooldown;
-
+export function useSimulationRunner(options: PrepareOptions | null) {
   const [data, setData] = useState<CodexionSimulationData | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
+  const running = useRef(false);
+  const queued = useRef<PrepareOptions | null>(null);
+  const latest = useRef<PrepareOptions | null>(null);
 
   useEffect(() => {
-    if (!rawLog || rawLog.length === 0) {
+    latest.current = options && options.lines.length > 0 ? options : null;
+
+    if (!latest.current) {
+      queued.current = null;
       setData(null);
       setIsLoading(false);
       setError(null);
       return;
     }
 
-    let isMounted = true;
-    setIsLoading(true);
-    setError(null);
-
-    prepareCodexionSimulation(
-      rawLog.join('\n'),
-      instantActionPadding,
-      timeToRefactor,
-      finalDongleCooldown,
-      timeToBurnout,
-      command
-    )
-      .then((result) => {
-        if (isMounted) {
-          setData(result);
-          setIsLoading(false);
-        }
-      })
-      .catch((err) => {
-        if (isMounted) {
-          setError(err);
-          setIsLoading(false);
-        }
-      });
-
-    return () => {
-      isMounted = false;
+    const run = (opts: PrepareOptions) => {
+      running.current = true;
+      setIsLoading(true);
+      runSimulation(opts)
+        .then((result) => {
+          if (latest.current) {
+            setData(withTimeMapping(result));
+            setError(null);
+          }
+        })
+        .catch((err: Error) => setError(err))
+        .finally(() => {
+          running.current = false;
+          const next = queued.current;
+          queued.current = null;
+          if (next && latest.current) run(next);
+          else setIsLoading(false);
+        });
     };
-  }, [rawLog, instantActionPadding, timeToRefactor, finalDongleCooldown, timeToBurnout, command]);
+
+    if (running.current) {
+      queued.current = latest.current;
+    } else {
+      run(latest.current);
+    }
+  }, [options]);
+
+  return { data, isLoading, error };
+}
+
+export function CodexionSimulationProvider({ children }: { children: React.ReactNode }) {
+  const command = useAppSelector((state) => state.user_input.command);
+  const rawLog = useAppSelector((state) => state.user_input.output);
+  const instantActionPadding = useAppSelector((state) => state.settings.instantActionPadding);
+  const defaultDongleCooldown = useAppSelector((state) => state.settings.dongleCooldown);
+
+  const known = useMemo(() => knownParams(command), [command]);
+  const params = useMemo(
+    () => resolveParams(command, { dongleCooldown: defaultDongleCooldown }),
+    [command, defaultDongleCooldown]
+  );
+
+  const options = useMemo<PrepareOptions | null>(
+    () => (rawLog.length > 0 ? { lines: rawLog, params, command, padding: instantActionPadding, known } : null),
+    [rawLog, params, command, instantActionPadding, known]
+  );
+
+  const { data, isLoading, error } = useSimulationRunner(options);
 
   const value = useMemo(
     () => ({
       data,
       isLoading,
       error,
-      timeToBurnout,
-      timeToRefactor,
-      dongleCooldown: finalDongleCooldown,
-      scheduler,
+      params,
+      known,
+      timeToBurnout: known.includes('timeToBurnout') ? params.timeToBurnout : 0,
+      timeToRefactor: known.includes('timeToRefactor') ? params.timeToRefactor : undefined,
+      dongleCooldown: params.dongleCooldown,
+      scheduler: known.includes('scheduler') ? params.scheduler : undefined,
     }),
-    [data, isLoading, error, timeToBurnout, timeToRefactor, finalDongleCooldown, scheduler]
+    [data, isLoading, error, params, known]
   );
 
   return (
