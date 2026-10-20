@@ -47,7 +47,7 @@ export function MapLegend({
           {showRecent && (
             <li className="flex items-center gap-2">
               <span className="size-2 rounded-full bg-emerald-400 ml-1 mr-1" />
-              Recent visits trail
+              Latest visit
             </li>
           )}
         </ul>

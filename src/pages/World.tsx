@@ -28,7 +28,7 @@ import { OverviewCard } from "@/components/Codexion/OverviewCard";
 import { BreakdownCard } from "@/components/Codexion/BreakdownCard";
 import { BackButton } from "@/components/Codexion/BackButton";
 import { KpiRow, ProductCard, StatsSkeleton } from "@/components/Codexion/WorldStatsCards";
-import { CityMarkers, CountryFocus, FeatureState, INITIAL_VIEW, RecentArcs } from "@/components/Codexion/WorldMapLayers";
+import { CityMarkers, CountryFocus, FeatureState, INITIAL_VIEW, LatestVisit } from "@/components/Codexion/WorldMapLayers";
 import { CountryPanel, MapLegend, type CountryDetails } from "@/components/Codexion/WorldPanels";
 import Header from "@/components/Codexion/Header";
 import Footer from "@/components/Codexion/Footer";
@@ -305,7 +305,7 @@ export default function World() {
               <FeatureState sourceId={COUNTRIES_SOURCE} id={selectedCode} stateKey="selected" ready={Boolean(countries)} />
               <CountryFocus bounds={selectedBounds} />
               {metric === "visitors" && <CityMarkers cities={cities} onSelect={(c) => c.country && selectCountry(c.country)} />}
-              {stats && <RecentArcs visits={stats.recentVisits} />}
+              {stats && <LatestVisit visits={stats.recentVisits} />}
 
               <MapControls className="bottom-8 right-8 z-20" showFullscreen />
               {hover && (
