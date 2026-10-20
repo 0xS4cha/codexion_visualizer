@@ -1,11 +1,11 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
-interface State {
+export interface InputState {
     command: string;
     output: string[];
 }
 
-const initialState: State = {
+const initialState: InputState = {
     command: "",
     output: []
 }
