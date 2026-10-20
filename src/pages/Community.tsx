@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
-import { useNavigate } from "react-router-dom";
 import { BackButton } from "@/components/Codexion/BackButton";
 import Users from "@/assets/users.json";
 import { UserReadme } from "@/types/user";
@@ -12,7 +11,6 @@ import Header from "@/components/Codexion/Header";
 import Footer from "@/components/Codexion/Footer";
 
 export default function Community() {
-  const navigate = useNavigate();
   const userList = Users as UserReadme[];
 
   const containerVariants = {

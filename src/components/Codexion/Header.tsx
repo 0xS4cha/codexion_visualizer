@@ -1,5 +1,4 @@
-import { useEffect, useState } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import logo42 from "@/assets/42_Logo.svg";
 
