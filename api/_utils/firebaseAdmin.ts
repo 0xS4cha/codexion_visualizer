@@ -4,7 +4,6 @@ import { getFirestore } from 'firebase-admin/firestore';
 
 function getFirebaseAdmin() {
   if (!getApps().length) {
-    console.log("Firebase Env Check:", !!process.env.FIREBASE_PROJECT_ID, !!process.env.FIREBASE_PRIVATE_KEY);
     const privateKey = process.env.FIREBASE_PRIVATE_KEY
       ? process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n')
       : undefined;
@@ -16,7 +15,6 @@ function getFirebaseAdmin() {
         privateKey: privateKey,
       }),
     });
-    console.log('Firebase Admin initialized successfully');
   }
 }
 

@@ -1,57 +1,37 @@
 import { VercelRequest, VercelResponse } from '@vercel/node';
-import { getAdminAuth, getAdminDb } from '../_utils/firebaseAdmin.js';
+import { getAdminDb } from '../_utils/firebaseAdmin.js';
 import { FieldValue } from 'firebase-admin/firestore';
+import { applyCors, HttpError, rateLimit, requireUser, sendError } from '../_utils/security.js';
+import { cleanDocId } from '../_utils/validation.js';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  res.setHeader('Access-Control-Allow-Credentials', 'true');
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
-  res.setHeader(
-    'Access-Control-Allow-Headers',
-    'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version, Authorization'
-  );
-
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end();
-  }
-
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
-  }
+  if (!applyCors(req, res, ['POST'])) return;
 
   try {
-    const authHeader = req.headers.authorization;
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return res.status(401).json({ error: 'Token not found or format invalid' });
-    }
-
-    const adminAuth = getAdminAuth();
-    const token = authHeader.split('Bearer ')[1];
-    const decodedToken = await adminAuth.verifyIdToken(token);
-    
-    const uid = decodedToken.uid;
-    const userLogin = decodedToken.login;
-    const { id, voteType } = req.body;
-
-    if (!id || !voteType || !['up', 'down'].includes(voteType) || !userLogin) {
-      return res.status(400).json({ error: 'Invalid parameters' });
+    const user = await requireUser(req);
+    await rateLimit(`cases-vote:${user.uid}`, 60, 60 * 1000);
+    const id = cleanDocId(req.body?.id);
+    const voteType = req.body?.voteType;
+    if (voteType !== 'up' && voteType !== 'down') {
+      throw new HttpError(400, 'Invalid parameters');
     }
 
     const adminDb = getAdminDb();
-    const edgecaseRef = adminDb.collection("edgecases").doc(id);
-    
-    const result = await adminDb.runTransaction(async (transaction: any) => {
+    const edgecaseRef = adminDb.collection('edgecases').doc(id);
+    const userLogin = user.login;
+
+    const result = await adminDb.runTransaction(async (transaction) => {
       const docSnap = await transaction.get(edgecaseRef);
       if (!docSnap.exists) {
-        throw new Error('Document does not exist!');
+        throw new HttpError(404, 'Edgecase not found');
       }
 
-      const data = docSnap.data();
-      const votedBy = data.votedBy || {};
+      const data = docSnap.data() ?? {};
+      const votedBy: Record<string, 'up' | 'down'> = data.votedBy || {};
       const previousVote = votedBy[userLogin];
 
       let voteChange = 0;
-      let newVotedBy = { ...votedBy };
+      const newVotedBy = { ...votedBy };
 
       if (previousVote === voteType) {
         voteChange = voteType === 'up' ? -1 : 1;
@@ -69,8 +49,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         newVotedBy[userLogin] = voteType;
       }
 
-      const currentVotes = data.votes || 0;
-      const newVotes = currentVotes + voteChange;
+      const newVotes = (data.votes || 0) + voteChange;
 
       transaction.update(edgecaseRef, {
         votes: FieldValue.increment(voteChange),
@@ -81,8 +60,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     });
 
     return res.status(200).json(result);
-  } catch (error: any) {
-    console.error('Error voting on edgecase:', error);
-    return res.status(500).json({ error: 'Internal server error' });
+  } catch (error) {
+    return sendError(res, error, 'Error voting on edgecase');
   }
 }

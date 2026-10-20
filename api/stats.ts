@@ -1,5 +1,6 @@
 import { VercelRequest, VercelResponse } from '@vercel/node';
 import { getAdminDb } from './_utils/firebaseAdmin.js';
+import { applyCors, sendError } from './_utils/security.js';
 
 function unescapeKey(key: string) {
   return key.replace(/_slash_/g, '/').replace(/_/g, '.');
@@ -17,17 +18,7 @@ export default async function handler(
   req: VercelRequest,
   res: VercelResponse
 ) {
-  res.setHeader('Access-Control-Allow-Credentials', 'true');
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS');
-
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end();
-  }
-
-  if (req.method !== 'GET') {
-    return res.status(405).json({ error: 'Method not allowed' });
-  }
+  if (!applyCors(req, res, ['GET'])) return;
 
   try {
     const adminDb = getAdminDb();
@@ -60,9 +51,9 @@ export default async function handler(
       city: unescapeKey(cityStr),
       lat: details.lat,
       lng: details.lng,
-      size: Math.max(2, Math.min(6, Math.ceil(details.count / 10))), // Map count to a dot size between 2 and 6
+      size: Math.max(2, Math.min(6, Math.ceil(details.count / 10))),
       count: details.count
-    })).sort((a, b) => b.count - a.count).slice(0, 100); // Top 100 cities max
+    })).sort((a, b) => b.count - a.count).slice(0, 100);
 
     const countriesData = data.countries || {};
     const formattedCountries: Record<string, number> = {};
@@ -97,8 +88,7 @@ export default async function handler(
       locations
     });
 
-  } catch (error: any) {
-    console.error('Error fetching stats:', error);
-    return res.status(500).json({ error: 'Internal server error' });
+  } catch (error) {
+    return sendError(res, error, 'Error fetching stats');
   }
 }

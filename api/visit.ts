@@ -1,33 +1,16 @@
 import { VercelRequest, VercelResponse } from '@vercel/node';
 import { getAdminDb } from './_utils/firebaseAdmin.js';
 import { FieldValue } from 'firebase-admin/firestore';
+import { applyCors, getClientIp, rateLimit, sendError } from './_utils/security.js';
 
 export default async function handler(
   req: VercelRequest,
   res: VercelResponse
 ) {
-  res.setHeader('Access-Control-Allow-Credentials', 'true');
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader(
-    'Access-Control-Allow-Methods',
-    'GET,OPTIONS,PATCH,DELETE,POST,PUT'
-  );
-  res.setHeader(
-    'Access-Control-Allow-Headers',
-    'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version, Authorization'
-  );
-
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end();
-  }
-
-  if (req.method !== 'POST') {
-    return res.status(405).json({
-      error: 'Method not allowed'
-    });
-  }
+  if (!applyCors(req, res, ['POST'])) return;
 
   try {
+    await rateLimit(`visit:${getClientIp(req)}`, 10, 60 * 1000);
     const country = req.headers['x-vercel-ip-country']?.toString() ?? process.env.DEV_COUNTRY ?? 'unknown';
     const city = req.headers['x-vercel-ip-city']?.toString() ?? 'unknown';
     const latitude = parseFloat(req.headers['x-vercel-ip-latitude']?.toString() || '0');
@@ -54,7 +37,8 @@ export default async function handler(
       }
     } catch (e) { }
 
-    const path = req.body?.path ?? '/';
+    const rawPath = typeof req.body?.path === 'string' ? req.body.path : '/';
+    const path = rawPath.slice(0, 100);
     const today = new Date().toISOString().split('T')[0];
 
     const adminDb = getAdminDb();
@@ -110,11 +94,7 @@ export default async function handler(
       country,
       tracked: true
     });
-  } catch (error: any) {
-    console.error('Error tracking visit:', error);
-
-    return res.status(500).json({
-      error: 'Internal server error'
-    });
+  } catch (error) {
+    return sendError(res, error, 'Error tracking visit');
   }
 }
