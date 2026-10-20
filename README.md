@@ -48,24 +48,36 @@ npm run preview
 
 ### Data Input
 
-Depending on the project configuration, you can typically:
-- load a local Codexion file (drag & drop or file picker),
-- paste raw JSON/text in a panel,
-- or point the app to a data endpoint.
+- paste the command (or fill the **Form**, pick a **Preset**, or **Randomize** edge-case parameters),
+- paste the log, drop a `.log`/`.txt` file on the log panel, or import it (a command on the first line is detected),
+- run the built-in **reference simulation**,
+- or stream your program live with [codexion_live](https://github.com/0xS4cha/codexion_live): `./codexion_live -- ./codexion 4 800 200 200 200 5 0 fifo`.
 
-> If your repo expects a specific input format (file name, schema, folder), document it here.
+The command, log and settings are saved in your browser.
 
 ## Visualization
 
-The visualization layer is designed to provide:
-- **Readable structure** (graph/tree/timeline depending on the dataset)
-- **Interactive navigation** (zoom, pan, selection)
-- **Search & filtering** to focus on relevant elements
-- **Debug-friendly inspection** (metadata panels, IDs, relations)
+- **Timeline**: canvas rendering that scales to large logs, zoom (Ctrl/⌘ + wheel), pan (drag, Shift + wheel), burnout deadline markers, issue markers and a shared time cursor with playback (play/pause, speed, step by event).
+- **Circle Table**: coders and dongles at the cursor time, synchronized with the timeline.
+- **Analysis**: a log validator (parse errors, timestamp order, logs after a burnout, coder ids, dongle conflicts, invalid transitions, durations, cooldown, burnout delay/early/missed, incomplete run, possible FIFO/EDF violations). Click an issue to jump to it on the timeline. Plus per-coder metrics (waits, burnout margin, dongle hold time, fairness).
+- **Compare**: your log against the reference simulation, with the first divergence highlighted.
+- **Export**: timeline PNG, segments CSV, issues CSV and full analysis JSON; download the log.
+- **Share**: short links (`/r/:id`) or compressed `?share=` links as a fallback.
 
+## Community hub
 
+Share edge cases, vote, comment, sort (newest, top voted, most discussed), replay the author's log, check your own log against an edge case, and browse profiles (`/u/:login`).
 
+## Tests
 
+```bash
+npm test
+npm run lint
+```
+
+## Configuration
+
+API routes only send CORS headers to the origins listed in `ALLOWED_ORIGINS` (comma separated, `*` allowed). Writes are rate limited and validated (sizes, tags, command format).
 
 ## Feedback
 
