@@ -1,12 +1,14 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAppSelector, useAppDispatch } from '@/store/hooks';
-import { setInstantAction, setDongleCooldown } from "@/store/features/settingsSlice";
+import { setInstantAction, setDongleCooldown, setLiveUrl, DEFAULT_LIVE_URL } from "@/store/features/settingsSlice";
 import ShinyText from "@/components/ui/TextAnimations/ShinyText/ShinyText";
 
 export default function CodexionOptions() {
   const padding = useAppSelector((state) => state.settings.instantActionPadding);
   const dongleCooldown = useAppSelector((state) => state.settings.dongleCooldown);
+  const liveUrl = useAppSelector((state) => state.settings.liveUrl);
+  const liveUrlValid = /^wss?:\/\/[^\s]+$/.test(liveUrl);
   const dispatch = useAppDispatch();
   const [isOpen, setIsOpen] = useState(false);
 
@@ -92,7 +94,31 @@ export default function CodexionOptions() {
                 </div>
 
                 <p className="mt-1 text-[10px] leading-relaxed text-white/30">
-                  Visualizes the period where dongles are unavailable after release.
+                  Used when the command does not set a dongle cooldown.
+                </p>
+              </div>
+
+              <div className="flex flex-col gap-3 rounded-lg border border-white/5 bg-white/5 p-4 transition-colors hover:bg-white/10">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-medium uppercase tracking-wider text-white/40">
+                    Live Bridge URL
+                  </span>
+                  {liveUrl !== DEFAULT_LIVE_URL && (
+                    <button type="button" onClick={() => dispatch(setLiveUrl(DEFAULT_LIVE_URL))} className="text-[10px] text-white/50 hover:text-white cursor-pointer">
+                      Reset
+                    </button>
+                  )}
+                </div>
+                <input
+                  type="text"
+                  value={liveUrl}
+                  onChange={(e) => dispatch(setLiveUrl(e.target.value.trim()))}
+                  spellCheck={false}
+                  className={`h-9 rounded-lg border bg-black/30 px-3 font-mono text-xs text-white/90 focus:outline-none focus:ring-1 focus:ring-white/20 ${liveUrlValid ? "border-white/10" : "border-red-500/50"}`}
+                  aria-label="Live bridge WebSocket URL"
+                />
+                <p className="mt-1 text-[10px] leading-relaxed text-white/30">
+                  WebSocket address of codexion_live (use --port / --host on the bridge to change it).
                 </p>
               </div>
             </div>
