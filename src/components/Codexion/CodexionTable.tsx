@@ -1,21 +1,28 @@
-import { useState, useRef } from "react";
+import { useRef } from "react";
 import {
   getStatusAtTime,
   getDongleStatusAtTime,
+  findSegmentIndex,
   ACTION_COLORS
 } from "@/core/codexionSimulation";
+import { ACTIONS } from "@/core/validateCodexionLog";
 import { useCodexionSimulation } from "@/hooks/useCodexionSimulation";
 import { useCodexionSimulationContext } from "@/context/CodexionSimulationContext";
+import { useAppSelector } from "@/store/hooks";
+import PlaybackControls from "@/components/Codexion/PlaybackControls";
 import html2canvas from 'html2canvas-pro';
 
 export default function CodexionTable() {
-  const [currentTime, setCurrentTime] = useState(0);
-  const { data, isLoading } = useCodexionSimulation();
+  const cursor = useAppSelector((s) => s.view.cursor);
+  const { data } = useCodexionSimulation();
   const { timeToBurnout: timeToBurnoutParam } = useCodexionSimulationContext();
   const tableRef = useRef<HTMLDivElement>(null);
   const radius = 200;
   const dongleRadius = 140;
   const center = 250;
+  const coderCount = data?.coderIds.length ?? 0;
+  const bubble = coderCount > 40 ? 18 : coderCount > 16 ? 30 : 64;
+  const dongleSize = coderCount > 40 ? 10 : coderCount > 16 ? 18 : 32;
 
   const handleDownload = async () => {
     if (tableRef.current === null) return;
@@ -38,19 +45,20 @@ export default function CodexionTable() {
     }
   };
 
-  if (isLoading || !data) {
+  if (!data) {
     return (<></>);
   }
-  const { coderIds, dongleSegments, minTime, maxTime, segments, visualToReal } = data;
+  const { coderIds, dongleSegments, minTime, maxTime, segments, visualToReal, realToVisual } = data;
   if (coderIds && coderIds.length === 0) {
     return (<></>);
   }
 
-  const realTime = visualToReal(currentTime);
+  const realTime = cursor;
+  const currentTime = realToVisual(cursor);
 
   return (
     <div className="flex flex-col rounded-xl border border-white/10 bg-white/5 backdrop-blur-md p-4">
-      <div className="mb-4 flex items-center justify-between">
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-4">
           <button
             onClick={handleDownload}
@@ -61,23 +69,8 @@ export default function CodexionTable() {
             </svg>
             Export PNG
           </button>
-          <span className="text-xs font-medium uppercase tracking-wider text-white/40">Time</span>
-          <input
-            type="range"
-            min={minTime}
-            max={maxTime}
-            value={currentTime}
-            onChange={(e) => setCurrentTime(Number(e.target.value))}
-            className="h-1.5 w-32 cursor-pointer appearance-none rounded-full bg-white/10 accent-white/70 hover:bg-white/20"
-            style={{ outline: 'none', WebkitAppearance: 'none' }}
-          />
-          <span className="min-w-[3rem] text-right text-sm font-medium text-white/70">
-            {realTime}ms
-          </span>
         </div>
-        <div className="text-xs font-medium text-white/60">
-          Time (ms)
-        </div>
+        <PlaybackControls start={visualToReal(minTime)} end={visualToReal(maxTime)} entries={data.entries} />
       </div>
 
       <div className="overflow-x-auto overflow-y-hidden rounded-lg border border-white/5 bg-black/10 flex justify-center" ref={tableRef}>
@@ -103,13 +96,17 @@ export default function CodexionTable() {
             const coderSegments = segments.get(id) || [];
             const status = getStatusAtTime(coderSegments, currentTime);
 
-            const lastCompile = [...coderSegments]
-              .filter(s => s.startTime <= currentTime && s.action === "is compiling")
-              .sort((a, b) => b.startTime - a.startTime)[0];
+            let lastCompile = undefined;
+            for (let si = findSegmentIndex(coderSegments, currentTime); si >= 0; si--) {
+              if (coderSegments[si].action === ACTIONS.COMPILE) {
+                lastCompile = coderSegments[si];
+                break;
+              }
+            }
 
             let healthPct = 100;
-            if (lastCompile && timeToBurnoutParam > 0) {
-              const elapsedSinceCompile = realTime - lastCompile.realStart;
+            if (timeToBurnoutParam > 0) {
+              const elapsedSinceCompile = realTime - (lastCompile ? lastCompile.realStart : 0);
               healthPct = Math.max(0, 100 - (elapsedSinceCompile / timeToBurnoutParam) * 100);
             }
 
@@ -120,7 +117,9 @@ export default function CodexionTable() {
                 style={{
                   left: x - 40,
                   top: y - 40,
+                  transform: bubble < 64 ? `scale(${bubble / 64})` : undefined,
                 }}
+                title={`Coder ${id}: ${status}`}
               >
                 <div className="relative group">
                   <svg className="absolute -inset-2 w-20 h-20 -rotate-90">
@@ -158,14 +157,15 @@ export default function CodexionTable() {
                     {id}
                   </div>
                 </div>
-                <span className="mt-2 text-[10px] text-white/70 text-center w-24">
-                  {status}
-                </span>
+                {bubble === 64 && (
+                  <span className="mt-2 text-[10px] text-white/70 text-center w-24">
+                    {status}
+                  </span>
+                )}
               </div>
             );
           })}
 
-          {/* Render Dongles */}
           {Array.from({ length: coderIds.length }).map((_, index) => {
             const id = index + 1;
             const angle = ((id - 0.5) / coderIds.length) * 2 * Math.PI;
@@ -192,8 +192,10 @@ export default function CodexionTable() {
                 }}
               >
                 <div
-                  className="w-8 h-8 rounded-lg flex items-center justify-center text-[8px] font-bold shadow-md border border-white/10 transition-colors duration-200"
+                  className="rounded-lg flex items-center justify-center text-[8px] font-bold shadow-md border border-white/10 transition-colors duration-200"
                   style={{
+                    width: dongleSize,
+                    height: dongleSize,
                     backgroundColor: color,
                     transform: `rotate(${angle + Math.PI / 2}rad)`
                   }}
@@ -206,7 +208,7 @@ export default function CodexionTable() {
                     <path d="M14 2v2"></path>
                   </svg>
                 </div>
-                {dSeg?.ownerId && (
+                {dSeg?.ownerId && dongleSize === 32 && (
                   <span className="absolute -bottom-4 text-[8px] text-white/50 font-mono">
                     C{dSeg.ownerId}
                   </span>
