@@ -94,16 +94,6 @@ function AnalysisStatus() {
 }
 
 export default function Visualizer() {
-  useEffect(() => {
-    fetch("/api/visit", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ path: window.location.pathname }),
-    }).catch(() => undefined);
-  }, []);
-
   const dispatch = useAppDispatch();
 
   useEffect(() => {
