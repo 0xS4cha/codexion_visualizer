@@ -34,7 +34,7 @@ export function KpiRow({ stats, periodLabel }: { stats: StatsResponse; periodLab
   return (
     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
       <StatTile delay={0.1} icon={<Eye className={iconClass} />} label="Visits" value={stats.visits.toLocaleString()} hint={periodLabel} />
-      <StatTile delay={0.15} icon={<UserRound className={iconClass} />} label="Unique visitors" value={stats.uniqueVisitors.toLocaleString()} hint={`${stats.allTimeVisits.toLocaleString()} visits all time`} />
+      {/* <StatTile delay={0.15} icon={<UserRound className={iconClass} />} label="Unique visitors" value={stats.uniqueVisitors.toLocaleString()} hint={`${stats.allTimeVisits.toLocaleString()} visits all time`} /> */}
       <StatTile
         delay={0.2}
         icon={<CalendarDays className={iconClass} />}

@@ -80,9 +80,9 @@ export function OverviewCard({ periodLabel, visits, uniqueVisitors, growth, show
             Visits in {periodLabel}
           </p>
           <p className="text-3xl leading-none font-bold text-white tracking-tight tabular-nums">{visits.toLocaleString()}</p>
-          <p className="text-white/50 text-xs mt-2 tabular-nums">
+          {/* <p className="text-white/50 text-xs mt-2 tabular-nums">
             {uniqueVisitors.toLocaleString()} unique visitors
-          </p>
+          </p> */}
         </motion.div>
       </CardHeader>
 
