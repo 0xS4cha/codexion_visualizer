@@ -380,10 +380,10 @@ export default function World() {
                 onValueChange={(value) => value && updateParams({ range: value === "30d" ? null : value })}
                 aria-label="Time range"
                 spacing={0}
-                className="rounded-full border border-white/10 bg-[#121215]/80 backdrop-blur-xl p-1"
+                className="border border-white/10 bg-[#121215]/80 backdrop-blur-xl"
               >
                 {RANGE_OPTIONS.map((o) => (
-                  <ToggleGroupItem key={o.value} value={o.value} aria-label={o.long} className={`${toggleItemClass} rounded-full`}>
+                  <ToggleGroupItem key={o.value} value={o.value} aria-label={o.long}>
                     {o.label}
                   </ToggleGroupItem>
                 ))}
@@ -394,10 +394,10 @@ export default function World() {
                 onValueChange={(value) => value && updateParams({ metric: value === "visitors" ? null : value })}
                 aria-label="Map metric"
                 spacing={0}
-                className="rounded-full border border-white/10 bg-[#121215]/80 backdrop-blur-xl p-1"
+                className="border border-white/10 bg-[#121215]/80 backdrop-blur-xl"
               >
-                <ToggleGroupItem value="visitors" className={`${toggleItemClass} rounded-full`}>Visits</ToggleGroupItem>
-                <ToggleGroupItem value="runs" className={`${toggleItemClass} rounded-full`}>Runs</ToggleGroupItem>
+                <ToggleGroupItem value="visitors">Visits</ToggleGroupItem>
+                <ToggleGroupItem value="runs">Runs</ToggleGroupItem>
               </ToggleGroup>
               <Button
                 variant="outline"
