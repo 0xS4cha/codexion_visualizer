@@ -1,6 +1,11 @@
 ﻿import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { getAdminAuth } from './_utils/firebaseAdmin.js';
 
+const FORTY_TWO_HEADERS = {
+  Accept: "application/json",
+  "User-Agent": "codexion-visualizer/1.0 (+https://codexion-visualizer.sacha-dev.me)",
+};
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   const { code, error } = req.query;
 
@@ -15,7 +20,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {
     const tokenResponse = await fetch("https://api.intra.42.fr/oauth/token", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { ...FORTY_TWO_HEADERS, "Content-Type": "application/json" },
       body: JSON.stringify({
         grant_type: "authorization_code",
         client_id: process.env.FORTY_TWO_CLIENT_ID,
@@ -34,7 +39,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const { access_token } = await tokenResponse.json();
 
     const userResponse = await fetch("https://api.intra.42.fr/v2/me", {
-      headers: { Authorization: `Bearer ${access_token}` },
+      headers: { ...FORTY_TWO_HEADERS, Authorization: `Bearer ${access_token}` },
     });
 
     if (!userResponse.ok) {
