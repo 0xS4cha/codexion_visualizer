@@ -69,8 +69,26 @@ export type RepoInfo = {
   url: string;
 };
 
+export type TrendingEdgecase = {
+  id: string;
+  title: string;
+  author: string;
+  tags: string[];
+  votes: number;
+  commentCount: number;
+  command: string;
+  instantActionPadding: number;
+  dongleCooldown: number;
+};
+
+export type HubPulse = {
+  count: number;
+  trending: TrendingEdgecase[];
+};
+
 export type PulseResponse = {
   liveVisitors: number;
   visitorsByCountry: Record<string, number>;
   repo: RepoInfo | null;
+  hub: HubPulse | null;
 };

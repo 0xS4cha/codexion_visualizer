@@ -17,7 +17,7 @@ import { Progress } from "@/components/ui/progress";
 
 import Users from "@/assets/users.json";
 import { UserReadme } from "@/types/user";
-import { usePulse } from "@/hooks/usePulse";
+import type { PulseResponse } from "@/types/stats";
 import { countryFlag } from "@/lib/worldStats";
 
 const MAX_AVATARS_PREVIEW = 5;
@@ -28,12 +28,11 @@ function nextStarGoal(stars: number): number {
   return STAR_GOALS.find((g) => g > stars) ?? Math.ceil((stars + 1) / 5000) * 5000;
 }
 
-export default function GitHubCTA() {
+export default function GitHubCTA({ pulse }: { pulse: PulseResponse | null }) {
   const navigate = useNavigate();
   const userList = Users as UserReadme[];
   const previewUsers = userList.slice(0, MAX_AVATARS_PREVIEW);
   const remainingCount = Math.max(userList.length - MAX_AVATARS_PREVIEW, 0);
-  const pulse = usePulse();
   const repo = pulse?.repo ?? null;
   const starGoal = repo ? nextStarGoal(repo.stars) : 0;
 

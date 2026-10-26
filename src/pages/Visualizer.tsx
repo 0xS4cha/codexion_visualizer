@@ -11,6 +11,7 @@ import CodexionCompare from "@/components/Codexion/CodexionCompare";
 import Header from "@/components/Codexion/Header";
 import Footer from "@/components/Codexion/Footer";
 import GitHubCTA from "@/components/Codexion/GitHubCTA";
+import HubCTA from "@/components/Codexion/HubCTA";
 import { CodexionSimulationProvider, useCodexionSimulationContext } from "@/context/CodexionSimulationContext";
 import { useAppSelector, useAppDispatch } from "@/store/hooks";
 import { setCommand, setOutput } from "@/store/features/inputSlice";
@@ -18,8 +19,11 @@ import { setInstantAction, setDongleCooldown } from "@/store/features/settingsSl
 import { setActiveTab } from "@/store/features/viewSlice";
 import type { VisualizerTab } from "@/store/features/viewSlice";
 import { usePlayback } from "@/hooks/usePlayback";
+import { usePulse } from "@/hooks/usePulse";
 import { decodeShare } from "@/lib/share";
 import { toast } from "sonner";
+import { Link } from "react-router-dom";
+import { ArrowRight } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
@@ -87,8 +91,15 @@ function AnalysisStatus() {
   if (!data) return null;
   const errors = data.issues.filter((i) => i.type === 'error').length;
   return (
-    <span className={`text-[11px] ${errors ? 'text-red-300' : 'text-emerald-300/80'}`}>
-      {errors ? `${errors} error${errors > 1 ? 's' : ''} found` : 'No errors found'}
+    <span className="flex items-center gap-2 text-[11px]">
+      <span className={errors ? 'text-red-300' : 'text-emerald-300/80'}>
+        {errors ? `${errors} error${errors > 1 ? 's' : ''} found` : 'No errors found'}
+      </span>
+      <span className="text-white/20">·</span>
+      <Link to="/hub" className="group flex items-center gap-1 text-white/50 hover:text-white transition-colors">
+        {errors ? 'See how others hit this in the Hub' : 'Stress-test it with community edge cases'}
+        <ArrowRight className="w-3 h-3 transition-transform group-hover:translate-x-0.5" />
+      </Link>
     </span>
   );
 }
@@ -122,6 +133,7 @@ export default function Visualizer() {
 
   const activeTab = useAppSelector((state) => state.view.activeTab);
   const hasOutput = useAppSelector((state) => state.user_input.output.some(line => line.trim() !== ''));
+  const pulse = usePulse();
 
   return (
     <CodexionSimulationProvider>
@@ -218,7 +230,8 @@ export default function Visualizer() {
               ) : (
                 <div className="space-y-6">
                   <EmptyState key="empty-state" />
-                  <GitHubCTA />
+                  <HubCTA hub={pulse?.hub ?? null} />
+                  <GitHubCTA pulse={pulse} />
                 </div>
               )}
             </AnimatePresence>
