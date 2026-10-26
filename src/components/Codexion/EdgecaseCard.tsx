@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { MessageSquare } from "lucide-react";
+import { ChevronDown, ChevronUp, MessageSquare } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { EdgecaseComments } from "@/components/Codexion/EdgecaseComments";
@@ -74,70 +74,50 @@ export function EdgecaseCard({
 
   return (
     <div
-      className="flex gap-4 rounded-xl border border-white/10 bg-black/20 p-4"
+      className="flex gap-4 rounded-2xl border border-white/10 bg-[#121215]/80 backdrop-blur-md shadow-xl p-5 hover:border-white/20 transition-colors duration-500"
     >
-      <div className="flex flex-col items-center justify-start gap-1">
+      <div className="flex flex-col items-center justify-start gap-0.5 rounded-xl border border-white/5 bg-white/5 px-1 py-1.5 self-start">
         <button
           onClick={handleUpVote}
-          className={`p-1 rounded transition cursor-pointer ${optimisticUserVote === "up"
-            ? "text-green-500"
-            : "text-white/40 hover:text-green-400 hover:bg-white/5"
+          aria-label="Upvote"
+          aria-pressed={optimisticUserVote === "up"}
+          className={`p-1 rounded-lg transition cursor-pointer ${optimisticUserVote === "up"
+            ? "text-emerald-400 bg-emerald-400/10"
+            : "text-white/40 hover:text-emerald-300 hover:bg-white/10"
             }`}
         >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="20"
-            height="20"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <path d="m18 15-6-6-6 6" />
-          </svg>
+          <ChevronUp className="w-4 h-4" />
         </button>
         <span
-          className={`text-sm font-semibold tabular-nums ${optimisticUserVote === "up"
-            ? "text-green-500"
+          className={`text-sm font-bold tabular-nums ${optimisticUserVote === "up"
+            ? "text-emerald-400"
             : optimisticUserVote === "down"
-              ? "text-red-500"
-              : "text-white/80"
+              ? "text-red-400"
+              : "text-white"
             }`}
         >
           {optimisticVotes}
         </span>
         <button
           onClick={handleDownVote}
-          className={`p-1 rounded transition cursor-pointer ${optimisticUserVote === "down"
-            ? "text-red-500"
-            : "text-white/40 hover:text-red-400 hover:bg-white/5"
+          aria-label="Downvote"
+          aria-pressed={optimisticUserVote === "down"}
+          className={`p-1 rounded-lg transition cursor-pointer ${optimisticUserVote === "down"
+            ? "text-red-400 bg-red-400/10"
+            : "text-white/40 hover:text-red-300 hover:bg-white/10"
             }`}
         >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="20"
-            height="20"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <path d="m6 9 6 6 6-6" />
-          </svg>
+          <ChevronDown className="w-4 h-4" />
         </button>
       </div>
       <div className="flex flex-1 flex-col min-w-0">
       <div className="flex flex-1 flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="space-y-2 min-w-0">
           <div className="flex flex-wrap items-center gap-3">
-            <h4 className="text-base sm:text-lg font-semibold text-white/90 break-words">
+            <h4 className="text-base font-semibold text-white/90 tracking-tight break-words">
               {title}
             </h4>
-            <button type="button" onClick={onAuthorClick} className="text-xs text-white/40 hover:text-white hover:underline cursor-pointer">By @{author}</button>
+            <button type="button" onClick={onAuthorClick} className="text-[11px] text-white/40 hover:text-white hover:underline cursor-pointer">by @{author}</button>
           </div>
           <p className="text-sm text-white/45 max-w-2xl leading-relaxed">{description}</p>
           <div className="flex flex-wrap gap-2">
@@ -145,7 +125,7 @@ export function EdgecaseCard({
               <Badge
                 key={tag}
                 variant="outline"
-                className="border-white/10 bg-white/5 text-[10px] text-white/60 px-2.5 py-0.5"
+                className="border-white/5 bg-white/5 text-[10px] text-white/50 px-2.5 py-0.5"
               >
                 {tag}
               </Badge>
@@ -157,7 +137,7 @@ export function EdgecaseCard({
             onClick={onOpen}
             variant="outline"
             title="Load the command and settings, then run your program"
-            className="text-white/70 text-xs font-semibold px-4.5 py-1.5 rounded-full border border-white/10 hover:bg-white/10 hover:text-white transition cursor-pointer h-9"
+            className="h-9 px-4 rounded-xl border border-white/10 bg-white/5 text-xs font-medium text-white/80 hover:bg-white/10 hover:text-white transition active:scale-95 cursor-pointer"
           >
             Open
           </Button>
@@ -166,7 +146,7 @@ export function EdgecaseCard({
               onClick={onReplay}
               variant="outline"
               title="Load the log the author published"
-              className="text-white/70 text-xs font-semibold px-4 py-1.5 rounded-full border border-white/10 hover:bg-white/10 hover:text-white transition cursor-pointer h-9"
+              className="h-9 px-4 rounded-xl border border-white/10 bg-white/5 text-xs font-medium text-white/80 hover:bg-white/10 hover:text-white transition active:scale-95 cursor-pointer"
             >
               Replay
             </Button>
@@ -175,7 +155,7 @@ export function EdgecaseCard({
             <Button
               onClick={onCheckLog}
               title="Validate your current log against this edge case's command"
-              className="text-black bg-white text-xs font-semibold px-4 py-1.5 rounded-full hover:bg-white/90 transition cursor-pointer h-9"
+              className="h-9 px-4 rounded-xl bg-white text-black text-xs font-semibold tracking-wide hover:bg-white/90 transition active:scale-95 cursor-pointer"
             >
               Check my log
             </Button>
@@ -185,7 +165,7 @@ export function EdgecaseCard({
       <button
         type="button"
         onClick={() => setShowComments((v) => !v)}
-        className="mt-3 flex items-center gap-1.5 self-start text-xs text-white/40 hover:text-white/80 cursor-pointer"
+        className="mt-4 flex items-center gap-1.5 self-start text-[11px] font-medium text-white/40 hover:text-white transition-colors cursor-pointer"
       >
         <MessageSquare className="h-3.5 w-3.5" />
         {comments} comment{comments === 1 ? "" : "s"}

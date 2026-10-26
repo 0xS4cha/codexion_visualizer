@@ -8,7 +8,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import type { StatsResponse } from "@/types/stats";
 import { summarizeSeries } from "@/lib/worldStats";
 
-function StatTile({ icon, label, value, hint, delay }: { icon: ReactNode; label: string; value: ReactNode; hint?: ReactNode; delay: number }) {
+export function StatTile({ icon, label, value, hint, delay }: { icon: ReactNode; label: string; value: ReactNode; hint?: ReactNode; delay: number }) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 12 }}

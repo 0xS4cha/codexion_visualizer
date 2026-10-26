@@ -1,5 +1,7 @@
-import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useMemo, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { motion, AnimatePresence } from "motion/react";
+import { ChevronLeft, ChevronRight, FlaskConical, LayoutDashboard, MessageSquare, Plus, Search, ThumbsUp, UserRound, UsersRound, X } from "lucide-react";
 import { DashboardUser } from "@/types/user";
 import ShapeGrid from "@/components/ui/Backgrounds/ShapeGrid/ShapeGrid";
 import Header from "@/components/Codexion/Header";
@@ -13,21 +15,35 @@ import { toast } from "sonner";
 import { setInstantAction, setDongleCooldown } from "@/store/features/settingsSlice";
 import { useSecureApi } from "@/hooks/useSecureApi";
 import { EdgecaseCard } from "@/components/Codexion/EdgecaseCard";
+import { BackButton } from "@/components/Codexion/BackButton";
+import { StatTile } from "@/components/Codexion/WorldStatsCards";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Skeleton } from "@/components/ui/skeleton";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import Footer from "@/components/Codexion/Footer";
 
 type SortMode = "newest" | "top" | "discussed" | "oldest";
 
 const SORT_LABELS: Record<SortMode, string> = {
   newest: "Newest",
-  top: "Top voted",
-  discussed: "Most discussed",
+  top: "Top",
+  discussed: "Discussed",
   oldest: "Oldest",
 };
+
+const cardClass =
+  "gap-2 bg-[#121215]/80 backdrop-blur-md border-white/10 shadow-xl rounded-2xl hover:border-white/20 transition-colors duration-500";
+const sectionLabelClass = "text-[10px] tracking-wider uppercase font-medium text-white/40";
+const fieldClass =
+  "h-10 rounded-lg bg-black/30 border-white/10 text-sm text-white/90 placeholder:text-white/30 focus-visible:border-white/30 focus-visible:ring-1 focus-visible:ring-white/20";
+const secondaryButtonClass =
+  "rounded-xl border border-white/10 bg-white/5 text-xs font-medium text-white/80 hover:bg-white/10 hover:text-white transition active:scale-95 cursor-pointer";
+const primaryButtonClass =
+  "rounded-xl bg-white text-black hover:bg-white/90 text-xs font-semibold tracking-wide transition active:scale-95 cursor-pointer";
 
 export default function Edgecase() {
   const [user, setUser] = useState<DashboardUser | null>(null);
@@ -107,6 +123,15 @@ export default function Edgecase() {
     }
   }, [navigate]);
 
+  const totals = useMemo(
+    () => ({
+      votes: edgecases.reduce((acc, ec) => acc + (ec.votes ?? 0), 0),
+      comments: edgecases.reduce((acc, ec) => acc + (ec.commentCount ?? 0), 0),
+      authors: new Set(edgecases.map((ec) => ec.author).filter(Boolean)).size,
+    }),
+    [edgecases]
+  );
+
   const handlePublish = async () => {
     if (!title.trim() || !description.trim()) return;
     setIsSubmitting(true);
@@ -172,6 +197,19 @@ export default function Edgecase() {
     setCurrentPage(1);
   };
 
+  const clearFilters = () => {
+    setSearchQuery("");
+    setActiveTags([]);
+    setCurrentPage(1);
+  };
+
+  const openShareModal = () => {
+    setLocalCommand(reduxCommand);
+    setLocalPadding(reduxPadding);
+    setLocalCooldown(reduxCooldown);
+    setIsModalOpen(true);
+  };
+
   const filterededgecases = edgecases.filter((ec) => {
     const searchLower = searchQuery.toLowerCase();
     const matchesSearch =
@@ -202,6 +240,7 @@ export default function Edgecase() {
   });
 
   const hasLocalOutput = output.some((l) => l.trim() !== "");
+  const hasFilters = searchQuery !== "" || activeTags.length > 0;
   const totalPages = Math.ceil(sortededgecases.length / itemsPerPage);
   const paginatededgecases = sortededgecases.slice(
     (currentPage - 1) * itemsPerPage,
@@ -210,11 +249,13 @@ export default function Edgecase() {
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-[#0c0c0c] flex items-center justify-center">
-        <div className="text-white/60 text-sm tracking-wide">Loading...</div>
+      <div className="min-h-screen bg-[#0a0a0d] flex items-center justify-center">
+        <div className="text-white/40 text-sm tracking-wide animate-pulse">Loading…</div>
       </div>
     );
   }
+
+  const iconClass = "w-3.5 h-3.5";
 
   return (
     <>
@@ -233,33 +274,104 @@ export default function Edgecase() {
 
       <Header />
 
-      <main className="px-4 pb-20 pt-24 max-w-7xl mx-auto">
-        <div className="w-full space-y-6">
-          <div className="grid gap-6 lg:grid-cols-[320px_1fr]">
-            <aside className="space-y-4">
-              <Card className="border border-white/10 bg-white/5 backdrop-blur-md">
-                <CardHeader className="pb-3">
-                  <CardDescription className="text-xs uppercase tracking-widest text-white/40">Filters</CardDescription>
-                  <CardTitle className="text-lg font-semibold text-white/85">Quick search</CardTitle>
+      <main className="min-h-screen pt-20 pb-24 px-4 sm:px-6 max-w-7xl mx-auto">
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.5 }}
+          className="space-y-6"
+        >
+          <div className="flex flex-wrap items-end justify-between gap-3">
+            <div>
+              <BackButton />
+              <h1 className="mt-2 px-4 text-xl sm:text-2xl font-bold text-white tracking-tight">Edge Case Hub</h1>
+              <p className="px-4 text-xs text-white/40">Tricky Codexion scenarios shared by the community</p>
+            </div>
+            <Button onClick={openShareModal} className={`${primaryButtonClass} h-10 px-4`}>
+              <Plus className="w-4 h-4" />
+              Share an edge case
+            </Button>
+          </div>
+
+          {isLoadingList && edgecases.length === 0 ? (
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+              {Array.from({ length: 4 }, (_, i) => (
+                <Skeleton key={i} className="h-[86px] rounded-2xl bg-white/5" />
+              ))}
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+              <StatTile delay={0.1} icon={<FlaskConical className={iconClass} />} label="Edge cases" value={edgecases.length.toLocaleString()} hint="shared so far" />
+              <StatTile delay={0.15} icon={<ThumbsUp className={iconClass} />} label="Votes" value={totals.votes.toLocaleString()} hint="net score across all cases" />
+              <StatTile delay={0.2} icon={<MessageSquare className={iconClass} />} label="Comments" value={totals.comments.toLocaleString()} hint="community discussions" />
+              <StatTile delay={0.25} icon={<UsersRound className={iconClass} />} label="Contributors" value={totals.authors.toLocaleString()} hint="unique authors" />
+            </div>
+          )}
+
+          <div className="grid grid-cols-1 lg:grid-cols-[320px_1fr] gap-6 items-start">
+            <motion.aside
+              initial={{ opacity: 0, x: -15 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.4, delay: 0.1 }}
+              className="space-y-6 lg:sticky lg:top-24"
+            >
+              <Card className={cardClass}>
+                <CardHeader className="pb-2">
+                  <CardTitle className="flex items-center justify-between text-sm font-semibold text-white/90">
+                    Filters
+                    {hasFilters && (
+                      <button
+                        type="button"
+                        onClick={clearFilters}
+                        className="flex items-center gap-1 text-[11px] font-medium text-white/50 hover:text-white transition-colors cursor-pointer"
+                      >
+                        <X className="w-3 h-3" />
+                        Clear
+                      </button>
+                    )}
+                  </CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="space-y-3">
-                    <select
+                <CardContent className="space-y-5">
+                  <div className="space-y-2">
+                    <p className={sectionLabelClass}>Search</p>
+                    <div className="relative">
+                      <Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/30" />
+                      <Input
+                        value={searchQuery}
+                        onChange={handleSearchChange}
+                        placeholder="Title, tag or author…"
+                        aria-label="Search edge cases"
+                        className={`${fieldClass} pl-9`}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <p className={sectionLabelClass}>Sort by</p>
+                    <ToggleGroup
+                      type="single"
                       value={sortMode}
-                      onChange={(e) => { setSortMode(e.target.value as SortMode); setCurrentPage(1); }}
-                      className="h-11 w-full rounded-md border border-white/10 bg-black/30 px-3 text-sm text-white/80 focus:outline-none cursor-pointer"
+                      onValueChange={(value) => {
+                        if (!value) return;
+                        setSortMode(value as SortMode);
+                        setCurrentPage(1);
+                      }}
                       aria-label="Sort edge cases"
+                      spacing={0}
+                      className="w-full border border-white/10 bg-black/30"
                     >
                       {(Object.keys(SORT_LABELS) as SortMode[]).map((m) => (
-                        <option key={m} value={m} className="bg-[#121215]">Sort: {SORT_LABELS[m]}</option>
+                        <ToggleGroupItem key={m} value={m} className="flex-1 text-xs cursor-pointer">
+                          {SORT_LABELS[m]}
+                        </ToggleGroupItem>
                       ))}
-                    </select>
-                    <Input
-                      value={searchQuery}
-                      onChange={handleSearchChange}
-                      placeholder="Search an edgecase, a tag, or an author..."
-                      className="h-11 bg-black/30 border-white/10 text-white/90 placeholder:text-white/30 focus-visible:border-white/30 focus-visible:ring-white/20"
-                    />
+                    </ToggleGroup>
+                  </div>
+
+                  <div className="space-y-2">
+                    <p className={sectionLabelClass}>
+                      Tags{activeTags.length > 0 && <span className="text-white/60"> · {activeTags.length} selected</span>}
+                    </p>
                     <div className="flex flex-wrap gap-2">
                       {AVAILABLE_TAGS.map((tag) => (
                         <FilterChip
@@ -274,221 +386,281 @@ export default function Edgecase() {
                 </CardContent>
               </Card>
 
-              <Card className="border border-white/10 bg-white/5 backdrop-blur-md">
-                <CardHeader className="pb-3">
-                  <CardDescription className="text-xs uppercase tracking-widest text-white/40">Actions</CardDescription>
-                  <CardTitle className="text-lg font-semibold text-white/85">Options</CardTitle>
+              <Card className={cardClass}>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-semibold text-white/90">Shortcuts</CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-3">
-                  <Button
-                    onClick={() => navigate("/")}
-                    variant="outline"
-                    className="w-full rounded-full border border-white/10 bg-white/5 text-sm font-semibold text-white/80 hover:bg-white/10 transition h-11 cursor-pointer"
-                  >
-                    Go to Visualizer
-                  </Button>
-                  <Button
-                    onClick={() => navigate(`/u/${user.login}`)}
-                    variant="outline"
-                    className="w-full rounded-full border border-white/10 bg-white/5 text-sm font-semibold text-white/80 hover:bg-white/10 transition h-11 cursor-pointer"
-                  >
-                    My edge cases
-                  </Button>
-                  <Button
-                    onClick={() => {
-                      setLocalCommand(reduxCommand);
-                      setLocalPadding(reduxPadding);
-                      setLocalCooldown(reduxCooldown);
-                      setIsModalOpen(true);
-                    }}
-                    className="w-full rounded-full bg-white text-black hover:bg-white/90 text-sm font-bold transition h-11 cursor-pointer"
-                  >
-                    Share an Edgecase
-                  </Button>
+                <CardContent className="space-y-2">
+                  {[
+                    { icon: LayoutDashboard, label: "Go to Visualizer", to: "/" },
+                    { icon: UserRound, label: "My edge cases", to: `/u/${user.login}` },
+                  ].map(({ icon: Icon, label, to }, i) => (
+                    <motion.div key={label} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.1, duration: 0.4 }}>
+                      <Link
+                        to={to}
+                        className="flex items-center justify-between rounded-lg px-3 py-2.5 text-xs bg-white/5 border border-white/5 hover:bg-white/10 hover:border-white/15 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40"
+                      >
+                        <span className="flex items-center gap-2 text-white/80 font-medium">
+                          <Icon className="w-3.5 h-3.5 text-white/50" />
+                          {label}
+                        </span>
+                        <ChevronRight className="w-3.5 h-3.5 text-white/40" />
+                      </Link>
+                    </motion.div>
+                  ))}
                 </CardContent>
               </Card>
-            </aside>
+            </motion.aside>
 
-            <section className="space-y-4">
-              <div className="grid gap-4">
-                {isLoadingList ? (
-                  <div className="text-white/50 text-center py-8">Loading edgecases...</div>
-                ) : filterededgecases.length === 0 ? (
-                  <div className="text-white/50 text-center py-8">No edgecases found.</div>
-                ) : (
-                  <>
-                    {paginatededgecases.map((ec) => (
-                      <EdgecaseCard
-                        key={ec.id}
-                        id={ec.id}
-                        title={ec.title}
-                        author={ec.author}
-                        tags={ec.tags || []}
-                        description={ec.description}
-                        votes={ec.votes || 0}
-                        userVote={user ? ec.votedBy?.[user.login] : undefined}
-                        commentCount={ec.commentCount ?? 0}
-                        currentLogin={user.login}
-                        hasStoredLog={edgecaseOutputLines(ec).some((l) => l.trim() !== "")}
-                        canCheckLog={hasLocalOutput && !!ec.command}
-                        onAuthorClick={() => navigate(`/u/${ec.author}`)}
-                        onVote={(voteType) => handleVote(ec.id, voteType)}
-                        onOpen={() => {
-                          dispatch(setCommand(ec.command));
-                          dispatch(setInstantAction(ec.instantActionPadding));
-                          dispatch(setDongleCooldown(ec.dongleCooldown));
-                          navigate("/");
-                        }}
-                        onReplay={() => {
-                          dispatch(setCommand(ec.command));
-                          dispatch(setOutput(edgecaseOutputLines(ec)));
-                          dispatch(setInstantAction(ec.instantActionPadding));
-                          dispatch(setDongleCooldown(ec.dongleCooldown));
-                          dispatch(setActiveTab("timeline"));
-                          navigate("/");
-                        }}
-                        onCheckLog={() => {
-                          dispatch(setCommand(ec.command));
-                          dispatch(setInstantAction(ec.instantActionPadding));
-                          dispatch(setDongleCooldown(ec.dongleCooldown));
-                          dispatch(setActiveTab("analysis"));
-                          navigate("/");
-                        }}
-                      />
-                    ))}
-
-                    {totalPages > 1 && (
-                      <div className="flex items-center justify-center gap-4 mt-6">
-                        <Button
-                          onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                          disabled={currentPage === 1}
-                          variant="outline"
-                          className="px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-white/70 hover:bg-white/10 disabled:opacity-50 transition cursor-pointer"
-                        >
-                          Previous
-                        </Button>
-                        <span className="text-sm text-white/50">
-                          Page {currentPage} of {totalPages}
-                        </span>
-                        <Button
-                          onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-                          disabled={currentPage === totalPages}
-                          variant="outline"
-                          className="px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-white/70 hover:bg-white/10 disabled:opacity-50 transition cursor-pointer"
-                        >
-                          Next
-                        </Button>
-                      </div>
-                    )}
-                  </>
+            <motion.section
+              initial={{ opacity: 0, x: 15 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.4, delay: 0.2 }}
+              className="space-y-4"
+            >
+              <div className="flex items-center justify-between px-1">
+                <p className={sectionLabelClass}>
+                  {isLoadingList ? "Loading edge cases…" : `${filterededgecases.length} edge case${filterededgecases.length === 1 ? "" : "s"}`}
+                </p>
+                {totalPages > 1 && (
+                  <p className="text-[11px] text-white/40 tabular-nums">
+                    Page {currentPage} of {totalPages}
+                  </p>
                 )}
               </div>
-            </section>
+
+              {isLoadingList ? (
+                <div className="grid gap-4" aria-busy="true">
+                  {Array.from({ length: itemsPerPage }, (_, i) => (
+                    <Skeleton key={i} className="h-[150px] rounded-2xl bg-white/5" />
+                  ))}
+                </div>
+              ) : filterededgecases.length === 0 ? (
+                <EmptyState hasFilters={hasFilters} onClear={clearFilters} onShare={openShareModal} />
+              ) : (
+                <>
+                  <AnimatePresence mode="wait">
+                    <motion.div
+                      key={`${currentPage}-${sortMode}`}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -10 }}
+                      transition={{ duration: 0.15 }}
+                      className="grid gap-4"
+                    >
+                      {paginatededgecases.map((ec, i) => (
+                        <motion.div
+                          key={ec.id}
+                          initial={{ opacity: 0, y: 12 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: i * 0.05, duration: 0.4 }}
+                        >
+                          <EdgecaseCard
+                            id={ec.id}
+                            title={ec.title}
+                            author={ec.author}
+                            tags={ec.tags || []}
+                            description={ec.description}
+                            votes={ec.votes || 0}
+                            userVote={user ? ec.votedBy?.[user.login] : undefined}
+                            commentCount={ec.commentCount ?? 0}
+                            currentLogin={user.login}
+                            hasStoredLog={edgecaseOutputLines(ec).some((l) => l.trim() !== "")}
+                            canCheckLog={hasLocalOutput && !!ec.command}
+                            onAuthorClick={() => navigate(`/u/${ec.author}`)}
+                            onVote={(voteType) => handleVote(ec.id, voteType)}
+                            onOpen={() => {
+                              dispatch(setCommand(ec.command));
+                              dispatch(setInstantAction(ec.instantActionPadding));
+                              dispatch(setDongleCooldown(ec.dongleCooldown));
+                              navigate("/");
+                            }}
+                            onReplay={() => {
+                              dispatch(setCommand(ec.command));
+                              dispatch(setOutput(edgecaseOutputLines(ec)));
+                              dispatch(setInstantAction(ec.instantActionPadding));
+                              dispatch(setDongleCooldown(ec.dongleCooldown));
+                              dispatch(setActiveTab("timeline"));
+                              navigate("/");
+                            }}
+                            onCheckLog={() => {
+                              dispatch(setCommand(ec.command));
+                              dispatch(setInstantAction(ec.instantActionPadding));
+                              dispatch(setDongleCooldown(ec.dongleCooldown));
+                              dispatch(setActiveTab("analysis"));
+                              navigate("/");
+                            }}
+                          />
+                        </motion.div>
+                      ))}
+                    </motion.div>
+                  </AnimatePresence>
+
+                  {totalPages > 1 && (
+                    <div className="flex items-center justify-center gap-3 pt-2">
+                      <Button
+                        onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                        disabled={currentPage === 1}
+                        variant="outline"
+                        aria-label="Previous page"
+                        className={`${secondaryButtonClass} h-9 px-3 disabled:opacity-40`}
+                      >
+                        <ChevronLeft className="w-3.5 h-3.5" />
+                        Previous
+                      </Button>
+                      <span className="text-xs text-white/50 tabular-nums min-w-[60px] text-center">
+                        {currentPage} / {totalPages}
+                      </span>
+                      <Button
+                        onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                        disabled={currentPage === totalPages}
+                        variant="outline"
+                        aria-label="Next page"
+                        className={`${secondaryButtonClass} h-9 px-3 disabled:opacity-40`}
+                      >
+                        Next
+                        <ChevronRight className="w-3.5 h-3.5" />
+                      </Button>
+                    </div>
+                  )}
+                </>
+              )}
+            </motion.section>
           </div>
-        </div>
+        </motion.div>
       </main>
       <Footer />
 
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-        <DialogContent className="sm:max-w-2xl bg-[#121215] border border-white/10 text-white/90">
+        <DialogContent className="sm:max-w-2xl rounded-2xl bg-[#121215]/95 backdrop-blur-xl border border-white/10 text-white/90 shadow-[0_8px_32px_rgba(0,0,0,0.5)]">
           <DialogHeader>
-            <DialogTitle className="text-xl font-bold text-white/90">Share your edgecase</DialogTitle>
-            <DialogDescription className="text-white/40">
-              Publish an edgecase scenario for others to simulate and analyze.
+            <DialogTitle className="text-lg font-bold text-white tracking-tight">Share your edge case</DialogTitle>
+            <DialogDescription className="text-xs text-white/40">
+              Publish an edge case scenario for others to simulate and analyze.
             </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4 py-2">
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-white/70">Title</label>
+            <label className="flex flex-col gap-1.5">
+              <span className={sectionLabelClass}>Title</span>
               <Input
                 value={title}
                 maxLength={120}
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder="A descriptive title"
-                className="h-11 bg-black/30 border-white/10 text-white/90 placeholder:text-white/30 focus-visible:border-white/30 focus-visible:ring-white/20"
+                className={fieldClass}
               />
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-white/70">Description</label>
-              <Input
+            </label>
+            <label className="flex flex-col gap-1.5">
+              <span className={sectionLabelClass}>Description</span>
+              <textarea
                 value={description}
                 maxLength={2000}
                 onChange={(e) => setDescription(e.target.value)}
-                placeholder="What happened in this edgecase?"
-                className="h-11 bg-black/30 border-white/10 text-white/90 placeholder:text-white/30 focus-visible:border-white/30 focus-visible:ring-white/20"
+                placeholder="What happened in this edge case?"
+                className="min-h-[80px] resize-none rounded-lg border border-white/10 bg-black/30 px-3 py-2.5 text-sm text-white/90 placeholder:text-white/30 focus:border-white/30 focus:outline-none focus:ring-1 focus:ring-white/20"
               />
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-white/70">Tags <span className="text-white/30">({selectedTags.length}/{MAX_TAGS})</span></label>
+            </label>
+            <div className="flex flex-col gap-1.5">
+              <span className={sectionLabelClass}>
+                Tags <span className="text-white/30">({selectedTags.length}/{MAX_TAGS})</span>
+              </span>
               <div className="flex flex-wrap gap-2">
                 {AVAILABLE_TAGS.map((tag) => (
-                  <button
+                  <FilterChip
                     key={tag}
-                    type="button"
+                    label={tag}
+                    active={selectedTags.includes(tag)}
                     onClick={() =>
                       setSelectedTags((prev) =>
                         prev.includes(tag) ? prev.filter((t) => t !== tag) : prev.length >= MAX_TAGS ? prev : [...prev, tag]
                       )
                     }
-                    className="cursor-pointer font-sans"
-                  >
-                    <Badge
-                      variant={selectedTags.includes(tag) ? "default" : "outline"}
-                      className={`px-3 py-1.5 text-xs transition-all ${selectedTags.includes(tag)
-                        ? "bg-white text-black hover:bg-white/90"
-                        : "border-white/10 bg-white/5 text-white/60 hover:text-white hover:bg-white/10"
-                        }`}
-                    >
-                      {tag}
-                    </Badge>
-                  </button>
+                  />
                 ))}
               </div>
             </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-white/70">Command</label>
+            <label className="flex flex-col gap-1.5">
+              <span className={sectionLabelClass}>Command</span>
               <Input
                 value={localCommand}
                 onChange={(e) => setLocalCommand(e.target.value)}
-                className="h-11 font-mono bg-black/30 border-white/10 text-white/90 placeholder:text-white/30 focus-visible:border-white/30 focus-visible:ring-white/20"
+                className={`${fieldClass} font-mono`}
               />
-            </div>
+            </label>
 
             <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-white/70">Instant Action Padding</label>
+              <label className="flex flex-col gap-1.5">
+                <span className={sectionLabelClass}>Instant Action Padding</span>
                 <Input
                   type="number"
                   value={localPadding}
                   onChange={(e) => setLocalPadding(Number(e.target.value))}
-                  className="h-11 font-mono bg-black/30 border-white/10 text-white/90 placeholder:text-white/30 focus-visible:border-white/30 focus-visible:ring-white/20"
+                  className={`${fieldClass} font-mono`}
                 />
-              </div>
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-white/70">Dongle Cooldown</label>
+              </label>
+              <label className="flex flex-col gap-1.5">
+                <span className={sectionLabelClass}>Dongle Cooldown</span>
                 <Input
                   type="number"
                   value={localCooldown}
                   onChange={(e) => setLocalCooldown(Number(e.target.value))}
-                  className="h-11 font-mono bg-black/30 border-white/10 text-white/90 placeholder:text-white/30 focus-visible:border-white/30 focus-visible:ring-white/20"
+                  className={`${fieldClass} font-mono`}
                 />
-              </div>
+              </label>
             </div>
           </div>
 
-          <DialogFooter className="mt-4">
+          <DialogFooter className="mt-2">
             <Button
               onClick={handlePublish}
               disabled={isSubmitting || !title.trim() || !description.trim()}
-              className="w-full rounded-full bg-white text-black font-semibold hover:bg-white/90 transition disabled:opacity-50 h-11 cursor-pointer"
+              className={`${primaryButtonClass} w-full h-10 disabled:opacity-50`}
             >
-              {isSubmitting ? "Publishing..." : "Publish edgecase"}
+              {isSubmitting ? "Publishing…" : "Publish edge case"}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
     </>
+  );
+}
+
+type EmptyStateProps = {
+  hasFilters: boolean;
+  onClear: () => void;
+  onShare: () => void;
+};
+
+function EmptyState({ hasFilters, onClear, onShare }: EmptyStateProps) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 15 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4, ease: "easeOut" }}
+      className="flex flex-col items-center justify-center border border-white/10 bg-white/5 backdrop-blur-md rounded-2xl p-12 text-center h-[340px]"
+    >
+      <motion.div
+        animate={{ scale: [1, 1.05, 1], opacity: [0.5, 0.8, 0.5] }}
+        transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+        className="w-14 h-14 rounded-full bg-white/5 border border-white/10 flex items-center justify-center mb-5 text-white/40"
+      >
+        <FlaskConical className="w-7 h-7" strokeWidth={1.5} />
+      </motion.div>
+      <h3 className="text-lg font-semibold text-white/90 mb-2">No edge cases found</h3>
+      <p className="text-sm text-white/45 max-w-md mb-6 leading-relaxed">
+        {hasFilters
+          ? "Nothing matches your search or tags. Try loosening your filters."
+          : "Nobody has shared an edge case yet. Be the first one!"}
+      </p>
+      <Button
+        onClick={hasFilters ? onClear : onShare}
+        variant="outline"
+        className={`${hasFilters ? secondaryButtonClass : primaryButtonClass} h-9 px-4`}
+      >
+        {hasFilters ? "Clear filters" : "Share an edge case"}
+      </Button>
+    </motion.div>
   );
 }
 
@@ -500,12 +672,12 @@ type FilterChipProps = {
 
 function FilterChip({ label, active, onClick }: FilterChipProps) {
   return (
-    <button type="button" onClick={onClick} className="cursor-pointer">
+    <button type="button" onClick={onClick} aria-pressed={active} className="cursor-pointer rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40">
       <Badge
         variant={active ? "default" : "outline"}
-        className={`px-3 py-1.5 text-xs transition-all ${active
+        className={`px-3 py-1 text-[11px] font-medium transition-all ${active
           ? "bg-white text-black hover:bg-white/90"
-          : "border-white/15 bg-white/5 text-white/60 hover:text-white hover:bg-white/10"
+          : "border-white/10 bg-white/5 text-white/60 hover:text-white hover:bg-white/10"
           }`}
       >
         {label}
