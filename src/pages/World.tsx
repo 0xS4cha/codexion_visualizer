@@ -377,7 +377,7 @@ export default function World() {
               <ToggleGroup
                 type="single"
                 value={range}
-                onValueChange={(value) => value && updateParams({ range: value === "30d" ? null : value })}
+                onValueChange={(value) => value && updateParams({ range: value === "all" ? null : value })}
                 aria-label="Time range"
                 spacing={0}
                 className="border border-white/10 bg-[#121215]/80 backdrop-blur-xl"

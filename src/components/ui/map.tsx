@@ -323,7 +323,7 @@ const Map = forwardRef<MapRef, MapProps>(function Map(
       map.off("load", loadHandler);
       map.off("style.load", styleLoadHandler);
       map.off("move", handleMove);
-      map.remove();
+      if (map.painter) map.remove();
       setIsLoaded(false);
       setIsStyleLoaded(false);
       setMapInstance(null);
